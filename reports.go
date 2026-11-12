@@ -51,6 +51,8 @@ var reportCatalog = []reportDef{
 	{"inspection:blank", "Maintenance", "Blank PM Inspection Sheet", "The 16-point checklist to print and fill in by hand.", false},
 	{"summary", "Maintenance", "Monthly Maintenance Summary", "The month at a glance for management, with the notes saved for that month.", true},
 	{"procedures", "Maintenance", "Maintenance Procedures", "How the department works: the steps, the review schedule and what each priority means.", false},
+	{"temps-week", "Food Safety", "Temperature Log: Last 7 Days", "Every temperature reading from the last week with its safe range and status.", false},
+	{"temps-bad", "Food Safety", "Out-of-Range Temperatures", "Readings outside the safe range in the last 30 days, with the corrective action taken.", false},
 	{"pm-equipment", "Schedule", "Equipment PM Schedule", "Recurring equipment maintenance jobs, when each was last done and when it is next due.", false},
 	{"pm-cleaning", "Schedule", "Cleaning Schedule", "Daily, weekly, monthly and yearly cleaning tasks with last done and next due.", false},
 	{"pm-facility", "Schedule", "Grounds and Facility Schedule", "Building and grounds jobs with last done and next due.", false},
@@ -224,6 +226,24 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 		}
 		rep.Sections = append(rep.Sections, reportSection{Heading: "Review schedule", Cols: []string{"When", "Review", "Owner", "Backup"}, Rows: cd})
 		return rep, true
+	case "temps-week", "temps-bad":
+		days, title := 7, "Temperature Log: Last 7 Days"
+		if id == "temps-bad" {
+			days, title = 30, "Out-of-Range Temperatures"
+		}
+		rows := [][]string{}
+		for _, v := range s.tempViews(time.Now().AddDate(0, 0, -days).Format(dayFmt), "") {
+			bad := v.Status == "Too Warm" || v.Status == "Too Cold"
+			if id == "temps-bad" && !bad {
+				continue
+			}
+			at := v.At
+			if t, err := time.Parse("2006-01-02 15:04", v.At); err == nil {
+				at = t.Format("1/2/2006 3:04 PM")
+			}
+			rows = append(rows, []string{at, v.Point, fmt.Sprintf("%g°F", v.Temp), v.Limit, v.Status, v.By, strings.TrimSpace(v.Notes + " " + v.Action)})
+		}
+		return &report{Title: title, Subtitle: today, Sections: []reportSection{{Note: "Safe ranges follow the FDA Food Code unless a different range was set for the point.", Cols: []string{"When", "Point", "Temperature", "Safe Range", "Status", "By", "Notes / Corrective Action"}, Rows: rows}}}, true
 	case "pm-equipment":
 		return &report{Title: "Equipment PM Schedule", Subtitle: today, Sections: []reportSection{{Cols: pmCols, Rows: pmRows("Equipment PM")}}}, true
 	case "pm-cleaning":

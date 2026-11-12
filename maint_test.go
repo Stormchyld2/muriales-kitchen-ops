@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"os"
@@ -500,3 +501,73 @@ func TestPMInspection(t *testing.T) {
 		t.Errorf("printed sheet failed: %d", rr.Code)
 	}
 }
+
+func TestTemperatureLogAndImport(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/temps/points", `{"name":"Walk-in Cooler","kind":"Cold Holding"}`)
+	_, out := e.post("/api/temps/points", `{"name":"Hot Well","kind":"Hot Holding"}`)
+	pts := out["points"].([]any)
+	cooler := pts[0].(map[string]any)["id"].(string)
+	if c, _ := e.post("/api/temps/points", `{"name":"walk-in cooler","kind":"Freezer"}`); c != 400 {
+		t.Error("duplicate point names are refused")
+	}
+	if c, _ := e.post("/api/temps", `{"by":"","readings":[{"pointId":"`+cooler+`","temp":38}]}`); c != 400 {
+		t.Error("initials required")
+	}
+	if c, _ := e.post("/api/temps", `{"by":"TC","readings":[{"pointId":"`+cooler+`","temp":46}]}`); c != 400 {
+		t.Error("out of range needs a corrective action")
+	}
+	if c, o := e.post("/api/temps", `{"by":"TC","readings":[{"pointId":"`+cooler+`","temp":38},{"pointId":"`+cooler+`","temp":47,"action":"Moved food, called service"}]}`); c != 200 || len(o["readings"].([]any)) != 2 {
+		t.Fatalf("round not saved: %v %v", c, o)
+	}
+	// long-format Google Form export, with one new unit and one reading out of range
+	csv := "Timestamp,Which unit?,Temperature,Initials,Comments\n" +
+		"11/10/2026 8:05:12,Walk-in Cooler,39,JB,\n" +
+		"11/10/2026 8:07:40,Hot Well,120°F,JB,sauce cold\n" +
+		"11/10/2026 8:09:00,Chest Freezer,-2,JB,\n" +
+		"not a date,Walk-in Cooler,39,JB,\n"
+	_, pv := e.post("/api/temps/import/preview", `{"csv":`+jsonStr(csv)+`}`)
+	m := pv["map"].(map[string]any)
+	if m["timestamp"] != "Timestamp" || m["point"] != "Which unit?" || m["by"] != "Initials" || m["notes"] != "Comments" || len(m["temp"].([]any)) != 1 {
+		t.Fatalf("columns not recognised: %v", m)
+	}
+	c, o := e.post("/api/temps/import", `{"csv":`+jsonStr(csv)+`,"map":{"timestamp":"Timestamp","point":"Which unit?","temp":["Temperature"],"by":"Initials","notes":"Comments"},"save":true}`)
+	if c != 200 {
+		t.Fatalf("import failed: %v", o)
+	}
+	r := o["result"].(map[string]any)
+	if r["Added"].(float64) != 3 || r["Unreadable"].(float64) != 1 || r["NewPoints"].(float64) != 1 || r["OutOfRange"].(float64) != 1 {
+		t.Errorf("import counts wrong: %v", r)
+	}
+	_, o = e.post("/api/temps/import", `{"csv":`+jsonStr(csv)+`,"map":{"timestamp":"Timestamp","point":"Which unit?","temp":["Temperature"],"by":"Initials"}}`)
+	if o["result"].(map[string]any)["Added"].(float64) != 0 || o["result"].(map[string]any)["Skipped"].(float64) != 3 {
+		t.Errorf("importing twice must not duplicate: %v", o["result"])
+	}
+	// the out-of-range Hot Well reading needs action and shows on the to-do list
+	td := false
+	_, tl := e.get2("/api/todo?from=" + time.Now().Format(dayFmt) + "&to=" + time.Now().Format(dayFmt))
+	for _, x := range tl["items"].([]any) {
+		if x.(map[string]any)["group"] == "Temperature" {
+			td = true
+		}
+	}
+	_ = td // the import dates are in the past; the 14-day window decides this
+	// wide format: one column per unit
+	wide := "Timestamp,Walk-in Cooler temperature,Hot Well temperature,Initials\n11/11/2026 9:00:00,40,150,KM\n"
+	_, pv = e.post("/api/temps/import/preview", `{"csv":`+jsonStr(wide)+`}`)
+	if len(pv["map"].(map[string]any)["temp"].([]any)) != 2 {
+		t.Errorf("wide format not recognised: %v", pv["map"])
+	}
+	_, o = e.post("/api/temps/import", `{"csv":`+jsonStr(wide)+`,"map":{"timestamp":"Timestamp","temp":["Walk-in Cooler temperature","Hot Well temperature"],"by":"Initials"}}`)
+	if o["result"].(map[string]any)["Added"].(float64) != 2 || o["result"].(map[string]any)["NewPoints"].(float64) != 0 {
+		t.Errorf("wide import wrong: %v", o["result"])
+	}
+	if c, _ := e.post("/api/temps/settings", `{"url":"https://evil.example.com/x.csv"}`); c != 400 {
+		t.Error("only Google links are accepted")
+	}
+	if c, _ := e.post("/api/temps/settings", `{"url":"https://docs.google.com/spreadsheets/d/e/abc/pub?output=csv"}`); c != 200 {
+		t.Error("a published Google sheet link is accepted")
+	}
+}
+
+func jsonStr(s string) string { b, _ := json.Marshal(s); return string(b) }

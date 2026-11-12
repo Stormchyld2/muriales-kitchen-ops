@@ -82,6 +82,12 @@ type maintSettings struct {
 	// means any name is accepted. The program has no logins, so this is a
 	// check on the name typed, not a security control.
 	Managers []string `json:"managers"`
+
+	// Temperature log: the published Google Form response sheet and how its
+	// columns map to a reading.
+	TempsURL      string   `json:"tempsUrl"`
+	TempMap       *tempMap `json:"tempMap"`
+	TempsSyncedAt string   `json:"tempsSyncedAt"`
 }
 
 const defaultPortal = "https://app.getmaintainx.com"
@@ -253,6 +259,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.reportRoutes(mux)
 	s.procedureRoutes(mux)
 	s.inspectionRoutes(mux)
+	s.tempRoutes(mux)
 	mux.HandleFunc("GET /api/maint", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
