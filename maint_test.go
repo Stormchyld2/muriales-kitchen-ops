@@ -211,8 +211,17 @@ func TestMasterTodo(t *testing.T) {
 		t.Errorf("today's list: %v", titles)
 	}
 	_, o = e.get2("/api/todo?from=" + d(0) + "&to=" + d(7) + "&sources=Cleaning")
-	if n := len(o["items"].([]any)); n != 2 {
-		t.Errorf("cleaning-only list for the week: %d items", n)
+	n := 0
+	for _, x := range o["items"].([]any) {
+		if x.(map[string]any)["group"] != "Cleaning" {
+			t.Errorf("source filter let through %v", x)
+		}
+		if x.(map[string]any)["kind"] == "task" { // the PM jobs this test added, not the seeded cleaning schedule
+			n++
+		}
+	}
+	if n != 2 {
+		t.Errorf("cleaning-only list for the week: %d PM jobs", n)
 	}
 	_, o = e.get2("/api/todo?from=" + d(0) + "&to=" + d(30))
 	titles = titles[:0]
