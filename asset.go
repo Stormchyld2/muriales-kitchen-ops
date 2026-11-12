@@ -22,8 +22,10 @@ type ServiceRecord struct {
 	Type        string  `json:"type"` // Repair, Preventive, Inspection, Other
 	Description string  `json:"description"`
 	Cost        float64 `json:"cost"`
-	Vendor      string  `json:"vendor"` // who did the work
-	By          string  `json:"by"`     // who recorded it
+	Parts       float64 `json:"parts,omitempty"`    // part of the cost that was parts
+	Downtime    float64 `json:"downtime,omitempty"` // hours the equipment was down
+	Vendor      string  `json:"vendor"`             // who did the work
+	By          string  `json:"by"`                 // who recorded it
 	IssueID     string  `json:"issueId,omitempty"`
 	PMID        string  `json:"pmId,omitempty"`
 }
@@ -174,4 +176,32 @@ func (s *store) serviceRoutes(mux *http.ServeMux, reply func(http.ResponseWriter
 		}
 		reply(w)
 	})
+}
+
+// syncIssueService keeps one repair record in the equipment's service history
+// for a work order, matching the costs and downtime entered on it. The caller
+// holds s.mu.
+func (s *store) syncIssueService(p *Issue, by string) {
+	var all []ServiceRecord
+	s.readMaint("service.json", &all)
+	kept := all[:0]
+	for _, r := range all {
+		if r.IssueID != p.ID {
+			kept = append(kept, r)
+		}
+	}
+	total := p.PartsCost + p.LaborCost
+	if p.EquipmentID != "" && (total > 0 || p.Downtime > 0) {
+		date := p.CompletedAt
+		if date == "" {
+			date = time.Now().Format(dayFmt)
+		}
+		kept = append(kept, ServiceRecord{
+			ID: newID(), EquipmentID: p.EquipmentID, Date: date, Type: "Repair",
+			Description: fmt.Sprintf("#%d %s", p.Number, p.Title),
+			Cost:        total, Parts: p.PartsCost, Downtime: p.Downtime,
+			By: by, IssueID: p.ID,
+		})
+	}
+	_ = s.writeMaint("service.json", kept)
 }

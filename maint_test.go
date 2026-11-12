@@ -115,7 +115,7 @@ func TestAssetCostsAndReplacementAdvice(t *testing.T) {
 	// a repair cost entered on an issue becomes a service record
 	_, out = e.post("/api/maint/issues", `{"equipmentId":"`+id+`","title":"Leak","reportedBy":"M"}`)
 	iid := out["issues"].([]any)[0].(map[string]any)["id"].(string)
-	_, out = e.do2("PUT", "/api/maint/issues/"+iid, `{"status":"Repaired","by":"M","cost":250}`)
+	_, out = e.do2("PUT", "/api/maint/issues/"+iid, `{"status":"Repaired","by":"M","parts":100,"labor":150,"downtime":3}`)
 	if adv(out)["total"].(float64) != 3750 {
 		t.Errorf("issue cost should join the total: %v", adv(out))
 	}

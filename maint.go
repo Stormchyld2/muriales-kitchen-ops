@@ -63,6 +63,13 @@ type Issue struct {
 	ReportedBy  string  `json:"reportedBy"`
 	ReportedAt  string  `json:"reportedAt"`
 	WorkOrder   string  `json:"workOrder"` // number or link from MaintainX
+	AssignedTo  string  `json:"assignedTo"`
+	CompletedAt string  `json:"completedAt"` // date the repair was finished
+	Downtime    float64 `json:"downtime"`    // hours the equipment was down
+	PartsCost   float64 `json:"partsCost"`
+	LaborCost   float64 `json:"laborCost"` // labor or outside service
+	FollowUp    bool    `json:"followUp"`  // more work still needed
+	Notes       string  `json:"completionNotes"`
 	VerifiedBy  string  `json:"verifiedBy"`
 	VerifiedAt  string  `json:"verifiedAt"`
 	History     []Entry `json:"history"`
@@ -356,11 +363,16 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	// Update an issue: status, work order number, a note, or manager sign-off.
 	mux.HandleFunc("PUT /api/maint/issues/{id}", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct {
-			Status    *string `json:"status"`
-			WorkOrder *string `json:"workOrder"`
-			Note      string  `json:"note"`
-			By        string  `json:"by"`
-			Cost      float64 `json:"cost"`
+			Status    *string  `json:"status"`
+			WorkOrder *string  `json:"workOrder"`
+			Note      string   `json:"note"`
+			By        string   `json:"by"`
+			Assigned  *string  `json:"assignedTo"`
+			Downtime  *float64 `json:"downtime"`
+			Parts     *float64 `json:"parts"`
+			Labor     *float64 `json:"labor"`
+			FollowUp  *bool    `json:"followUp"`
+			Done      *string  `json:"completionNotes"`
 		}
 		if json.NewDecoder(r.Body).Decode(&in2) != nil || strings.TrimSpace(in2.By) == "" {
 			fail(w, 400, "Enter your name.")
@@ -402,10 +414,35 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		if n := strings.TrimSpace(in2.Note); n != "" {
 			add(n)
 		}
-		if in2.Cost > 0 {
-			s.addService(ServiceRecord{EquipmentID: p.EquipmentID, IssueID: p.ID, Date: stamp()[:10], Type: "Repair",
-				Description: "#" + fmt.Sprint(p.Number) + " " + p.Title, Cost: in2.Cost, By: by})
-			add(fmt.Sprintf("Recorded a repair cost of $%.2f.", in2.Cost))
+		if in2.Assigned != nil && strings.TrimSpace(*in2.Assigned) != p.AssignedTo {
+			p.AssignedTo = strings.TrimSpace(*in2.Assigned)
+			add("Assigned to " + p.AssignedTo + ".")
+		}
+		if in2.FollowUp != nil {
+			p.FollowUp = *in2.FollowUp
+		}
+		if in2.Done != nil {
+			p.Notes = strings.TrimSpace(*in2.Done)
+		}
+		costChanged := false
+		for _, f := range []struct {
+			in  *float64
+			dst *float64
+		}{{in2.Downtime, &p.Downtime}, {in2.Parts, &p.PartsCost}, {in2.Labor, &p.LaborCost}} {
+			if f.in != nil && *f.in >= 0 && *f.in != *f.dst {
+				*f.dst, costChanged = *f.in, true
+			}
+		}
+		if p.Status == "Repaired" || p.Status == "Verified" || p.Status == "Closed" {
+			if p.CompletedAt == "" {
+				p.CompletedAt = t[:10]
+			}
+		} else {
+			p.CompletedAt = ""
+		}
+		if costChanged {
+			add(fmt.Sprintf("Costs recorded: parts $%.2f, labor/service $%.2f, downtime %.1f hours.", p.PartsCost, p.LaborCost, p.Downtime))
+			s.syncIssueService(p, by)
 		}
 		// Equipment goes back to Operational only when a manager has verified
 		// the last open issue on it.
