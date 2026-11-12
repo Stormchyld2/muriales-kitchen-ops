@@ -129,6 +129,8 @@ aside .wo{margin:14px 10px 0;width:calc(100% - 20px)}
 .status.Operational,.status.Verified,.status.Closed{background:#58b368}.status.Needs\ Attention,.status.Open,.status.Medium{background:#e7b416}
 .status.Out\ of\ Service,.status.Urgent,.status.High{background:#e0525e}.status.Low{background:#9aa0a8}
 .hist{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px}.hist div{margin-bottom:6px}
+aside .nav.mod{font-weight:700}.nav .grow{flex:1}.nav .chev{opacity:.6;font-size:12px}
+.nav.sub{padding:7px 12px 7px 42px;font-size:14px;margin:1px 0}.navsep{height:1px;background:var(--line);margin:10px 8px}
 code{background:#1f2125;border:1px solid #565a62;border-radius:4px;padding:2px 6px;word-break:break-all}
 </style>
 </head>
@@ -283,13 +285,21 @@ function visible() {
 
 /* ---------- screens ---------- */
 const MAINT_VIEWS = ["equip", "issues"];
-const NAV = [["_","Maintenance"],["equip","wrench","Equipment"],["issues","list","Maintenance Issues"],["_","Safety Data Sheets"],["library","home","Library"],["add","add","Add SDS"],["categories","cats","Categories"],["print","print","Print / Export"],["notes","list","Handoff Notes"],["settings","gear","Settings"],["about","info","About"]];
+const MODS = [
+  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["issues","Maintenance Issues"]]},
+  {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
+];
+const NAV_TOP = [["settings","gear","Settings"],["about","info","About"]];
+const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
 const SUB = {equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
-  $("#nav").innerHTML = NAV.map(([v, i, l]) => v === "_" ? `<div class="navhead">${i}</div>` : `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("")
-    + (MAINT_VIEWS.includes(state.view) ? `<button class="btn green wo" data-act="submit-wo" title="Opens MaintainX in your browser">${icon("ext")}Submit Work Order</button>` : "");
+  if (state.lastView !== state.view) { const cur = modOf(state.view); if (cur) state.openMod = cur; state.lastView = state.view; }
+  $("#nav").innerHTML = MODS.map(m => `<button class="nav mod ${state.openMod === m.k ? "open" : ""}" data-act="mod" data-k="${m.k}">${icon(m.icon)}<span class="grow">${m.label}</span><span class="chev">${state.openMod === m.k ? "▾" : "▸"}</span></button>`
+      + (state.openMod === m.k ? m.subs.map(([v, l]) => `<button class="nav sub ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${l}</button>`).join("") : "")).join("")
+    + `<div class="navsep"></div>` + NAV_TOP.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("")
+    + (MAINT_VIEWS.includes(state.view) ? `<button class="btn green wo" data-act="submit-wo" title="Opens MaintainX in its own window">${icon("ext")}Submit Work Order</button>` : "");
   $("#subtitle").textContent = state.view === "add" && state.form && state.form.replaceMode ? "Replace SDS PDF" : SUB[state.view];
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
@@ -1098,7 +1108,7 @@ function vIssues() {
 function tMaintainx() {
   const m = state.maint; if (!m) { loadMaint(); return `<p class="hint">Loading...</p>`; }
   return `<div class="panel" style="max-width:760px"><h3 style="margin-top:0">MaintainX</h3>
-    <p>The <b>Submit Work Order</b> button opens your MaintainX web address in the browser. This program does not connect to MaintainX; work orders are entered there, and the work order number can be written on the issue here.</p>
+    <p>The <b>Submit Work Order</b> button opens your MaintainX web address in its own window, with no browser tabs or address bar. Sign in once and it stays signed in on that computer. This program does not connect to MaintainX; work orders are entered there, and the work order number can be written on the issue here.</p>
     <label>MaintainX web address:</label><input class="field" id="portal" value="${esc(m.portalUrl)}">
     <div class="row" style="margin-top:10px"><button class="btn green" data-act="portal-save">${icon("save")}Save</button><button class="btn" data-act="submit-wo">${icon("ext")}Open It Now</button></div></div>`;
 }
@@ -1154,8 +1164,11 @@ const ACT = {
     const text = `${eq.name || ""}${eq.area ? " (" + eq.area + ")" : ""}${eq.make || eq.model ? " - " + [eq.make, eq.model].filter(Boolean).join(" ") : ""}\n${p.title}\nPriority: ${p.priority}\n${p.description || ""}\nReported by ${p.reportedBy} on ${fmtDate(p.reportedAt)}`.trim();
     try { await navigator.clipboard.writeText(text); toast("Issue details copied. Paste them into the new work order in MaintainX."); } catch (e) { toast("Opening MaintainX. The details could not be copied.", true); }
     await api("/api/maint/open-portal", {method: "POST"}); },
-  async "submit-wo"() { await api("/api/maint/open-portal", {method: "POST"}); toast("Opening MaintainX in your browser."); },
+  async "submit-wo"() { await api("/api/maint/open-portal", {method: "POST"}); toast("Opening MaintainX."); },
   async "portal-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({portalUrl: $("#portal").value})}); render(); toast("Saved."); },
+  mod(el) { const k = el.dataset.k, m = MODS.find(x => x.k === k);
+    if (state.openMod === k) { state.openMod = null; return render(); }
+    state.openMod = k; return ACT.nav({dataset: {v: m.subs[0][0]}}); },
   nav(el) { const v = el.dataset.v; if (v === "print") return state.lib.products.length ? printDialog("all") : toast("Add a product first."); if (v === "add") state.form = blankForm(); state.view = v; if (v === "settings") loadTab(); state.focusQ = false; render(); if (v === "library") return reload().then(render); },
   open(el, e) { if (e.target.closest("input")) return; state.view = "detail"; state.id = el.dataset.id; render(); },
   toggle(el) { state.sel.has(el.dataset.id) ? state.sel.delete(el.dataset.id) : state.sel.add(el.dataset.id); render(); },

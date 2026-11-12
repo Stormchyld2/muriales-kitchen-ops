@@ -13,7 +13,11 @@ import (
 // openWindow shows the program in its own application window (no address bar
 // or tabs) using Microsoft Edge, which is part of Windows. Chrome is used if
 // Edge is missing. As a last resort the default browser is opened.
-func openWindow(url string) (*exec.Cmd, error) {
+func openWindow(url string) (*exec.Cmd, error) { return openAppWindow(url, "window-2") }
+
+// openAppWindow does the work for openWindow. Each profile name keeps its own
+// sign-ins, so MaintainX can have its own window and stay signed in.
+func openAppWindow(url, profileName string) (*exec.Cmd, error) {
 	var candidates []string
 	for _, root := range []string{os.Getenv("ProgramFiles(x86)"), os.Getenv("ProgramFiles"), os.Getenv("LOCALAPPDATA")} {
 		if root == "" {
@@ -27,7 +31,7 @@ func openWindow(url string) (*exec.Cmd, error) {
 		}
 		candidates = append(candidates, filepath.Join(root, "Google", "Chrome", "Application", "chrome.exe"))
 	}
-	profile := filepath.Join(os.Getenv("LOCALAPPDATA"), "MurialesKitchenOps", "window-2") // new folder so a cached old icon is not reused
+	profile := filepath.Join(os.Getenv("LOCALAPPDATA"), "MurialesKitchenOps", profileName)
 	_ = os.MkdirAll(profile, 0o755)
 	for _, exe := range candidates {
 		if _, err := os.Stat(exe); err != nil {
@@ -53,7 +57,7 @@ func openFolder(path string) {
 
 func fatal(msg string) {
 	text, _ := syscall.UTF16PtrFromString(msg)
-	title, _ := syscall.UTF16PtrFromString("Muriale's SDS Book")
+	title, _ := syscall.UTF16PtrFromString("Muriale's Kitchen Operations")
 	syscall.NewLazyDLL("user32.dll").NewProc("MessageBoxW").Call(
 		0, uintptr(unsafe.Pointer(text)), uintptr(unsafe.Pointer(title)), 0x10)
 	os.Exit(1)
@@ -74,6 +78,8 @@ func freeSpace(path string) int64 {
 	return int64(free)
 }
 
+// openURL shows a web address (the MaintainX portal) in its own application
+// window with a separate profile, so the sign-in is remembered.
 func openURL(u string) {
-	_ = exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", u).Start()
+	_, _ = openAppWindow(u, "maintainx")
 }
