@@ -600,3 +600,49 @@ func TestMicrosoftFormImport(t *testing.T) {
 		t.Errorf("excel serial: %q", got)
 	}
 }
+
+func TestCorrectiveActionAndDailyReport(t *testing.T) {
+	e := newEnv(t)
+	if c, _ := e.post("/api/corrective", `{"identifiedBy":"JW","area":"Food Safety","priority":"P1 - Critical"}`); c != 400 {
+		t.Error("issue is required")
+	}
+	c, o := e.post("/api/corrective", `{"identifiedBy":"JW","area":"Food Safety","priority":"P1 - Critical","issue":"Walk-in at 47F","target":"2000-01-01"}`)
+	if c != 200 || o["saved"].(map[string]any)["id"] != "CA-0001" {
+		t.Fatalf("create: %v %v", c, o)
+	}
+	_, o = e.post("/api/corrective", `{"identifiedBy":"JW","area":"Sanitation","priority":"P3 - Routine","issue":"Drain"}`)
+	if o["saved"].(map[string]any)["id"] != "CA-0002" {
+		t.Error("ids count up")
+	}
+	if c, _ := e.post("/api/corrective", `{"id":"CA-0001","identifiedBy":"JW","area":"Food Safety","priority":"P1 - Critical","issue":"Walk-in at 47F","status":"Closed"}`); c != 400 {
+		t.Error("closing needs who and what was done")
+	}
+	c, o = e.post("/api/corrective", `{"id":"CA-0001","identifiedBy":"JW","area":"Food Safety","priority":"P1 - Critical","issue":"Walk-in at 47F","required":"Replaced door gasket","status":"Closed","closedBy":"MM"}`)
+	if c != 200 || len(o["forms"].([]any)) != 2 {
+		t.Fatalf("close: %v %v", c, o)
+	}
+	if o["saved"].(map[string]any)["closedDate"] == "" {
+		t.Error("closed date set")
+	}
+	if _, err := os.Stat(filepath.Join(e.s.caDir(), "CA-0001.html")); err != nil {
+		t.Error("form file not saved")
+	}
+	rep, _ := e.s.buildReport("ca-open", "")
+	if len(rep.Sections[0].Rows) != 1 {
+		t.Error("open report lists only open forms")
+	}
+	// daily temperature report
+	e.post("/api/temps/points", `{"name":"Cooler","kind":"Cold Holding","area":"Back Line"}`)
+	_, p := e.post("/api/temps", `{"by":"JW","readings":[]}`)
+	_ = p
+	day := time.Now().Format(dayFmt)
+	pts := e.s.tempPoints()
+	e.post("/api/temps", `{"by":"JW","readings":[{"pointId":"`+pts[0].ID+`","temp":47,"action":"Moved food"}]}`)
+	if c, o := e.post("/api/temp-reports", `{"date":"`+day+`"}`); c != 200 || o["file"] == "" {
+		t.Fatalf("save report: %v %v", c, o)
+	}
+	b, err := os.ReadFile(filepath.Join(e.s.tempReportsDir(), "Temperature Report "+day+".html"))
+	if err != nil || !strings.Contains(string(b), "Too Warm") || !strings.Contains(string(b), "Back Line") || !strings.Contains(string(b), "Manager Review") {
+		t.Errorf("report content: %v", err)
+	}
+}

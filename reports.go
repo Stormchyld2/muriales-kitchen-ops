@@ -53,6 +53,8 @@ var reportCatalog = []reportDef{
 	{"procedures", "Maintenance", "Maintenance Procedures", "How the department works: the steps, the review schedule and what each priority means.", false},
 	{"temps-week", "Food Safety", "Temperature Log: Last 7 Days", "Every temperature reading from the last week with its safe range and status.", false},
 	{"temps-bad", "Food Safety", "Out-of-Range Temperatures", "Readings outside the safe range in the last 30 days, with the corrective action taken.", false},
+	{"ca-open", "Corrective Actions", "Open Corrective Actions", "Actions not yet closed, with owner, target date and whether they are overdue.", false},
+	{"ca-log", "Corrective Actions", "Corrective Action Log", "Every corrective action form on file.", false},
 	{"pm-equipment", "Schedule", "Equipment PM Schedule", "Recurring equipment maintenance jobs, when each was last done and when it is next due.", false},
 	{"pm-cleaning", "Schedule", "Cleaning Schedule", "Daily, weekly, monthly and yearly cleaning tasks with last done and next due.", false},
 	{"pm-facility", "Schedule", "Grounds and Facility Schedule", "Building and grounds jobs with last done and next due.", false},
@@ -244,6 +246,8 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 			rows = append(rows, []string{at, v.Point, fmt.Sprintf("%g°F", v.Temp), v.Limit, v.Status, v.By, strings.TrimSpace(v.Notes + " " + v.Action)})
 		}
 		return &report{Title: title, Subtitle: today, Sections: []reportSection{{Note: "Safe ranges follow the FDA Food Code unless a different range was set for the point.", Cols: []string{"When", "Point", "Temperature", "Safe Range", "Status", "By", "Notes / Corrective Action"}, Rows: rows}}}, true
+	case "ca-open", "ca-log":
+		return s.caReport(id == "ca-open"), true
 	case "pm-equipment":
 		return &report{Title: "Equipment PM Schedule", Subtitle: today, Sections: []reportSection{{Cols: pmCols, Rows: pmRows("Equipment PM")}}}, true
 	case "pm-cleaning":

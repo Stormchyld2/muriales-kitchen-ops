@@ -306,11 +306,12 @@ const MODS = [
   {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["insp","PM Inspections"],["finds","Inspection Items"],["summary","Monthly Summary"],["procs","Procedures"]]},
   {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
   {k: "food", label: "Food Safety", icon: "list", subs: [["temps","Temperature Log"],["tpoints","Temperature Points"]]},
+  {k: "ca", label: "Corrective Actions", icon: "warn", subs: [["calog","Corrective Action Log"]]},
   {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
 ];
 const NAV_TOP = [["todo","list","To-Do List"],["reports","print","Reports"],["settings","gear","Settings"],["about","info","About"]];
 const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
-const SUB = {temps:"Temperature Log", tpoints:"Temperature Points", insp:"PM Inspection Sheets", procs:"Maintenance Procedures", reports:"Reports", finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
+const SUB = {calog:"Corrective Action Log", temps:"Temperature Log", tpoints:"Temperature Points", insp:"PM Inspection Sheets", procs:"Maintenance Procedures", reports:"Reports", finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
@@ -323,7 +324,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = oosBanner() + lockBanner() + ({temps: vTemps, tpoints: vTPoints, insp: vInsp, procs: vProcs, reports: vReports, finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = oosBanner() + lockBanner() + ({calog: vCA, temps: vTemps, tpoints: vTPoints, insp: vInsp, procs: vProcs, reports: vReports, finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -1241,13 +1242,17 @@ function oosClearAsk(id) {
 }
 
 /* ---------- temperature log ---------- */
-async function loadTemps(days) { state.tdays = days || state.tdays || 7; const from = ymd(new Date(Date.now() - (state.tdays - 1) * 864e5)); state.temps = await api("/api/temps?from=" + from); if (state.view === "temps" || state.view === "tpoints" || (state.view === "settings" && state.tab === "tempsheet")) render(); }
+const dayLong = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, {weekday: "short", year: "numeric", month: "short", day: "numeric"}); };
+const trOpen = (f, print) => window.open("/api/temp-reports/" + encodeURIComponent(f) + (print ? "?print=1" : ""), "_blank");
+async function loadTemps(days) { try { state.treports = (await api("/api/temp-reports")).reports; } catch (e) { state.treports = []; } state.tdays = days || state.tdays || 7; const from = ymd(new Date(Date.now() - (state.tdays - 1) * 864e5)); state.temps = await api("/api/temps?from=" + from); if (state.view === "temps" || state.view === "tpoints" || (state.view === "settings" && state.tab === "tempsheet")) render(); }
 const tStatus = s => s === "OK" ? "OK" : s;
 function vTemps() {
   const d = state.temps; if (!d) { loadTemps(); return `<p class="hint">Loading...</p>`; }
   const bad = state.tbad, rows = d.readings.filter(r => !bad || r.status === "Too Warm" || r.status === "Too Cold");
   const needs = r => (r.status === "Too Warm" || r.status === "Too Cold") && !(r.action || "").trim();
+  const isBad = r => r.status === "Too Warm" || r.status === "Too Cold";
   return `<div class="row"><button class="btn green big" data-act="temp-enter">${icon("plus")}Enter Temperatures</button>${d.url ? `<button class="btn" data-act="temp-sync">${icon("down")}Sync Google Form</button>` : ""}
+    <button class="btn" data-act="tr-save">${icon("print")}Save Daily Report</button><input type="date" class="field" id="trdate" value="${esc(state.trdate || ymd(new Date()))}" style="width:150px" title="Day for the daily report">
     <select class="field" id="tdays" style="width:170px">${[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"]].map(([n, l]) => `<option value="${n}" ${n === state.tdays ? "selected" : ""}>${l}</option>`).join("")}</select>
     <label style="font-weight:400"><input type="checkbox" data-act="temp-bad" ${bad ? "checked" : ""}> Out of range only</label>
     ${d.needAction ? `<span class="hint"><b>${d.needAction} reading${d.needAction === 1 ? "" : "s"} need a corrective action</b></span>` : ""}${d.syncedAt ? `<span class="hint">Form synced ${esc(d.syncedAt)}</span>` : ""}</div>
@@ -1255,7 +1260,8 @@ function vTemps() {
   <div class="tablewrap">${!rows.length ? `<div class="empty"><b>No readings</b>Use Enter Temperatures for a round of checks.</div>`
     : `<table class="plain"><thead><tr>${["When", "Point", "Temp", "Safe Range", "Status", "By", "Notes / Corrective Action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
       ${rows.map(r => `<tr><td>${esc(when12(r.at))}</td><td><b>${esc(r.point)}</b></td><td>${r.temp}°F</td><td>${esc(r.limit)}</td><td>${tag(tStatus(r.status))}</td><td>${esc(r.by)}</td><td>${esc([r.notes, r.action].filter(Boolean).join(" · "))}</td>
-        <td style="text-align:right">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button>` : ""}</td></tr>`).join("")}</tbody></table>`}</div>`;
+        <td style="text-align:right">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button>` : ""}</td></tr>`).join("")}</tbody></table>`}</div>
+  ${(state.treports || []).length ? `<h3>Saved Daily Reports</h3><div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Day</th><th class="nosort" style="width:auto">Saved</th><th class="nosort"></th></tr></thead><tbody>${state.treports.map(x => `<tr><td><b>${esc(dayLong(x.Date))}</b></td><td>${esc(x.Saved)}</td><td style="text-align:right"><button class="btn small" data-act="tr-open" data-f="${esc(x.File)}">Open</button> <button class="btn small" data-act="tr-print" data-f="${esc(x.File)}">${icon("print")}Print</button></td></tr>`).join("")}</tbody></table></div><p class="hint">Reports are also kept as files in the Temperature Reports folder beside the program.</p>` : ""}`;
 }
 function tempEnter() {
   const d = state.temps;
@@ -1326,6 +1332,36 @@ function tempMapDialog(pv, src) {
 }
 const readTMap = () => { const m = {}; document.querySelectorAll("[data-tm]").forEach(el => { m[el.dataset.tm] = el.multiple ? [...el.selectedOptions].map(o => o.value) : el.value; }); return m; };
 const syncMsg = o => { const r = o.result; return `${r.Added} new reading${r.Added === 1 ? "" : "s"} added${r.Skipped ? `, ${r.Skipped} already there` : ""}${r.NewPoints ? `, ${r.NewPoints} new point${r.NewPoints === 1 ? "" : "s"} created` : ""}${r.OutOfRange ? `. ${r.OutOfRange} out of range!` : "."}${r.Unreadable ? ` ${r.Unreadable} could not be read.` : ""}`; };
+
+/* ---------- corrective actions ---------- */
+async function loadCA() { state.ca = await api("/api/corrective"); if (state.view === "calog") render(); }
+function vCA() {
+  const d = state.ca; if (!d) { loadCA(); return `<p class="hint">Loading...</p>`; }
+  const f = state.caFilter || "open", over = x => x.status !== "Closed" && x.target && x.target < ymd(new Date());
+  const rows = d.forms.filter(x => f === "all" || (f === "open" ? x.status !== "Closed" : x.status === "Closed"));
+  return `<div class="row"><button class="btn green big" data-act="ca-new">${icon("plus")}New Corrective Action</button>
+    <select class="field" data-act="ca-filter" style="width:190px">${[["open", "Open and in progress"], ["closed", "Closed"], ["all", "All forms"]].map(([v, l]) => `<option value="${v}" ${v === f ? "selected" : ""}>${l}</option>`).join("")}</select>
+    <span class="hint">${d.forms.filter(x => x.status !== "Closed").length} open, ${d.forms.filter(over).length} overdue, ${d.forms.length} on file</span></div>
+  <div class="tablewrap">${!rows.length ? `<div class="empty"><b>No forms here</b>Use New Corrective Action for a significant food-safety, sanitation, safety, maintenance or training issue.</div>`
+    : `<table class="plain"><thead><tr>${["ID", "Date", "Area", "Priority", "Issue", "Owner", "Target", "Status"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
+    ${rows.map(x => `<tr><td><b>${esc(x.id)}</b></td><td>${esc(x.date)}</td><td>${esc(x.area)}</td><td>${esc(x.priority)}</td><td>${esc(x.issue.length > 90 ? x.issue.slice(0, 90) + "..." : x.issue)}</td><td>${esc(x.owner)}</td><td>${esc(x.target)}</td><td>${tag(over(x) ? "Overdue" : x.status)}</td>
+      <td style="text-align:right"><button class="btn small" data-act="ca-open" data-id="${esc(x.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="ca-print" data-id="${esc(x.id)}">${icon("print")}Print</button></td></tr>`).join("")}</tbody></table>`}</div>`;
+}
+async function caForm(id, pre) {
+  if (!state.ca) await loadCA();
+  const d = state.ca, f = Object.assign({date: ymd(new Date()), status: "Open", identifiedBy: who(), priority: "P3 - Routine"}, id ? d.forms.find(x => x.id === id) || {} : (pre || {}));
+  const t = (k, label, extra) => `<label>${label}</label><input class="field" data-ca="${k}" value="${esc(f[k] || "")}" ${extra || ""}>`, a = (k, label, rows) => `<label>${label}</label><textarea class="field" rows="${rows || 2}" data-ca="${k}">${esc(f[k] || "")}</textarea>`;
+  const sel = (k, label, opts) => `<label>${label}</label><select class="field" data-ca="${k}">${opts.map(o => `<option ${o === f[k] ? "selected" : ""}>${o}</option>`).join("")}</select>`;
+  const yn = (k, label) => sel(k, label, ["", "Yes", "No"]);
+  showModal(`<h2>${icon("warn")}${id ? esc(id) + " Corrective Action" : "New Corrective Action"}</h2><div class="body" id="cabody" data-id="${esc(id || "")}"><div class="fields">
+    <h3 style="margin:0">Issue Information</h3>${t("date", "Date identified:", 'type="date"')}${t("identifiedBy", 'Identified by: <span class="req">*</span>')}${sel("area", "Area / system:", d.areas)}${sel("priority", "Priority:", d.priorities)}
+    ${a("issue", 'Issue / finding: <span class="req">*</span>', 3)}${a("risk", "Immediate risk / impact:")}${a("immediate", "Immediate correction taken:")}
+    <h3 style="margin:8px 0 0">Root Cause / Required Action</h3>${a("rootCause", "Root cause / contributing factors:")}${a("required", "Required corrective action:", 3)}${t("owner", "Assigned owner:")}${t("target", "Target date:", 'type="date"')}
+    ${yn("training", "Training required?")}${yn("workOrder", "Work order / MaintainX needed?")}${yn("vendor", "Vendor needed?")}${yn("sop", "SOP / procedure change needed?")}${yn("followUpNeeded", "Follow-up inspection needed?")}${t("evidence", "Evidence / photo ref:")}
+    ${t("doneDate", "Action completed on:", 'type="date"')}${t("doneBy", "Completed by:")}${t("verifyDate", "Verification date:", 'type="date"')}${t("verifiedBy", "Verified by:")}${a("verifyResult", "Verification result:")}
+    <h3 style="margin:8px 0 0">Closure</h3>${sel("status", "Status:", d.statuses)}${t("closedBy", "Closed by (needed to close):")}${yn("repeat", "Repeat issue?")}${t("followUpDate", "Follow-up date:", 'type="date"')}${a("followUpResult", "Follow-up result:")}${a("notes", "Management notes:")}${a("related", "Related records:")}
+    </div></div><div class="foot"><button class="btn green big" data-act="ca-save">${icon("save")}Save Form</button>${id ? `<button class="btn big" data-act="ca-print" data-id="${esc(id)}">${icon("print")}Print</button>` : ""}<button class="btn big" data-act="close">Cancel</button></div>`);
+}
 
 async function loadInsp() { state.insp = await api("/api/inspections"); if (state.view === "insp") render(); }
 function vInsp() {
@@ -1557,7 +1593,7 @@ function assetDetail(id) {
 }
 
 /* ---------- calendar ---------- */
-const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i", "Inspection": "i", "Temperature": "i"};
+const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i", "Inspection": "i", "Temperature": "i", "Corrective Action": "i"};
 const GFILTERS = [["all", "All"], ["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Issues"]];
 const FFILTERS = [["all", "Any Frequency"], ["Daily", "Daily"], ["Weekly", "Weekly"], ["Monthly", "Monthly"], ["Quarterly / Semi-Annual", "Quarterly / Semi-Annual"], ["Yearly", "Yearly"], ["As Needed", "As Needed"]];
 state.cal = {mode: "month", ref: new Date(), group: "all", freq: "all", events: null, key: ""};
@@ -1606,7 +1642,7 @@ function dayDialog(d) {
 
 /* ---------- master to-do list ---------- */
 const TODO_PERIODS = [["today", "Today"], ["tomorrow", "Tomorrow"], ["week", "This Week"], ["nextweek", "Next Week"], ["next7", "Next 7 Days"], ["month", "This Month"], ["nextmonth", "Next Month"], ["next30", "Next 30 Days"], ["overdue", "Overdue Only"], ["custom", "Pick Dates..."]];
-const TODO_SOURCES = [["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Open maintenance issues"], ["Inspection", "Inspection items"], ["Temperature", "Temperatures needing action"], ["Equipment", "Repair or replace decisions"], ["SDS", "SDS follow-ups"], ["Other", "My own items"]];
+const TODO_SOURCES = [["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Open maintenance issues"], ["Inspection", "Inspection items"], ["Temperature", "Temperatures needing action"], ["Corrective Action", "Corrective action forms"], ["Equipment", "Repair or replace decisions"], ["SDS", "SDS follow-ups"], ["Other", "My own items"]];
 state.todo = null; state.todoPick = {period: "today", sources: TODO_SOURCES.map(x => x[0]), from: "", to: ""};
 function todoRange(p, a, b) {
   const t = new Date(), day = new Date(t.getFullYear(), t.getMonth(), t.getDate());
@@ -1736,7 +1772,7 @@ const ACT = {
     <div class="foot"><button class="btn green big" data-act="todo-done-go" data-id="${el.dataset.id}">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`); },
   async "todo-done-go"(el) { const by = $("#todoby").value; rememberWho(by); await api("/api/maint/todos/" + el.dataset.id + "/done", {method: "POST", body: JSON.stringify({by})}); closeModal(); await refreshTodo(); toast("Done."); },
   async "todo-act"(el) { const k = el.dataset.kind, id = el.dataset.id; if (!state.maint) state.maint = await api("/api/maint");
-    if (k === "temp") return tempAction(id); if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
+    if (k === "ca") return caForm(id); if (k === "temp") return tempAction(id); if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
     if (k === "product") { state.id = id; state.view = "detail"; render(); } },
   "cal-nav"(el) { const c = state.cal, n = +el.dataset.d; if (n === 0) c.ref = new Date(); else if (c.mode === "week") c.ref = addDays(c.ref, 7 * n); else c.ref = new Date(c.ref.getFullYear(), c.ref.getMonth() + n, 1); c.events = null; render(); },
   "cal-mode"(el) { state.cal.mode = el.dataset.v; state.cal.events = null; render(); },
@@ -1783,6 +1819,23 @@ const ACT = {
   async "tm-go"() { const m = readTMap(), src = state.tmpSrc;
     try { if (src.sheet) { state.temps = await api("/api/temps/settings", {method: "POST", body: JSON.stringify({map: m})}); const o = await api("/api/temps/sync", {method: "POST"}); state.temps = o.data; closeModal(); render(); toast(syncMsg(o)); }
       else { const o = await api("/api/temps/import", {method: "POST", body: JSON.stringify({csv: src.csv, map: m, save: true})}); state.temps = o.data; closeModal(); render(); toast(syncMsg(o)); } } catch (e) { toast(e.message, true); } },
+  async "tr-save"() { const date = $("#trdate").value; if (!date) return toast("Choose a day for the report.", true); state.trdate = date;
+    try { const o = await api("/api/temp-reports", {method: "POST", body: JSON.stringify({date})}); await loadTemps();
+      showModal(`<h2>${icon("print")}Daily Temperature Report Saved</h2><div class="body"><p>The report for <b>${esc(dayLong(date))}</b> is saved. Save it again later in the day to include newer readings.</p><p class="hint">Saved in the Temperature Reports folder beside the program.</p></div>
+        <div class="foot"><button class="btn green big" data-act="tr-print" data-f="${esc(o.file)}">${icon("print")}Print Now</button><button class="btn big" data-act="tr-open" data-f="${esc(o.file)}">Open</button><button class="btn big" data-act="close">Print Later</button></div>`); } catch (e) { toast(e.message, true); } },
+  "tr-open"(el) { trOpen(el.dataset.f); },
+  "tr-print"(el) { trOpen(el.dataset.f, true); },
+  "temp-ca"(el) { const r = state.temps.readings.find(x => x.id === el.dataset.id); if (!r) return;
+    caForm("", {area: "Food Safety", priority: "P2 - Urgent", issue: `${r.point} read ${r.temp}°F (${r.status.toLowerCase()}; safe range ${r.limit}) on ${when12(r.at)}.`, immediate: r.action || "", related: `Temperature log, ${r.point}, ${when12(r.at)}`}); },
+  "ca-new"() { caForm(""); },
+  "ca-open"(el) { caForm(el.dataset.id); },
+  "ca-print"(el) { window.open("/api/corrective/" + encodeURIComponent(el.dataset.id) + "/print?print=1", "_blank"); },
+  "ca-filter"(el) { state.caFilter = el.value; render(); },
+  async "ca-save"() { const v = grab("[data-ca]", "ca"); v.id = $("#cabody").dataset.id;
+    if (!v.identifiedBy.trim()) return toast("Enter who identified the issue.", true); rememberWho(v.identifiedBy);
+    try { const o = await api("/api/corrective", {method: "POST", body: JSON.stringify(v)}); state.ca = o; closeModal(); if (state.view === "todo") await refreshTodo(); render();
+      showModal(`<h2>${icon("save")}${esc(o.saved.id)} Saved</h2><div class="body"><p>The form is in the Corrective Action Log. Do you want to print it?</p><p class="hint">A copy is also kept in the Corrective Action Forms folder beside the program.</p></div>
+        <div class="foot"><button class="btn green big" data-act="ca-print" data-id="${esc(o.saved.id)}">${icon("print")}Print Now</button><button class="btn big" data-act="close">Print Later</button></div>`); } catch (e) { toast(e.message, true); } },
   "tpt-edit"(el) { tptForm(el.dataset.id); },
   async "tpt-starter"() { state.temps = await api("/api/temps/points/starter", {method: "POST"}); render(); toast("Units loaded. Existing ones were kept."); },
   async "tpt-save"() { const v = grab("[data-tp]", "tp"); const num = x => x === "" ? null : parseFloat(x); v.min = num(v.min); v.max = num(v.max); v.id = $("#tpbody").dataset.id;
@@ -1962,6 +2015,8 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   const t = e.target;
   if (t.id === "tdays") loadTemps(+t.value);
+  else if (t.id === "trdate") state.trdate = t.value;
+  else if (t.dataset.act === "ca-filter") ACT["ca-filter"](t);
   else if (t.id === "tempcsv" && t.files.length) { const f = t.files[0]; t.value = ""; (async () => { try { let csv; if (/\.xlsx$/i.test(f.name)) csv = (await api("/api/temps/xlsx", {method: "POST", body: await f.arrayBuffer()})).csv; else csv = await f.text(); tempMapDialog(await api("/api/temps/import/preview", {method: "POST", body: JSON.stringify({csv})}), {csv}); } catch (e) { toast(e.message, true); } })(); }
   else if (t.dataset.repMonth !== undefined) state.repMonth = t.value;
   else if (t.id === "sumMonth") { if (t.value) loadSummary(t.value); }
