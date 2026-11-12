@@ -1,6 +1,6 @@
 # Muriale's Kitchen Operations
 
-A Windows program for Muriale's Italian Kitchen. Like the SDS Manager it was built from, it is a single program with no installer and no outside server: it keeps plain files in a **Kitchen Data** folder next to the program (or in a folder chosen in Settings, such as a shared 365 or network drive).
+A Windows program for Muriale's Italian Kitchen. Like the SDS Manager it was built from, it is a single program with no installer and no outside server: it keeps plain files next to the program: an **SDS Data** folder (exactly the folder the SDS Manager uses, so PDFs can be dropped into it) and a separate **Maintenance Data** folder. The SDS Data location can be changed in Settings, for example to a shared 365 or network drive; Maintenance Data always sits beside it.
 
 ## Modules
 
@@ -14,14 +14,15 @@ Who may use it is decided by who can open the folder: only people with access to
 ## Files
 
 ```
-Kitchen Data/
-  library.json  sheets/  removed/        SDS library
-  maintenance/
-    equipment.json  issues.json  settings.json   (each with a .bak copy)
-    Maintenance Log.md                   readable copy, rewritten by the program
+SDS Data/                      the SDS library, same as the SDS Manager
+  library.json  sheets/  removed/
+Maintenance Data/
+  equipment.json  issues.json  settings.json   (each with a .bak copy)
+  Maintenance Log.md           readable copy, rewritten by the program
+Kitchen Backups/               SDS zips, plus a Maintenance zip with each backup
 ```
 
-Backups (Settings, Backup & Restore) zip the whole folder, maintenance files included. The "someone is editing" lock covers everything.
+Backup & Restore in Settings restores the SDS library only. Each backup also saves a Maintenance zip; to go back to one, close the program and copy its files over Maintenance Data. The "someone is editing" lock covers both modules.
 
 ## Building
 

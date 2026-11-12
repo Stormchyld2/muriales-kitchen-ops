@@ -3,7 +3,7 @@
 //
 // The program runs a private server that only this computer can reach and
 // shows its screens in an application window. All sheets are stored as normal
-// PDF files in the "Kitchen Data" folder next to the program.
+// PDF files in the "SDS Data" folder next to the program.
 package main
 
 import (
@@ -245,7 +245,7 @@ type settings struct {
 func (s *store) relocate(target string) (bool, error) {
 	target = filepath.Clean(strings.TrimSpace(strings.Trim(strings.TrimSpace(target), `"`)))
 	if !filepath.IsAbs(target) {
-		return false, errors.New("enter the full path of the folder, for example C:\\Users\\Name\\OneDrive\\Kitchen Data")
+		return false, errors.New("enter the full path of the folder, for example C:\\Users\\Name\\OneDrive\\SDS Data")
 	}
 	if strings.EqualFold(target, filepath.Clean(s.dir)) {
 		return false, errors.New("the library is already in that folder")
@@ -314,6 +314,17 @@ func (s *store) relocate(target string) (bool, error) {
 		if err != nil {
 			cleanup()
 			return false, fmt.Errorf("the library could not be copied, so nothing was changed: %v", err)
+		}
+	}
+	// The maintenance files live beside the library folder; bring them along.
+	if oldM, newM := s.maintDir(), filepath.Join(filepath.Dir(target), "Maintenance Data"); !strings.EqualFold(oldM, newM) && !exists(filepath.Join(newM, "equipment.json")) {
+		if entries, err := os.ReadDir(oldM); err == nil {
+			_ = os.MkdirAll(newM, 0o755)
+			for _, e := range entries {
+				if !e.IsDir() && !strings.HasSuffix(e.Name(), ".tmp") {
+					_ = copyFile(filepath.Join(oldM, e.Name()), filepath.Join(newM, e.Name()))
+				}
+			}
 		}
 	}
 	// Open the library in its new home before committing to it.
@@ -1347,6 +1358,14 @@ func (s *store) routes(mux *http.ServeMux) {
 			fail(w, 500, "the backup could not be written: "+err.Error())
 			return
 		}
+		if exists(s.maintDir()) {
+			// The maintenance files are small; keep a copy of them with every backup.
+			mname := filepath.Join(dir, "Maintenance Backup "+time.Now().Format("2006-01-02 150405")+".zip")
+			if err := zipDir(s.maintDir(), mname); err != nil {
+				os.Remove(mname)
+				log.Printf("maintenance backup failed: %v", err)
+			}
+		}
 		openFolder(dir)
 		writeJSON(w, 200, map[string]string{"file": name})
 	})
@@ -1436,7 +1455,7 @@ func dataDir() (dir, cfg string, chosen bool) {
 			return st.DataFolder, cfg, true
 		}
 	}
-	return filepath.Join(filepath.Dir(exe), "Kitchen Data"), cfg, false
+	return filepath.Join(filepath.Dir(exe), "SDS Data"), cfg, false
 }
 
 func main() {

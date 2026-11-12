@@ -35,7 +35,7 @@ jobs:
       - name: Start the program and check it responds
         shell: pwsh
         run: |
-          $env:SDSBOOK_DATA = Join-Path $env:RUNNER_TEMP "Kitchen Data"
+          $env:SDSBOOK_DATA = Join-Path $env:RUNNER_TEMP "SDS Data"
           $app = Start-Process -FilePath .\MurialesKitchenOps.exe -PassThru
           $base = "http://127.0.0.1:47715"
           $ping = $null

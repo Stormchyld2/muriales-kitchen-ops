@@ -1,8 +1,8 @@
 package main
 
 // Equipment and maintenance. Everything is kept as plain files in the
-// "maintenance" folder inside the data folder, so it is backed up, shared and
-// locked together with the rest of the library:
+// "Maintenance Data" folder beside the "SDS Data" folder. It is shared and locked
+// together with the library, and every backup also saves a copy of it:
 //
 //	equipment.json   the equipment list
 //	issues.json      reported problems with their history
@@ -72,7 +72,9 @@ var (
 	issueStatuses = []string{"Open", "Work Order Submitted", "In Progress", "Repaired", "Verified", "Closed"}
 )
 
-func (s *store) maintDir() string { return filepath.Join(s.dir, "maintenance") }
+// The maintenance files sit beside the "SDS Data" folder, so SDS Data holds
+// only the library and its PDFs.
+func (s *store) maintDir() string { return filepath.Join(filepath.Dir(s.dir), "Maintenance Data") }
 
 func (s *store) readMaint(name string, v any) {
 	if b, err := os.ReadFile(filepath.Join(s.maintDir(), name)); err == nil {
