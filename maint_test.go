@@ -220,3 +220,39 @@ func TestMasterTodo(t *testing.T) {
 		t.Errorf("overdue items should come first, got %v", first)
 	}
 }
+
+func TestScheduleImportAndAsNeeded(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.post("/api/maint/import-schedule", `{"pastDates":"today"}`)
+	if o["added"].(float64) < 80 {
+		t.Fatalf("expected the workbook jobs to load: %v", o)
+	}
+	_, o = e.post("/api/maint/import-schedule", `{"pastDates":"today"}`)
+	if o["added"].(float64) != 0 || o["skipped"].(float64) < 80 {
+		t.Errorf("a second import must not add duplicates: %v", o)
+	}
+	_, out := e.get2("/api/maint")
+	today := time.Now().Format(dayFmt)
+	asNeeded, past := 0, 0
+	for _, x := range out["pm"].([]any) {
+		v := x.(map[string]any)
+		if v["unit"] == "asneeded" {
+			asNeeded++
+			if v["state"] != "As Needed" || v["nextDue"] != "" {
+				t.Errorf("as-needed jobs are not scheduled: %v", v)
+			}
+		} else if v["lastDone"] == "" && v["firstDue"].(string) < today {
+			past++
+		}
+	}
+	if asNeeded < 2 || past != 0 {
+		t.Errorf("asNeeded=%d pastDue=%d", asNeeded, past)
+	}
+	_, cal := e.get2("/api/maint/calendar?from=" + today + "&to=" + today)
+	if n := len(cal["events"].([]any)); n == 0 || n > 45 {
+		t.Errorf("today should have the daily jobs but not everything: %d events", n)
+	}
+	if c, _ := e.post("/api/maint/pm", `{"group":"Cleaning","name":"Mop buckets","unit":"asneeded"}`); c != 200 {
+		t.Error("an as-needed job needs no interval or date")
+	}
+}

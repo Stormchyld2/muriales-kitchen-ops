@@ -125,14 +125,14 @@ dt{font-weight:600}dd{margin:0}
 .plain td{cursor:default}.plain tbody tr{cursor:default}.plain tbody tr:hover{background:none}
 aside .navhead{margin:14px 10px 4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.6}
 aside .wo{margin:14px 10px 0;width:calc(100% - 20px);font-size:13px;padding:8px 6px;justify-content:center;white-space:nowrap}
+.status.Operational,.status.Verified,.status.Closed,.status.OK,.status.Done{background:#58b368}
+.status.Attention,.status.Open,.status.Medium,.status.Watch,.status.Soon,.status.P3{background:#e7b416}
+.status.Service,.status.Urgent,.status.High,.status.Overdue,.status.Replacing,.status.P1,.status.P2{background:#e0525e}
+.status.Low,.status.P4,.status.Needed{background:#9aa0a8}
 .status{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700;color:#111;background:#9aa0a8}
-.status.Operational,.status.Verified,.status.Closed{background:#58b368}.status.Needs\ Attention,.status.Open,.status.Medium{background:#e7b416}
-.status.Out\ of\ Service,.status.Urgent,.status.High{background:#e0525e}.status.Low{background:#9aa0a8}
 .hist{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px}.hist div{margin-bottom:6px}
 aside .nav.mod{font-weight:700}.nav .grow{flex:1}.nav .chev{opacity:.6;font-size:12px}
 .nav.sub{padding:7px 12px 7px 42px;font-size:14px;margin:1px 0}.navsep{height:1px;background:var(--line);margin:10px 8px}
-.status.Overdue{background:#e0525e}.status.Due\ Soon{background:#e7b416}.status.OK{background:#58b368}
-.status.Watch{background:#e7b416}.status.Consider\ Replacing{background:#e0525e}
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chip{background:#2d3036;border:1px solid var(--line);color:var(--text);border-radius:14px;padding:4px 12px;cursor:pointer;font-size:13px}.chip.on{background:#2f6fb7;border-color:#2f6fb7;color:#fff}
 .calbar{margin-bottom:8px}.calbar .grow{flex:1}
 .calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line)}
@@ -321,7 +321,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = lockBanner() + ({todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: vPM, equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = lockBanner() + ({todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -508,14 +508,14 @@ function vCats() {
   </div>`;
 }
 
-const TABS = [["maintainx","MaintainX"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
+const TABS = [["maintainx","MaintainX"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
 function loadTab() { if (state.view !== "settings") return; const f = {maintainx: loadMaint, backup: loadBackups, recovery: loadRecovery, diagnostics: loadDiag}[state.tab]; if (f) f(); }
 async function loadBackups() { state.backups = await api("/api/backups"); if (state.view === "settings") render(); }
 async function loadRecovery() { state.rec = await api("/api/recovery"); if (state.view === "settings" && state.tab === "recovery") render(); }
 async function loadDiag() { state.diag = await api("/api/diagnostics"); if (state.view === "settings" && state.tab === "diagnostics") render(); }
 function vSettings() {
   const tabs = `<div class="tabs">${TABS.map(([k, l]) => `<button class="${state.tab === k ? "on" : ""}" data-act="tab" data-t="${k}">${l}</button>`).join("")}</div>`;
-  const body = ({storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag}[state.tab] || tStorage)();
+  const body = ({storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, workbook: tWorkbook, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag}[state.tab] || tStorage)();
   return tabs + body;
 }
 function tAreas() {
@@ -1163,6 +1163,15 @@ function vIssues() {
       ${list.map(p => `<tr data-act="issue-open" data-id="${p.id}"><td>${p.number}</td><td>${esc(eqName(p.equipmentId))}</td><td>${esc(p.title)}</td><td>${tag(p.priority)}</td><td>${tag(p.status)}</td><td>${fmtDate(p.reportedAt)}</td><td>${esc(p.workOrder)}</td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
+function tWorkbook() {
+  return `<div class="panel" style="max-width:760px"><h3 style="margin-top:0">Load the PM schedule from your workbooks</h3>
+    <p>Loads the 74 recurring jobs from your Maintenance PM Calendar (PM-001 to PM-074) and the 14 daily and weekly grounds, facility and cleaning tasks from the Quick Look (WG-003 to WG-016). Each keeps its job ID, asset ID, who does it, how often, and its notes. Kitchen, dish and refrigeration jobs go to Equipment PM, building and grounds jobs to Grounds / Facility, and cleaning jobs to Cleaning. You can change any job's group later.</p>
+    <p>The due dates in the workbook are from early September. Choose what to do with dates that have already gone by:</p>
+    <label style="display:block;font-weight:400;margin:4px 0"><input type="radio" name="past" value="today" checked> Move them forward to their next turn on the same schedule (recommended). A monthly job due Sept 1 starts Dec 1 and a weekly Thursday job starts next Thursday, so nothing starts out overdue and the work stays spread out.</label>
+    <label style="display:block;font-weight:400;margin:4px 0"><input type="radio" name="past" value="keep"> Keep the dates from the workbook. Jobs past due will show as overdue.</label>
+    <p class="hint">Jobs already loaded are skipped, so running this again does not create duplicates.</p>
+    <div class="row"><button class="btn green big" data-act="wb-load">${icon("down")}Load the Jobs</button></div></div>`;
+}
 function tMaintainx() {
   const m = state.maint; if (!m) { loadMaint(); return `<p class="hint">Loading...</p>`; }
   return `<div class="panel" style="max-width:760px"><h3 style="margin-top:0">MaintainX</h3>
@@ -1198,7 +1207,8 @@ function issueForm(eqId) {
     <label>Equipment: <span class="req">*</span></label><select class="field" data-is="equipmentId"><option value="">Choose...</option>${state.maint.equipment.map(e => `<option value="${e.id}" ${e.id === eqId ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select>
     <label>What is wrong: <span class="req">*</span></label><input class="field" data-is="title" placeholder="Short, e.g. Not holding temperature">
     <label>Details:</label><textarea class="field" rows="3" data-is="description" placeholder="What happened, when it started, anything tried"></textarea>
-    <label>Priority:</label><select class="field" data-is="priority">${state.maint.priorities.map(x => `<option ${x === "Medium" ? "selected" : ""}>${x}</option>`).join("")}</select>
+    <label>Priority:</label><select class="field" data-is="priority">${state.maint.priorities.map(x => `<option ${x === "P3 - Routine" ? "selected" : ""}>${x}</option>`).join("")}</select>
+    <label></label><div class="hint" id="priohint">${esc(state.maint.priorityUse["P3 - Routine"])}</div>
     <label>Out of service:</label><label style="font-weight:400"><input type="checkbox" data-is="outOfService"> Do not use this equipment until it is fixed</label>
     <label>Your name: <span class="req">*</span></label><input class="field" data-is="reportedBy" value="${esc(who())}"></div></div>
     <div class="foot"><button class="btn wine big" data-act="issue-save">${icon("save")}Save Issue</button><button class="btn big" data-act="close">Cancel</button></div>`);
@@ -1223,7 +1233,7 @@ const GROUPS = {
   "Cleaning": {title: "cleaning task", add: "Add Cleaning Task", empty: "Add the daily, weekly, monthly and yearly cleaning your kitchen does, and they will show on the calendar. A manager marks each one done.", tpl: "CLEAN_TEMPLATES"},
   "Grounds / Facility": {title: "grounds and facility job", add: "Add Facility Job", empty: "Add recurring building and grounds jobs such as pest control, gutters, parking lot and roof checks.", tpl: "FAC_TEMPLATES"},
 };
-const FREQS = ["Daily", "Weekly", "Monthly", "Quarterly / Semi-Annual", "Yearly"];
+const FREQS = ["Daily", "Weekly", "Monthly", "Quarterly / Semi-Annual", "Yearly", "As Needed"];
 function vPM(group) {
   const m = state.maint; if (!m) { loadMaint().then(render); return `<p class="hint">Loading...</p>`; }
   const g = GROUPS[group], list = (m.pm || []).filter(t => t.group === group).sort((a, b) => FREQS.indexOf(a.bucket) - FREQS.indexOf(b.bucket) || a.nextDue.localeCompare(b.nextDue));
@@ -1232,22 +1242,27 @@ function vPM(group) {
   return `<div class="row"><button class="btn green big" data-act="pm-edit" data-id="" data-group="${esc(group)}">${icon("plus")}${g.add}</button>
     <span class="hint">${list.length} recurring job${list.length === 1 ? "" : "s"}${late ? ` · <b>${late} overdue</b>` : ""}</span></div>
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>Nothing here yet</b>${g.empty}</div>`
-    : `<table class="plain"><thead><tr>${[eq ? "Equipment" : "Area", "Job", "Repeats", "Last Done", "Next Due", "Status"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:230px"></th></tr></thead><tbody>
-      ${list.map(t => `<tr><td>${esc(eq ? eqName(t.equipmentId) : [t.area, t.equipmentId ? eqName(t.equipmentId) : ""].filter(Boolean).join(" · "))}</td><td><b>${esc(t.name)}</b>${t.notes ? `<div class="hint">${esc(t.notes)}</div>` : ""}</td><td>${t.bucket}<div class="hint">every ${t.every} ${t.every === 1 ? t.unit.replace(/s$/, "") : t.unit}</div></td><td>${fmtDate(t.lastDone) || '<span class="hint">Never</span>'}</td><td>${fmtDate(t.nextDue)}<div class="hint">${when(t)}</div></td><td>${tag(t.state)}</td>
+    : `<table class="plain"><thead><tr>${["Equipment / Area", "Job", "Repeats", "Last Done", "Next Due", "Status"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:230px"></th></tr></thead><tbody>
+      ${list.map(t => `<tr><td>${esc([t.equipmentId ? eqName(t.equipmentId) : "", t.area].filter(Boolean).join(" · "))}${t.assetCode ? `<div class="hint">${esc(t.assetCode)}</div>` : ""}</td><td><b>${esc(t.name)}</b>${t.performer ? `<div class="hint">${esc(t.performer)}</div>` : ""}${t.notes ? `<div class="hint">${esc(t.notes)}</div>` : ""}</td><td>${esc(t.freqLabel || t.bucket)}<div class="hint">${t.unit === "asneeded" ? "not scheduled" : `every ${t.every} ${t.every === 1 ? t.unit.replace(/s$/, "") : t.unit}`}${t.code ? " · " + esc(t.code) : ""}</div></td><td>${fmtDate(t.lastDone) || '<span class="hint">Never</span>'}</td><td>${t.nextDue ? `${fmtDate(t.nextDue)}<div class="hint">${when(t)}</div>` : '<span class="hint">As needed</span>'}</td><td>${tag(t.state)}</td>
         <td style="text-align:right;white-space:nowrap"><button class="btn small green" data-act="pm-done-ask" data-id="${t.id}">${icon("save")}Mark Done</button> <button class="btn small" data-act="pm-edit" data-id="${t.id}" data-group="${esc(group)}">${icon("edit")}Edit</button></td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
 function pmForm(id, group) {
   const t = (state.maint.pm || []).find(x => x.id === id) || {every: 1, unit: "weeks", firstDue: ymd(new Date()), group};
-  group = t.group; const eq = group === "Equipment PM", tpls = window[GROUPS[group].tpl] || [];
+  group = t.group; const tpls = window[GROUPS[group].tpl] || [];
   state.tpls = tpls;
-  showModal(`<h2>${icon("wrench")}${id ? "Edit" : "Add"} ${GROUPS[group].title[0].toUpperCase() + GROUPS[group].title.slice(1)}</h2><div class="body" id="pmbody" data-id="${esc(id)}" data-group="${esc(group)}"><div class="fields">
+  showModal(`<h2>${icon("wrench")}${id ? "Edit" : "Add"} ${GROUPS[group].title[0].toUpperCase() + GROUPS[group].title.slice(1)}</h2><div class="body" id="pmbody" data-id="${esc(id)}"><div class="fields">
     ${id ? "" : `<label>Start from:</label><select class="field" id="pmtpl"><option value="">A common job (optional)...</option>${tpls.map((x, i) => `<option value="${i}">${x[0]}</option>`).join("")}</select>`}
-    <label>${eq ? "Equipment:" : "Equipment (optional):"} ${eq ? '<span class="req">*</span>' : ""}</label><select class="field" data-pm="equipmentId"><option value="">${eq ? "Choose..." : "None"}</option>${state.maint.equipment.map(e => `<option value="${e.id}" ${e.id === t.equipmentId ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select>
-    ${eq ? "" : `<label>Area:</label><div><input class="field" data-pm="area" list="pmareas" value="${esc(t.area || "")}" placeholder="Where it is done, e.g. Prep Area, Parking Lot"><datalist id="pmareas">${(state.lib.locations || []).map(l => `<option value="${esc(l)}">`).join("")}</datalist></div>`}
+    <label>Group:</label><select class="field" data-pm="group" style="width:230px">${Object.keys(GROUPS).map(g => `<option ${g === group ? "selected" : ""}>${g}</option>`).join("")}</select>
     <label>Job: <span class="req">*</span></label><input class="field" data-pm="name" value="${esc(t.name || "")}" placeholder="What needs doing">
-    <label>Repeats every:</label><div class="row"><input class="field" type="number" min="1" data-pm="every" value="${t.every}" style="width:80px"><select class="field" data-pm="unit" style="width:120px">${["days", "weeks", "months", "years"].map(u => `<option ${u === t.unit ? "selected" : ""}>${u}</option>`).join("")}</select></div>
-    <label>${t.lastDone ? "First due (before it was first done):" : "First due:"}</label><input type="date" class="field" data-pm="firstDue" value="${esc(t.firstDue)}" style="width:190px">
+    <label>Equipment:</label><select class="field" data-pm="equipmentId"><option value="">None / not listed</option>${state.maint.equipment.map(e => `<option value="${e.id}" ${e.id === t.equipmentId ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select>
+    <label>Equipment / Area:</label><div><input class="field" data-pm="area" list="pmareas" value="${esc(t.area || "")}" placeholder="What it is on or where it is done"><datalist id="pmareas">${(state.lib.locations || []).map(l => `<option value="${esc(l)}">`).join("")}</datalist></div>
+    <label>Repeats every:</label><div class="row"><input class="field" type="number" min="1" data-pm="every" value="${t.every || 1}" style="width:80px"><select class="field" data-pm="unit" style="width:140px">${[["days", "days"], ["weeks", "weeks"], ["months", "months"], ["years", "years"], ["asneeded", "As needed (not scheduled)"]].map(([u, l]) => `<option value="${u}" ${u === t.unit ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    <label>Frequency as written:</label><input class="field" data-pm="freqLabel" value="${esc(t.freqLabel || "")}" placeholder="Optional, e.g. 3x a week, Seasonal">
+    <label>${t.lastDone ? "First due (before it was first done):" : "First due:"}</label><input type="date" class="field" data-pm="firstDue" value="${esc(t.firstDue || "")}" style="width:190px">
+    <label>Done by:</label><input class="field" data-pm="performer" value="${esc(t.performer || "")}" placeholder="Person, role or vendor">
+    <label>Job ID:</label><div class="row"><input class="field" data-pm="code" value="${esc(t.code || "")}" placeholder="e.g. PM-001" style="width:120px"><label style="font-weight:400">Asset ID</label><input class="field" data-pm="assetCode" value="${esc(t.assetCode || "")}" placeholder="e.g. K-001" style="width:120px"></div>
+    <label>MaintainX PM ID:</label><input class="field" data-pm="maintainxId" value="${esc(t.maintainxId || "")}" placeholder="Optional">
     <label>Notes:</label><textarea class="field" rows="2" data-pm="notes" placeholder="How it is done, who does it">${esc(t.notes || "")}</textarea></div>
     ${id ? `<div class="hist">${[...(t.history || [])].reverse().map(h => `<div><b>${fmtDate(h.at)}</b> ${esc(h.by)}: ${esc(h.text)}</div>`).join("") || "<div class='hint'>Not done yet.</div>"}</div>` : ""}</div>
     <div class="foot"><button class="btn green big" data-act="pm-save">${icon("save")}Save</button>${id ? `<button class="btn wine big" data-act="pm-delete" data-id="${esc(id)}">${icon("trash")}Delete</button>` : ""}<button class="btn big" data-act="close">Cancel</button></div>`);
@@ -1297,7 +1312,7 @@ function assetDetail(id) {
 /* ---------- calendar ---------- */
 const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i"};
 const GFILTERS = [["all", "All"], ["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Issues"]];
-const FFILTERS = [["all", "Any Frequency"], ["Daily", "Daily"], ["Weekly", "Weekly"], ["Monthly", "Monthly"], ["Quarterly / Semi-Annual", "Quarterly / Semi-Annual"], ["Yearly", "Yearly"]];
+const FFILTERS = [["all", "Any Frequency"], ["Daily", "Daily"], ["Weekly", "Weekly"], ["Monthly", "Monthly"], ["Quarterly / Semi-Annual", "Quarterly / Semi-Annual"], ["Yearly", "Yearly"], ["As Needed", "As Needed"]];
 state.cal = {mode: "month", ref: new Date(), group: "all", freq: "all", events: null, key: ""};
 function calRange() {
   const c = state.cal, ref = new Date(c.ref.getFullYear(), c.ref.getMonth(), c.mode === "month" || c.mode === "list" ? 1 : c.ref.getDate());
@@ -1385,6 +1400,8 @@ const grab = (sel, attr) => Object.fromEntries([...document.querySelectorAll(sel
 const maintDone = async (data, msg) => { state.maint = data; closeModal(); if (state.view === "cal") await loadCal(true); if (state.view === "todo") await refreshTodo(); render(); if (msg) toast(msg); };
 
 const ACT = {
+  async "wb-load"() { const past = (document.querySelector("[name=past]:checked") || {}).value || "today"; const o = await api("/api/maint/import-schedule", {method: "POST", body: JSON.stringify({pastDates: past})});
+    state.maint = await api("/api/maint"); state.cal.events = null; render(); toast(o.added ? `Loaded ${o.added} jobs${o.skipped ? ` (${o.skipped} were already there)` : ""}. See them under Schedule.` : `Nothing new to load. ${o.skipped} jobs were already there.`); },
   "todo-new"() { todoDialog(); },
   "todo-period"(el) { state.todoPick.period = el.dataset.v; state.todoPick.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src); todoDialog(); },
   async "todo-go"() { const k = state.todoPick; k.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src);
@@ -1420,7 +1437,7 @@ const ACT = {
   async "svc-delete"(el, e) { e && e.preventDefault(); const id = $("#asbody").dataset.id; state.maint = await api("/api/maint/service/" + el.dataset.id, {method: "DELETE"}); render(); assetDetail(id); },
   async "repct-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({replacePercent: parseInt($("#repct").value, 10) || 0})}); render(); toast("Saved."); },
   "pm-edit"(el) { pmForm(el.dataset.id, el.dataset.group); },
-  async "pm-save"() { const v = grab("[data-pm]", "pm"); v.id = $("#pmbody").dataset.id; v.group = $("#pmbody").dataset.group; v.every = parseInt(v.every, 10) || 0; await maintDone(await api("/api/maint/pm", {method: "POST", body: JSON.stringify(v)}), "Job saved."); },
+  async "pm-save"() { const v = grab("[data-pm]", "pm"); v.id = $("#pmbody").dataset.id; v.every = parseInt(v.every, 10) || 0; await maintDone(await api("/api/maint/pm", {method: "POST", body: JSON.stringify(v)}), "Job saved."); },
   async "pm-delete"(el) { await maintDone(await api("/api/maint/pm/" + el.dataset.id, {method: "DELETE"}), "Job deleted."); },
   "pm-done-ask"(el) { pmDone(el.dataset.id); },
   async "pm-done-go"() { const v = grab("[data-pd]", "pd"); v.cost = parseFloat(v.cost) || 0; rememberWho(v.by); await maintDone(await api("/api/maint/pm/" + $("#pdbody").dataset.id + "/done", {method: "POST", body: JSON.stringify(v)}), "Recorded. The next due date has been updated."); },
@@ -1581,6 +1598,7 @@ document.addEventListener("change", e => {
   const t = e.target;
   if (t.id === "cat") { state.cat = t.value; state.focusQ = false; render(); }
   else if (t.id === "file") takeFile(t.files[0]);
+  else if (t.dataset.is === "priority") $("#priohint").textContent = state.maint.priorityUse[t.value] || "";
   else if (t.id === "pmtpl" && t.value !== "") { const x = state.tpls[+t.value]; const set = (k, v) => { const el = document.querySelector(`[data-pm=${k}]`); if (el) el.value = v; }; set("name", x[0]); set("every", x[1]); set("unit", x[2]); set("notes", x[3]); }
   else if (t.id === "importpdfs" && t.files.length) { const files = [...t.files]; t.value = "";
     upload("/api/import/pdfs", "pdf", files).then(async r => { await reload(); const sk = r.skipped || [];

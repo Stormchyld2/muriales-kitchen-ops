@@ -78,7 +78,7 @@ func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 				detail += " · needs a manager to verify it is ready for food production"
 			}
 			state := "Open"
-			if p.Priority == "Urgent" || p.Priority == "High" {
+			if strings.HasPrefix(p.Priority, "P1") || strings.HasPrefix(p.Priority, "P2") {
 				state = "Overdue"
 			}
 			out = append(out, todoItem{Group: "Issue", Title: "#" + itoa(p.Number) + " " + p.Title, Detail: detail, Due: p.ReportedAt[:10], State: state, Kind: "issue", ID: p.ID})

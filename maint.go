@@ -77,12 +77,34 @@ const defaultPortal = "https://app.getmaintainx.com"
 
 var (
 	equipStatuses = []string{"Operational", "Needs Attention", "Out of Service"}
-	priorities    = []string{"Low", "Medium", "High", "Urgent"}
+	priorities    = []string{"P1 - Critical", "P2 - Urgent", "P3 - Routine", "P4 - Improvement"}
+	// priorityUse is the guidance shown beside each priority.
+	priorityUse = map[string]string{
+		"P1 - Critical":    "Immediate safety, food-safety, refrigeration, fire, or critical operational issue. Address immediately and escalate.",
+		"P2 - Urgent":      "Major operational impact but the restaurant can continue operating. Address as soon as practical.",
+		"P3 - Routine":     "Repair is needed but there is limited operational impact. Schedule and track to completion.",
+		"P4 - Improvement": "Cosmetic, convenience, or planned improvement. Complete as time and budget allow.",
+	}
 	issueStatuses = []string{"Open", "Work Order Submitted", "In Progress", "Repaired", "Verified", "Closed"}
 )
 
 // The maintenance files sit beside the "SDS Data" folder, so SDS Data holds
 // only the library and its PDFs.
+// fixPriority maps the earlier names (Urgent, High, Medium, Low) to the P1 to P4 scale.
+func fixPriority(p string) string {
+	switch p {
+	case "Urgent":
+		return priorities[0]
+	case "High":
+		return priorities[1]
+	case "Medium":
+		return priorities[2]
+	case "Low":
+		return priorities[3]
+	}
+	return p
+}
+
 func (s *store) maintDir() string { return filepath.Join(filepath.Dir(s.dir), "Maintenance Data") }
 
 func (s *store) readMaint(name string, v any) {
@@ -121,6 +143,9 @@ func (s *store) loadMaint() (eq []*Equipment, is []*Issue, st maintSettings) {
 	eq, is = []*Equipment{}, []*Issue{}
 	s.readMaint("equipment.json", &eq)
 	s.readMaint("issues.json", &is)
+	for _, p := range is {
+		p.Priority = fixPriority(p.Priority)
+	}
 	s.readMaint("settings.json", &st)
 	if st.PortalURL == "" {
 		st.PortalURL = defaultPortal
@@ -186,7 +211,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		eq, is, st := s.loadMaint()
 		sort.Slice(eq, func(i, j int) bool { return strings.ToLower(eq[i].Name) < strings.ToLower(eq[j].Name) })
 		writeJSON(w, 200, map[string]any{"equipment": eq, "issues": is, "portalUrl": st.PortalURL,
-			"pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses})
+			"priorityUse": priorityUse, "pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses})
 	}
 	save := func(w http.ResponseWriter, eq []*Equipment, is []*Issue) bool {
 		if err := s.writeMaint("equipment.json", eq); err != nil {
@@ -204,6 +229,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.pmRoutes(mux, reply)
 	s.serviceRoutes(mux, reply)
 	s.calendarRoutes(mux)
+	s.importRoutes(mux)
 	s.todoRoutes(mux)
 	mux.HandleFunc("GET /api/maint", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
@@ -304,8 +330,8 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		p := in2.Issue
 		p.ID, p.Status, p.ReportedAt = newID(), "Open", stamp()
 		p.Title, p.ReportedBy = strings.TrimSpace(p.Title), strings.TrimSpace(p.ReportedBy)
-		if !oneOf(priorities, p.Priority) {
-			p.Priority = "Medium"
+		if p.Priority = fixPriority(p.Priority); !oneOf(priorities, p.Priority) {
+			p.Priority = priorities[2]
 		}
 		for _, x := range is {
 			if x.Number >= p.Number {

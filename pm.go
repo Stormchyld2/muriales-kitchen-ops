@@ -22,9 +22,14 @@ type PMTask struct {
 	Group       string  `json:"group"`
 	Area        string  `json:"area"`
 	EquipmentID string  `json:"equipmentId"`
+	Code        string  `json:"code"`        // the job's ID in the maintenance workbook, e.g. PM-001
+	AssetCode   string  `json:"assetCode"`   // the asset ID in the workbook, e.g. K-001
+	Performer   string  `json:"performer"`   // who does it: a person, role or vendor
+	FreqLabel   string  `json:"freqLabel"`   // the frequency as originally written, e.g. "3x a week"
+	MaintainXID string  `json:"maintainxId"` // optional reference in MaintainX
 	Name        string  `json:"name"`
 	Every       int     `json:"every"`
-	Unit        string  `json:"unit"`     // days, weeks, months, years
+	Unit        string  `json:"unit"`     // days, weeks, months, years, or asneeded (not scheduled)
 	FirstDue    string  `json:"firstDue"` // used until the first time it is done
 	LastDone    string  `json:"lastDone"`
 	Notes       string  `json:"notes"`
@@ -42,6 +47,9 @@ type pmView struct {
 const dayFmt = "2006-01-02"
 
 func (t *PMTask) next() string {
+	if t.Unit == "asneeded" {
+		return ""
+	}
 	if t.LastDone == "" {
 		return t.FirstDue
 	}
@@ -77,6 +85,9 @@ func (t *PMTask) step(d time.Time) time.Time {
 
 // bucket names how often a task repeats, for the calendar's views.
 func (t *PMTask) bucket() string {
+	if t.Unit == "asneeded" {
+		return "As Needed"
+	}
 	days := t.Every
 	switch t.Unit {
 	case "weeks":
@@ -109,7 +120,9 @@ func (s *store) pmList() []pmView {
 			t.Group = "Equipment PM"
 		}
 		v := pmView{PMTask: *t, NextDue: t.next(), State: "OK", Bucket: t.bucket()}
-		if d, err := time.Parse(dayFmt, v.NextDue); err == nil {
+		if t.Unit == "asneeded" {
+			v.State = "As Needed"
+		} else if d, err := time.Parse(dayFmt, v.NextDue); err == nil {
 			v.Days = int(d.Sub(today).Hours() / 24)
 			if v.Days < 0 {
 				v.State = "Overdue"
@@ -119,7 +132,12 @@ func (s *store) pmList() []pmView {
 		}
 		out = append(out, v)
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].NextDue < out[j].NextDue })
+	sort.SliceStable(out, func(i, j int) bool {
+		if (out[i].NextDue == "") != (out[j].NextDue == "") {
+			return out[j].NextDue == ""
+		}
+		return out[i].NextDue < out[j].NextDue
+	})
 	return out
 }
 
@@ -135,7 +153,9 @@ func (s *store) pmRoutes(mux *http.ServeMux, reply func(http.ResponseWriter)) {
 		}
 		return true
 	}
-	unitOK := func(u string) bool { return u == "days" || u == "weeks" || u == "months" || u == "years" }
+	unitOK := func(u string) bool {
+		return u == "days" || u == "weeks" || u == "months" || u == "years" || u == "asneeded"
+	}
 
 	mux.HandleFunc("POST /api/maint/pm", func(w http.ResponseWriter, r *http.Request) {
 		var in2 PMTask
@@ -150,15 +170,17 @@ func (s *store) pmRoutes(mux *http.ServeMux, reply func(http.ResponseWriter)) {
 			fail(w, 400, "Enter what needs doing.")
 			return
 		}
-		if in2.Group == "Equipment PM" && in2.EquipmentID == "" {
-			fail(w, 400, "Choose the equipment.")
+		if in2.Group == "Equipment PM" && in2.EquipmentID == "" && strings.TrimSpace(in2.Area) == "" {
+			fail(w, 400, "Choose the equipment, or say what it is on.")
 			return
 		}
-		if in2.Every < 1 || !unitOK(in2.Unit) {
+		if !unitOK(in2.Unit) || (in2.Unit != "asneeded" && in2.Every < 1) {
 			fail(w, 400, "Enter how often it is done, for example every 3 months.")
 			return
 		}
-		if _, err := time.Parse(dayFmt, in2.FirstDue); err != nil {
+		if in2.Unit == "asneeded" {
+			in2.Every, in2.FirstDue = 0, ""
+		} else if _, err := time.Parse(dayFmt, in2.FirstDue); err != nil {
 			fail(w, 400, "Enter the date it is first due.")
 			return
 		}
@@ -232,5 +254,79 @@ func (s *store) pmRoutes(mux *http.ServeMux, reply func(http.ResponseWriter)) {
 			}
 		}
 		fail(w, 404, "That job was not found.")
+	})
+}
+
+// importSchedule loads the recurring jobs from the maintenance workbooks. They
+// ship inside the program (starter/schedule_import.json). Jobs already
+// loaded, matched by their workbook ID, are left alone, so it is safe to run
+// twice. pastDates says what to do with due dates that have already gone by:
+// by default they move forward along the job's own schedule; "keep" keeps the
+// date from the workbook.
+func (s *store) importRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("POST /api/maint/import-schedule", func(w http.ResponseWriter, r *http.Request) {
+		var in2 struct {
+			PastDates string `json:"pastDates"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&in2)
+		raw, err := starterFiles.ReadFile("starter/schedule_import.json")
+		if err != nil {
+			fail(w, 500, "The schedule file is missing from this build.")
+			return
+		}
+		var src struct {
+			Tasks []PMTask `json:"tasks"`
+		}
+		if json.Unmarshal(raw, &src) != nil {
+			fail(w, 500, "The schedule file could not be read.")
+			return
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		var have []*PMTask
+		s.readMaint("pm.json", &have)
+		known := map[string]bool{}
+		for _, t := range have {
+			if t.Code != "" {
+				known[t.Code] = true
+			}
+		}
+		today := time.Now().Format(dayFmt)
+		added, skipped := 0, 0
+		for i := range src.Tasks {
+			t := src.Tasks[i]
+			if known[t.Code] {
+				skipped++
+				continue
+			}
+			t.ID, t.History, t.LastDone = newID(), []Entry{}, ""
+			switch {
+			case t.Unit == "asneeded":
+				t.FirstDue = ""
+			case t.FirstDue == "":
+				t.FirstDue = today
+			case in2.PastDates != "keep" && t.FirstDue < today:
+				// Move a date that has gone by forward along the job's own
+				// schedule, so monthly and quarterly jobs stay spread out
+				// instead of all landing on today.
+				d, err := time.Parse(dayFmt, t.FirstDue)
+				for n := 0; err == nil && d.Format(dayFmt) < today && n < 5000; n++ {
+					d = t.step(d)
+				}
+				if err != nil {
+					d = time.Now()
+				}
+				t.FirstDue = d.Format(dayFmt)
+			}
+			have = append(have, &t)
+			added++
+		}
+		if added > 0 {
+			if err := s.writeMaint("pm.json", have); err != nil {
+				s.maintFail(w, err)
+				return
+			}
+		}
+		writeJSON(w, 200, map[string]int{"added": added, "skipped": skipped})
 	})
 }
