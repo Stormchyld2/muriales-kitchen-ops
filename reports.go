@@ -49,6 +49,7 @@ var reportCatalog = []reportDef{
 	{"oos", "Maintenance", "Out-of-Service History", "Every time equipment was taken out of service: why, who, and who cleared it.", false},
 	{"findings", "Maintenance", "Inspection Items", "Things found on walk-throughs that still need doing.", false},
 	{"summary", "Maintenance", "Monthly Maintenance Summary", "The month at a glance for management, with the notes saved for that month.", true},
+	{"procedures", "Maintenance", "Maintenance Procedures", "How the department works: the steps, the review schedule and what each priority means.", false},
 	{"pm-equipment", "Schedule", "Equipment PM Schedule", "Recurring equipment maintenance jobs, when each was last done and when it is next due.", false},
 	{"pm-cleaning", "Schedule", "Cleaning Schedule", "Daily, weekly, monthly and yearly cleaning tasks with last done and next due.", false},
 	{"pm-facility", "Schedule", "Grounds and Facility Schedule", "Building and grounds jobs with last done and next due.", false},
@@ -200,6 +201,25 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 		n := m["notes"].(summaryNotes)
 		r.Sections = append(r.Sections, reportSection{Heading: "Management notes", Cols: []string{"", ""}, Rows: [][]string{{"Highlights", n.Highlights}, {"Concerns", n.Concerns}, {"Actions for next month", n.Actions}}})
 		return r, true
+	case "procedures":
+		p := s.loadProcedures()
+		rep := &report{Title: "Maintenance Procedures", Subtitle: today}
+		steps := [][]string{}
+		for _, x := range p.Steps {
+			steps = append(steps, []string{x.Title, x.Text})
+		}
+		rep.Sections = append(rep.Sections, reportSection{Heading: "Procedures", Cols: []string{"Step", "What happens"}, Rows: steps})
+		pr := [][]string{}
+		for _, x := range p.Priorities {
+			pr = append(pr, []string{x.Priority, x.Use, x.Response})
+		}
+		rep.Sections = append(rep.Sections, reportSection{Heading: "Priorities", Cols: []string{"Priority", "Use", "Response"}, Rows: pr})
+		cd := [][]string{}
+		for _, x := range p.Cadence {
+			cd = append(cd, []string{x.When, x.Task, x.Owner, x.Backup})
+		}
+		rep.Sections = append(rep.Sections, reportSection{Heading: "Review schedule", Cols: []string{"When", "Review", "Owner", "Backup"}, Rows: cd})
+		return rep, true
 	case "pm-equipment":
 		return &report{Title: "Equipment PM Schedule", Subtitle: today, Sections: []reportSection{{Cols: pmCols, Rows: pmRows("Equipment PM")}}}, true
 	case "pm-cleaning":

@@ -1,0 +1,98 @@
+{
+ "cadence": [
+  {
+   "when": "Daily",
+   "task": "Review open MaintainX work orders and critical equipment issues",
+   "owner": "Kitchen Operations Manager",
+   "backup": "Brian backup"
+  },
+  {
+   "when": "Weekly",
+   "task": "Review due/overdue PMs; confirm dish, smart oven, grounds and weekly equipment PMs",
+   "owner": "Kitchen Operations Manager",
+   "backup": "Brian backup"
+  },
+  {
+   "when": "Monthly",
+   "task": "Reconcile MaintainX with PM calendar; complete filters, gaskets, safety checks and facility inspections",
+   "owner": "Kitchen Operations Manager",
+   "backup": ""
+  },
+  {
+   "when": "Quarterly",
+   "task": "Coordinate HVAC/refrigeration coils, belts, vendor PMs, grease/fire/hood items and repeat-failure review",
+   "owner": "Kitchen Operations Manager / Brian",
+   "backup": ""
+  },
+  {
+   "when": "Seasonal / Annual",
+   "task": "HVAC seasonal startups, grounds/winterization, regulatory/vendor annual inspections and asset review",
+   "owner": "Kitchen Operations Manager",
+   "backup": ""
+  }
+ ],
+ "steps": [
+  {
+   "title": "1. Asset Setup",
+   "text": "Every major piece of kitchen, refrigeration, dish, facility, grounds, and service equipment that needs tracked gets a permanent Asset ID. I match that Asset ID to the MaintainX asset whenever possible."
+  },
+  {
+   "title": "2. PM Setup",
+   "text": "Each asset that requires preventive maintenance gets a PM frequency, task description, responsible person or vendor, and due date. MaintainX handles the live reminders. The PM Master Schedule is the backup."
+  },
+  {
+   "title": "3. Completing a PM",
+   "text": "The person completing the PM checks the full task list, records anything found, and does not mark the PM complete until the required work is finished or a separate work order has been created for anything that still needs attention."
+  },
+  {
+   "title": "4. Problems Found During PM",
+   "text": "If a PM inspection finds a repair issue, I create a work order in MaintainX and assign the correct priority. I record major repairs, costs, downtime, and repeat problems in the Work Order History sheet."
+  },
+  {
+   "title": "5. Safety / Food Safety Issues",
+   "text": "Anything that could affect employee safety, fire safety, food safety, refrigeration temperatures, sanitation, or normal restaurant operation gets escalated immediately. The equipment is taken out of service when necessary."
+  },
+  {
+   "title": "6. Vendor Service",
+   "text": "When outside service is required, I record the vendor, service date, work performed, parts replaced, cost when available, and any follow-up recommendation. Important service paperwork should be kept with the maintenance records."
+  },
+  {
+   "title": "7. PM Backup Review",
+   "text": "I update the spreadsheet backup from MaintainX on a regular basis. At minimum, I check completed PMs, upcoming due dates, overdue items, major repairs, and open work orders."
+  },
+  {
+   "title": "8. Repeat Failures",
+   "text": "If the same asset keeps breaking down, I flag it for review instead of treating every work order as a separate problem. Repair frequency, downtime, and total cost should be considered before more money is put into the equipment."
+  },
+  {
+   "title": "9. Equipment Replacement",
+   "text": "When repair cost, reliability, food-safety risk, or downtime becomes unreasonable, I document the issue and bring a replacement recommendation to management with the repair history to back it up."
+  },
+  {
+   "title": "10. Record Retention",
+   "text": "MaintainX remains the live record. The workbook is the backup and long-term reference. Major invoices, service reports, warranty information, and inspection records should be kept where they can be matched back to the Asset ID."
+  }
+ ],
+ "priorities": [
+  {
+   "priority": "P1 - Critical",
+   "use": "Immediate safety, food-safety, refrigeration, fire, or critical operational issue.",
+   "response": "Address immediately and escalate."
+  },
+  {
+   "priority": "P2 - Urgent",
+   "use": "Major operational impact but the restaurant can continue operating.",
+   "response": "Address as soon as practical."
+  },
+  {
+   "priority": "P3 - Routine",
+   "use": "Repair is needed but there is limited operational impact.",
+   "response": "Schedule and track to completion."
+  },
+  {
+   "priority": "P4 - Improvement",
+   "use": "Cosmetic, convenience, or planned improvement.",
+   "response": "Complete as time and budget allow."
+  }
+ ]
+}

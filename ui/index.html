@@ -301,15 +301,15 @@ function visible() {
 }
 
 /* ---------- screens ---------- */
-const MAINT_VIEWS = ["finds", "equip", "assets", "issues", "pm", "cal", "clean", "fac", "summary"];
+const MAINT_VIEWS = ["procs", "finds", "equip", "assets", "issues", "pm", "cal", "clean", "fac", "summary"];
 const MODS = [
-  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["finds","Inspection Items"],["summary","Monthly Summary"]]},
+  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["finds","Inspection Items"],["summary","Monthly Summary"],["procs","Procedures"]]},
   {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
   {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
 ];
 const NAV_TOP = [["todo","list","To-Do List"],["reports","print","Reports"],["settings","gear","Settings"],["about","info","About"]];
 const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
-const SUB = {reports:"Reports", finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
+const SUB = {procs:"Maintenance Procedures", reports:"Reports", finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
@@ -322,7 +322,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = oosBanner() + lockBanner() + ({reports: vReports, finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = oosBanner() + lockBanner() + ({procs: vProcs, reports: vReports, finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -1239,6 +1239,16 @@ function oosClearAsk(id) {
     <div class="foot"><button class="btn green big" data-act="oos-clear-go">${icon("save")}Clear for Service</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
 
+function vProcs() {
+  const p = state.procs; if (!p) { api("/api/procedures").then(r => { state.procs = r; render(); }); return `<p class="hint">Loading...</p>`; }
+  return `<div class="row noprint"><button class="btn" data-act="rep-view" data-id="procedures">${icon("print")}Print</button><span class="hint">The wording is in Maintenance Data\\procedures.json if you want to change it.</span></div>
+  <h3>How we handle maintenance</h3>${p.steps.map(s => `<div class="panel" style="margin:8px 0"><b>${esc(s.title)}</b><div>${esc(s.text)}</div></div>`).join("")}
+  <h3>Priorities</h3><div style="border:1px solid var(--line);border-radius:8px"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Priority</th><th class="nosort" style="width:auto">Use</th><th class="nosort" style="width:auto">Response</th></tr></thead><tbody>
+    ${p.priorities.map(x => `<tr><td><b>${esc(x.priority)}</b></td><td>${esc(x.use)}</td><td>${esc(x.response)}</td></tr>`).join("")}</tbody></table></div>
+  <h3>Review schedule</h3><div style="border:1px solid var(--line);border-radius:8px"><table class="plain"><thead><tr><th class="nosort" style="width:auto">When</th><th class="nosort" style="width:auto">Review</th><th class="nosort" style="width:auto">Owner</th></tr></thead><tbody>
+    ${p.cadence.map(x => `<tr><td><b>${esc(x.when)}</b></td><td>${esc(x.task)}</td><td>${esc(x.owner)}${x.backup ? `<div class="hint">${esc(x.backup)}</div>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
 function vReports() {
   if (!state.reports) { api("/api/reports").then(r => { state.reports = r.reports; render(); }); return `<p class="hint">Loading...</p>`; }
   const mods = [...new Set(state.reports.map(r => r.module))], month = state.repMonth || ymd(new Date()).slice(0, 7);
@@ -1628,7 +1638,7 @@ const ACT = {
   async "issue-save"() { const v = grab("[data-is]", "is"); rememberWho(v.reportedBy); await maintDone(await api("/api/maint/issues", {method: "POST", body: JSON.stringify(v)}), "Issue saved. Use Submit Work Order to enter it in MaintainX."); if (v.outOfService) tagDetails(v.equipmentId); },
   "issue-open"(el) { issueDetail(el.dataset.id); },
   async "issue-update"() { const v = grab("[data-id-f]", "idF"); for (const k of ["parts", "labor", "downtime"]) v[k] = parseFloat(v[k]) || 0; rememberWho(v.by); await maintDone(await api("/api/maint/issues/" + $("#idbody").dataset.id, {method: "PUT", body: JSON.stringify(v)}), "Issue updated."); },
-  "rep-view"(el) { window.open("/api/reports/" + el.dataset.id + repQuery(el.dataset.id), "_blank"); },
+  "rep-view"(el) { window.open("/api/reports/" + el.dataset.id + (state.reports ? repQuery(el.dataset.id) : ""), "_blank"); },
   "rep-email"(el) { repEmail(el.dataset.id); },
   async "rep-email-go"() { const v = grab("[data-re]", "re"), b = $("#rebody"); if (!v.to.trim()) return toast("Enter who to send it to.", true);
     try { localStorage.setItem("repTo", v.to); } catch (e) {}

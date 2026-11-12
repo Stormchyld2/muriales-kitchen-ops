@@ -452,3 +452,14 @@ func TestOutOfServiceTag(t *testing.T) {
 		t.Error("path traversal must be refused")
 	}
 }
+
+func TestProcedures(t *testing.T) {
+	e := newEnv(t)
+	_, p := e.get2("/api/procedures")
+	if len(p["steps"].([]any)) != 10 || len(p["priorities"].([]any)) != 4 || len(p["cadence"].([]any)) != 5 {
+		t.Fatalf("procedures not loaded: %v", p)
+	}
+	if _, err := os.Stat(filepath.Join(e.s.maintDir(), "procedures.json")); err != nil {
+		t.Error("procedures should be copied into Maintenance Data")
+	}
+}
