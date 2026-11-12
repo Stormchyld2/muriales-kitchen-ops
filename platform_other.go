@@ -24,3 +24,12 @@ func fatal(msg string) {
 func freeSpace(string) int64 { return -1 }
 
 func openURL(u string) { fmt.Println("open url", u) }
+
+func htmlToPDF(src, dst string) error { return os.ErrNotExist }
+
+func openOutlookDraft(to []string, subject, body, attach string) error {
+	fmt.Println("outlook draft", to, subject, attach)
+	return nil
+}
+
+func openMailto(to []string, subject, body string) { fmt.Println("mailto", to, subject) }

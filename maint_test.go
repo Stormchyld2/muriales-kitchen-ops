@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -372,5 +373,43 @@ func TestOutOfServiceWorkflow(t *testing.T) {
 	_, out = e.post("/api/maint/issues", `{"equipmentId":"`+id+`","title":"Burner out","reportedBy":"M","outOfService":true}`)
 	if st(out) != "Out of Service" || len(out["oosLog"].([]any)) != 2 {
 		t.Errorf("issue should start a hold: %v", out["oosLog"])
+	}
+}
+
+func TestReports(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/maint/equipment", `{"name":"Walk-in <1>","type":"Cooler"}`)
+	_, cat := e.get2("/api/reports")
+	rs := cat["reports"].([]any)
+	if len(rs) < 10 {
+		t.Fatalf("catalog too small: %d", len(rs))
+	}
+	for _, x := range rs {
+		id := x.(map[string]any)["id"].(string)
+		req := httptest.NewRequest("GET", "/api/reports/"+id+"?month="+time.Now().Format("2006-01"), nil)
+		rec := httptest.NewRecorder()
+		e.h.ServeHTTP(rec, req)
+		if rec.Code != 200 || !strings.Contains(rec.Body.String(), "Muriale") {
+			t.Errorf("report %s failed: %d", id, rec.Code)
+		}
+		if id == "equipment" && (strings.Contains(rec.Body.String(), "<1>") || !strings.Contains(rec.Body.String(), "Walk-in &lt;1&gt;")) {
+			t.Error("report must escape text")
+		}
+	}
+	if c, _ := e.get2("/api/reports/nope"); c != 404 {
+		t.Error("unknown report should be 404")
+	}
+	if c, _ := e.post("/api/reports/email", `{"id":"equipment","to":"not an address"}`); c != 400 {
+		t.Error("bad address should be refused")
+	}
+	if c, _ := e.post("/api/reports/email", `{"id":"equipment","to":""}`); c != 400 {
+		t.Error("an address is required")
+	}
+	c, out := e.post("/api/reports/email", `{"id":"equipment","to":"chef@example.com; gm@example.com","message":"Please review"}`)
+	if c != 200 || out["method"] != "outlook" {
+		t.Fatalf("email draft failed: %v %v", c, out)
+	}
+	if _, err := os.Stat(filepath.Join(e.s.reportsDir(), fmt.Sprint(out["file"]))); err != nil {
+		t.Errorf("report file not saved: %v", err)
 	}
 }

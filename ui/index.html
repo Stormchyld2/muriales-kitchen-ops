@@ -307,9 +307,9 @@ const MODS = [
   {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
   {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
 ];
-const NAV_TOP = [["todo","list","To-Do List"],["settings","gear","Settings"],["about","info","About"]];
+const NAV_TOP = [["todo","list","To-Do List"],["reports","print","Reports"],["settings","gear","Settings"],["about","info","About"]];
 const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
-const SUB = {finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
+const SUB = {reports:"Reports", finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
@@ -322,7 +322,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = oosBanner() + lockBanner() + ({finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = oosBanner() + lockBanner() + ({reports: vReports, finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -1182,6 +1182,27 @@ function oosClearAsk(id) {
     <div class="foot"><button class="btn green big" data-act="oos-clear-go">${icon("save")}Clear for Service</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
 
+function vReports() {
+  if (!state.reports) { api("/api/reports").then(r => { state.reports = r.reports; render(); }); return `<p class="hint">Loading...</p>`; }
+  const mods = [...new Set(state.reports.map(r => r.module))], month = state.repMonth || ymd(new Date()).slice(0, 7);
+  return `<p class="hint" style="margin-top:0">Every report the program can produce, by module. <b>View</b> opens it in its own window to print. <b>Email</b> opens a message in Outlook with the report attached. You read it and press Send yourself; the program never sends anything.</p>` +
+    mods.map(m => `<h3 style="margin:18px 0 6px">${esc(m)}</h3><div style="border:1px solid var(--line);border-radius:8px"><table class="plain"><tbody>
+      ${state.reports.filter(r => r.module === m).map(r => `<tr><td style="width:34%"><b>${esc(r.title)}</b></td><td class="hint">${esc(r.about)}</td>
+        <td style="white-space:nowrap;text-align:right">${r.month ? `<input type="month" class="field" data-rep-month value="${month}" style="width:150px;display:inline-block"> ` : ""}<button class="btn small" data-act="rep-view" data-id="${r.id}">${icon("print")}View</button> <button class="btn small green" data-act="rep-email" data-id="${r.id}">${icon("ext")}Email</button></td></tr>`).join("")}
+    </tbody></table></div>`).join("");
+}
+const repQuery = id => { const r = state.reports.find(x => x.id === id); return r && r.month ? "?month=" + (document.querySelector("[data-rep-month]") || {value: state.repMonth || ymd(new Date()).slice(0, 7)}).value : ""; };
+function repEmail(id) {
+  const r = state.reports.find(x => x.id === id), month = repQuery(id);
+  let last = ""; try { last = localStorage.getItem("repTo") || ""; } catch (e) {}
+  showModal(`<h2>${icon("ext")}Email: ${esc(r.title)}</h2><div class="body" id="rebody" data-id="${id}" data-month="${esc(month.replace("?month=", ""))}"><div class="fields">
+    <label>To: <span class="req">*</span></label><input class="field" data-re="to" value="${esc(last)}" placeholder="manager@example.com; another@example.com">
+    <label>Subject:</label><input class="field" data-re="subject" placeholder="${esc(r.title)}">
+    <label>Message:</label><textarea class="field" rows="4" data-re="message" placeholder="Optional note to go above the report"></textarea></div>
+    <p class="hint">This opens a new message in Outlook with the report attached as a PDF (or a web page if a PDF could not be made). Check it, then press Send in Outlook.</p></div>
+    <div class="foot"><button class="btn green big" data-act="rep-email-go">${icon("ext")}Open in Outlook</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
+
 function vIssues() {
   const m = state.maint; if (!m) { loadMaint().then(render); return `<p class="hint">Loading...</p>`; }
   const all = state.showAll, list = [...m.issues].reverse().filter(p => all || (p.status !== "Verified" && p.status !== "Closed"));
@@ -1550,6 +1571,12 @@ const ACT = {
   async "issue-save"() { const v = grab("[data-is]", "is"); rememberWho(v.reportedBy); await maintDone(await api("/api/maint/issues", {method: "POST", body: JSON.stringify(v)}), "Issue saved. Use Submit Work Order to enter it in MaintainX."); },
   "issue-open"(el) { issueDetail(el.dataset.id); },
   async "issue-update"() { const v = grab("[data-id-f]", "idF"); for (const k of ["parts", "labor", "downtime"]) v[k] = parseFloat(v[k]) || 0; rememberWho(v.by); await maintDone(await api("/api/maint/issues/" + $("#idbody").dataset.id, {method: "PUT", body: JSON.stringify(v)}), "Issue updated."); },
+  "rep-view"(el) { window.open("/api/reports/" + el.dataset.id + repQuery(el.dataset.id), "_blank"); },
+  "rep-email"(el) { repEmail(el.dataset.id); },
+  async "rep-email-go"() { const v = grab("[data-re]", "re"), b = $("#rebody"); if (!v.to.trim()) return toast("Enter who to send it to.", true);
+    try { localStorage.setItem("repTo", v.to); } catch (e) {}
+    const o = await api("/api/reports/email", {method: "POST", body: JSON.stringify({...v, id: b.dataset.id, month: b.dataset.month})}); closeModal();
+    toast(o.method === "outlook" ? "The message is open in Outlook with the report attached. Press Send there." : "Outlook could not be opened for you. A new message is open; attach the report from the folder that opened.", o.method !== "outlook"); },
   "oos-ask"(el) { oosAsk(el.dataset.id); },
   "oos-clear-ask"(el) { oosClearAsk(el.dataset.id); },
   async "oos-go"() { const v = grab("[data-oos]", "oos"); rememberWho(v.by); await maintDone(await api("/api/maint/equipment/" + $("#oosbody").dataset.id + "/out-of-service", {method: "POST", body: JSON.stringify(v)}), "Out of service. The alert shows on every screen."); },
@@ -1710,7 +1737,8 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   const t = e.target;
-  if (t.id === "sumMonth") { if (t.value) loadSummary(t.value); }
+  if (t.dataset.repMonth !== undefined) state.repMonth = t.value;
+  else if (t.id === "sumMonth") { if (t.value) loadSummary(t.value); }
   else if (t.id === "cat") { state.cat = t.value; state.focusQ = false; render(); }
   else if (t.id === "file") takeFile(t.files[0]);
   else if (t.dataset.is === "priority") $("#priohint").textContent = state.maint.priorityUse[t.value] || "";
