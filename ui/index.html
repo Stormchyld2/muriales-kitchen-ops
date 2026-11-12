@@ -550,14 +550,14 @@ function tCleanup() {
     <p class="hint">Replace swaps in a newer PDF from the manufacturer and keeps the old one. Remove takes a discontinued product out of the library and the printed book.</p>
     ${live.length ? `<table class="plain">${head("SDS Date")}<tbody>
       ${live.map(p => `<tr><td>${esc(p.name)}${p.missing ? '<span class="tag red">PDF missing</span>' : ""}</td><td>${esc(p.manufacturer)}</td><td>${esc(p.category)}</td><td>${sdsDate(p)}</td>
-        <td style="text-align:right;white-space:nowrap"><button class="btn small" data-act="replace" data-id="${p.id}">${icon("swap")}Replace</button> <button class="btn small wine" data-act="remove" data-id="${p.id}">${icon("trash")}Remove</button></td></tr>`).join("")}
+        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="replace" data-id="${p.id}">${icon("swap")}Replace</button> <button class="btn small wine" data-act="remove" data-id="${p.id}">${icon("trash")}Remove</button></div></td></tr>`).join("")}
     </tbody></table>` : `<p class="hint">The library is empty.</p>`}
   </div>
   <div class="panel">
     <h3 style="margin-top:0">Removed products</h3>
     ${gone.length ? `<table class="plain">${head("Removed")}<tbody>
       ${gone.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(p.manufacturer)}</td><td>${esc(p.category)}</td><td>${fmtDate(p.removedAt)}<div class="hint">${daysLeft(p)}</div></td>
-        <td style="text-align:right;white-space:nowrap">${p.archivedFile ? `<button class="btn small" data-act="view-removed" data-id="${p.id}">View PDF</button> ` : ""}<button class="btn small green" data-act="restore-product" data-id="${p.id}">Restore</button> <button class="btn small wine" data-act="purge-ask" data-id="${p.id}">${icon("trash")}Delete Permanently</button></td></tr>`).join("")}
+        <td style="text-align:right"><div class="acts">${p.archivedFile ? `<button class="btn small" data-act="view-removed" data-id="${p.id}">View PDF</button> ` : ""}<button class="btn small green" data-act="restore-product" data-id="${p.id}">Restore</button> <button class="btn small wine" data-act="purge-ask" data-id="${p.id}">${icon("trash")}Delete Permanently</button></div></td></tr>`).join("")}
     </tbody></table>` : `<p class="hint">Nothing has been removed. Removed products are listed here so they can be restored.</p>`}
     <p class="hint">Removed products are kept for 30 days, then deleted permanently along with their PDF.</p>
   </div>`;
@@ -653,7 +653,7 @@ function tDiag() {
     <div class="row"><button class="btn green" data-act="integ-run">${icon("search")}Check Every PDF</button></div>
     ${!rows ? "" : (() => { const bad = rows.filter(r => r.status !== "ok");
       return !bad.length ? `<p style="margin-bottom:0"><b>All ${rows.length} PDFs match their fingerprints.</b></p>`
-        : `<table class="plain" style="margin-top:10px"><tbody>${bad.map(r => `<tr><td>${esc(r.name)}</td><td>${r.status === "missing" ? "PDF missing" : "File changed"}</td><td style="text-align:right">${r.status === "changed" ? `<button class="btn small" data-act="integ-accept" data-id="${r.id}">Accept This File</button> ` : ""}<button class="btn small" data-act="open-product" data-id="${r.id}">Open</button></td></tr>`).join("")}</tbody></table>`; })()}
+        : `<table class="plain" style="margin-top:10px"><tbody>${bad.map(r => `<tr><td>${esc(r.name)}</td><td>${r.status === "missing" ? "PDF missing" : "File changed"}</td><td style="text-align:right"><div class="acts">${r.status === "changed" ? `<button class="btn small" data-act="integ-accept" data-id="${r.id}">Accept This File</button> ` : ""}<button class="btn small" data-act="open-product" data-id="${r.id}">Open</button></div></td></tr>`).join("")}</tbody></table>`; })()}
   </div>`;
 }
 
@@ -1262,8 +1262,8 @@ function vTemps() {
   <div class="tablewrap">${!rows.length ? `<div class="empty"><b>No readings</b>Use Enter Temperatures for a round of checks.</div>`
     : `<table class="plain"><thead><tr>${["When", "Point", "Temp", "Safe Range", "Status", "By", "Notes / Corrective Action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
       ${rows.map(r => `<tr><td>${esc(when12(r.at))}</td><td><b>${esc(r.point)}</b></td><td>${r.temp}°F</td><td>${esc(r.limit)}</td><td>${tag(tStatus(r.status))}</td><td>${esc(r.by)}</td><td>${esc([r.notes, r.action].filter(Boolean).join(" · "))}</td>
-        <td style="text-align:right">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button>` : ""}</td></tr>`).join("")}</tbody></table>`}</div>
-  ${(state.treports || []).length ? `<h3>Saved Daily Reports</h3><div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Day</th><th class="nosort" style="width:auto">Saved</th><th class="nosort"></th></tr></thead><tbody>${state.treports.map(x => `<tr><td><b>${esc(dayLong(x.Date))}</b></td><td>${esc(x.Saved)}</td><td style="text-align:right"><button class="btn small" data-act="tr-open" data-f="${esc(x.File)}">Open</button> <button class="btn small" data-act="tr-print" data-f="${esc(x.File)}">${icon("print")}Print</button></td></tr>`).join("")}</tbody></table></div><p class="hint">Reports are also kept as files in the Temperature Reports folder beside the program.</p>` : ""}`;
+        <td style="text-align:right"><div class="acts">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button>` : ""}</div></td></tr>`).join("")}</tbody></table>`}</div>
+  ${(state.treports || []).length ? `<h3>Saved Daily Reports</h3><div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Day</th><th class="nosort" style="width:auto">Saved</th><th class="nosort"></th></tr></thead><tbody>${state.treports.map(x => `<tr><td><b>${esc(dayLong(x.Date))}</b></td><td>${esc(x.Saved)}</td><td style="text-align:right"><div class="acts"><button class="btn small" data-act="tr-open" data-f="${esc(x.File)}">Open</button> <button class="btn small" data-act="tr-print" data-f="${esc(x.File)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table></div><p class="hint">Reports are also kept as files in the Temperature Reports folder beside the program.</p>` : ""}`;
 }
 function tempEnter() {
   const d = state.temps;
@@ -1292,7 +1292,7 @@ function vTPoints() {
   return `<p class="hint" style="margin-top:0">The places you check temperatures. The safe range comes from the type (FDA Food Code) unless you set your own. Confirm the limits with your health department.</p>
   <div class="row"><button class="btn green big" data-act="tpt-edit" data-id="">${icon("plus")}Add Point</button><button class="btn" data-act="tpt-starter">${icon("down")}Load Muriale's Units (29)</button></div>
   <div class="tablewrap">${!d.points.length ? `<div class="empty"><b>No points yet</b>Add each cooler, freezer, hot well or other place you check.</div>` : `<table class="plain"><thead><tr>${["Point", "Area", "Type", "Safe range"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
-    ${d.points.map(p => `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.area || "")}</td><td>${esc(p.kind)}</td><td>${esc(tLimit(p).text)}</td><td style="text-align:right"><button class="btn small" data-act="tpt-edit" data-id="${p.id}">${icon("edit")}Edit</button> <button class="btn small wine" data-act="tpt-del" data-id="${p.id}">${icon("trash")}Delete</button></td></tr>`).join("")}</tbody></table>`}</div>`;
+    ${d.points.map(p => `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.area || "")}</td><td>${esc(p.kind)}</td><td>${esc(tLimit(p).text)}</td><td style="text-align:right"><div class="acts"><button class="btn small" data-act="tpt-edit" data-id="${p.id}">${icon("edit")}Edit</button> <button class="btn small wine" data-act="tpt-del" data-id="${p.id}">${icon("trash")}Delete</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 function tptForm(id) {
   const p = state.temps.points.find(x => x.id === id) || {kind: "Cold Holding"};
@@ -1347,7 +1347,7 @@ function vCA() {
   <div class="tablewrap">${!rows.length ? `<div class="empty"><b>No forms here</b>Use New Corrective Action for a significant food-safety, sanitation, safety, maintenance or training issue.</div>`
     : `<table class="plain"><thead><tr>${["ID", "Date", "Area", "Priority", "Issue", "Owner", "Target", "Status"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${rows.map(x => `<tr><td><b>${esc(x.id)}</b></td><td>${esc(x.date)}</td><td>${esc(x.area)}</td><td>${esc(x.priority)}</td><td>${esc(x.issue.length > 90 ? x.issue.slice(0, 90) + "..." : x.issue)}</td><td>${esc(x.owner)}</td><td>${esc(x.target)}</td><td>${tag(over(x) ? "Overdue" : x.status)}</td>
-      <td style="text-align:right"><button class="btn small" data-act="ca-open" data-id="${esc(x.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="ca-print" data-id="${esc(x.id)}">${icon("print")}Print</button></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="ca-open" data-id="${esc(x.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="ca-print" data-id="${esc(x.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 async function caForm(id, pre) {
   if (!state.ca) await loadCA();
@@ -1382,7 +1382,7 @@ function vChemLog() {
   return `<div class="row"><button class="btn wine big" data-act="chem-new">${icon("plus")}Report an Incident</button><button class="btn" data-act="rep-print" data-id="chem-log">${icon("print")}Print Log</button><span class="hint">${d.incidents.length} on record</span></div>
   <div class="tablewrap">${!d.incidents.length ? `<div class="empty"><b>No incidents recorded</b>Use Report an Incident for any chemical spill or exposure.</div>` : `<table class="plain"><thead><tr>${["ID", "When", "Product", "What happened", "Person(s)", "Emergency help?", "CA ref", "Training follow-up?"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${d.incidents.map(c => `<tr><td><b>${esc(c.id)}</b></td><td>${esc(when12(c.at))}</td><td>${esc(c.product)}</td><td>${esc(c.kind)}</td><td>${esc(c.persons)}</td><td>${esc(c.emergency)}</td><td>${esc(c.caRef)}</td><td>${esc(c.training)}</td>
-      <td style="text-align:right;white-space:nowrap"><button class="btn small" data-act="chem-open" data-id="${esc(c.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="chem-print" data-id="${esc(c.id)}">${icon("print")}Print</button> <button class="btn small" data-act="chem-ca" data-id="${esc(c.id)}">Corrective Action</button></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="chem-open" data-id="${esc(c.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="chem-print" data-id="${esc(c.id)}">${icon("print")}Print</button> <button class="btn small" data-act="chem-ca" data-id="${esc(c.id)}">Corrective Action</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 async function chemForm(id) {
   if (!state.chem) await loadChem();
@@ -1418,7 +1418,7 @@ function vReady() {
   <p class="hint" style="margin-top:0">A manager self-inspection to run before a health department or internal food-safety inspection. Items that need attention can become Corrective Action Forms.</p>
   <div class="tablewrap">${!d.reviews.length ? `<div class="empty"><b>No reviews yet</b>Use New Readiness Review to walk the kitchen with the 30-point checklist.</div>` : `<table class="plain"><thead><tr>${["ID", "Date", "Manager", "Type", "Ready?", "Critical?", "Open actions", "Recheck", "Outcome"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${d.reviews.map(r => `<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.date)}</td><td>${esc(r.manager)}</td><td>${esc(r.type)}</td><td>${esc(r.overall)}</td><td>${esc(r.critical)}</td><td>${r.open}</td><td>${esc(r.recheck)}</td><td>${esc(r.outcome)}</td>
-      <td style="text-align:right;white-space:nowrap"><button class="btn small" data-act="rd-open" data-id="${esc(r.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="rep-print" data-id="readiness:${esc(r.id)}">${icon("print")}Print</button></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="rd-open" data-id="${esc(r.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="rep-print" data-id="readiness:${esc(r.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 async function readyForm(id) {
   if (!state.ready) await loadReady();
@@ -1450,7 +1450,7 @@ function vReg(name) {
   return `<div class="row"><button class="btn green big" data-act="reg-new" data-c="${name}">${icon("plus")}${esc(def.newLabel)}</button><button class="btn" data-act="reg-print" data-id="${esc(def.report)}">${icon("print")}Print</button><span class="hint">${d.rows.length} on record</span></div>
   ${def.intro ? `<p class="hint" style="margin-top:0">${esc(def.intro)}</p>` : ""}
   <div class="tablewrap">${!d.rows.length ? `<div class="empty"><b>Nothing here yet</b></div>` : `<table class="plain"><thead><tr>${def.listCols.map(k => `<th class="nosort" style="width:auto">${esc(lab(k))}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
-    ${d.rows.map(r => `<tr>${def.listCols.map(k => `<td>${k === "id" ? `<b>${esc(r[k])}</b>` : ftype(k) === "date" ? esc(shortDate(r[k] || "")) : esc(clip(r[k], 90))}</td>`).join("")}<td style="text-align:right;white-space:nowrap">${extra(r)}${name === "cleanlog" && r.verifyStatus === "Pending" ? `<button class="btn small" data-act="cl-verify" data-id="${esc(r.id)}">Verify</button> ` : ""}<button class="btn small" data-act="reg-open" data-c="${name}" data-id="${esc(r.id)}">${icon("edit")}Open</button>${def.deletable ? ` <button class="btn small wine" data-act="reg-del" data-c="${name}" data-id="${esc(r.id)}">${icon("trash")}</button>` : ""}</td></tr>`).join("")}</tbody></table>`}</div>`;
+    ${d.rows.map(r => `<tr>${def.listCols.map(k => `<td>${k === "id" ? `<b>${esc(r[k])}</b>` : ftype(k) === "date" ? esc(shortDate(r[k] || "")) : esc(clip(r[k], 90))}</td>`).join("")}<td style="text-align:right"><div class="acts">${extra(r)}${name === "cleanlog" && r.verifyStatus === "Pending" ? `<button class="btn small" data-act="cl-verify" data-id="${esc(r.id)}">Verify</button> ` : ""}<button class="btn small" data-act="reg-open" data-c="${name}" data-id="${esc(r.id)}">${icon("edit")}Open</button>${def.deletable ? ` <button class="btn small wine" data-act="reg-del" data-c="${name}" data-id="${esc(r.id)}">${icon("trash")}</button>` : ""}</div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 function regForm(name, id) {
   const d = state.reg[name], def = d.def, r = id ? d.rows.find(x => x.id === id) || {} : {};
@@ -1467,11 +1467,11 @@ async function loadToday() { state.today = await api("/api/clean/today"); if (st
 function vClToday() {
   const d = state.today; if (!d) { loadToday(); return `<p class="hint">Loading...</p>`; }
   const done = d.tasks.filter(t => t.state === "Done Today").length, open = d.tasks.filter(t => t.state === "Overdue" || t.state === "Due Today"), table = (rows, kind) => `<div class="tablewrap"><table class="plain"><thead><tr>${["Area", kind === "task" ? "Task" : "Check", "When", "Who", "Status"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
-    ${rows.map(t => `<tr><td><b>${esc(t.area)}</b></td><td>${esc(t.task || t.check)}</td><td>${esc(t.timing || t.frequency)}</td><td>${esc(t.role || t.owner)}</td><td>${tag(t.state)}</td><td style="text-align:right">${t.state === "Done Today" ? "" : `<button class="btn small green" data-act="${kind === "task" ? "cl-done" : "mgr-done"}" data-id="${esc(t.id)}">Done</button>`}</td></tr>`).join("")}</tbody></table></div>`;
+    ${rows.map(t => `<tr><td><b>${esc(t.area)}</b></td><td>${esc(t.task || t.check)}</td><td>${esc(t.timing || t.frequency)}</td><td>${esc(t.role || t.owner)}</td><td>${tag(t.state)}</td><td style="text-align:right"><div class="acts">${t.state === "Done Today" ? "" : `<button class="btn small green" data-act="${kind === "task" ? "cl-done" : "mgr-done"}" data-id="${esc(t.id)}">Done</button>`}</div></td></tr>`).join("")}</tbody></table></div>`;
   const chk = d.checks.filter(t => t.state !== "Upcoming");
   return `<div class="row"><span class="hint"><b>${open.length}</b> to do, <b>${done}</b> done today</span><button class="btn" data-act="reg-print" data-id="linecook-weekly">${icon("print")}Print Line Cook Schedule</button></div>
   <h3>Cleaning</h3>${open.length || done ? table(d.tasks.filter(t => t.state !== "Upcoming"), "task") : `<div class="empty"><b>Nothing due</b></div>`}
-  ${d.pending.length ? `<h3>Waiting to be verified</h3><div class="tablewrap"><table class="plain"><thead><tr>${["ID", "Date", "Area", "Task", "Done by"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>${d.pending.map(p => `<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.date)}</td><td>${esc(p.area)}</td><td>${esc(p.task)}</td><td>${esc(p.completedBy)}</td><td style="text-align:right"><button class="btn small" data-act="cl-verify" data-id="${esc(p.id)}">Verify</button></td></tr>`).join("")}</tbody></table></div>` : ""}
+  ${d.pending.length ? `<h3>Waiting to be verified</h3><div class="tablewrap"><table class="plain"><thead><tr>${["ID", "Date", "Area", "Task", "Done by"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>${d.pending.map(p => `<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.date)}</td><td>${esc(p.area)}</td><td>${esc(p.task)}</td><td>${esc(p.completedBy)}</td><td style="text-align:right"><div class="acts"><button class="btn small" data-act="cl-verify" data-id="${esc(p.id)}">Verify</button></div></td></tr>`).join("")}</tbody></table></div>` : ""}
   <h3>Manager inspections</h3>${chk.length ? table(chk, "check") : `<div class="empty"><b>No manager checks due</b></div>`}`;
 }
 function cleanDone(id) {
@@ -1509,7 +1509,7 @@ function vRepl() {
   return `<div class="row"><button class="btn green big" data-act="repl-new" data-eq="">${icon("plus")}New Replacement Request</button><button class="btn" data-act="reg-print" data-id="replace-log">${icon("print")}Print History</button><span class="hint">Use when repeated repairs, downtime, safety risk or running cost suggest replacing instead of repairing again.</span></div>
   <div class="tablewrap">${!d.requests.length ? `<div class="empty"><b>No requests yet</b>Start one here, or from Assets &amp; Costs by opening a piece of equipment.</div>` : `<table class="plain"><thead><tr>${["ID", "Date", "Equipment", "Reason", "Recommendation", "Priority", "Decision", "Est. cost", "Completed"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${d.requests.map(r => `<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.date)}</td><td>${esc(r.equipment)}</td><td>${esc((r.reasons || "").slice(0, 70))}</td><td>${esc(r.recommendation)}</td><td>${esc(r.priority)}</td><td>${esc(r.decision || "Pending")}</td><td>${r.replaceCost ? money(r.replaceCost) : ""}</td><td>${esc(r.completionDate)}</td>
-      <td style="text-align:right;white-space:nowrap"><button class="btn small" data-act="repl-open" data-id="${esc(r.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="repl-print" data-id="${esc(r.id)}">${icon("print")}Print</button></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="repl-open" data-id="${esc(r.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="repl-print" data-id="${esc(r.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 function replRow(h) {
   h = h || {}; const tb = $("#rphist tbody"), tr = document.createElement("tr"), i = (k, w, t) => `<input class="field" data-rh="${k}" value="${esc(h[k] == null ? "" : h[k])}" ${t ? `type="${t}" step="0.01"` : ""} style="min-width:${w}px;width:100%">`;
@@ -1550,7 +1550,7 @@ function vInsp() {
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>No inspections yet</b>Use New Inspection, or Inspect on the Equipment PM screen.</div>`
     : `<table class="plain"><thead><tr>${["#", "Date", "Equipment", "PM Job", "Condition", "Failed", "By", "Issue"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
       ${list.map(q => { const is = state.maint.issues.find(p => p.id === q.issueId); return `<tr><td>${q.number}</td><td>${fmtDate(q.date)}</td><td>${esc(eqName(q.equipmentId))}</td><td>${esc(q.taskName)}</td><td>${tag(q.condition)}</td><td>${q.fails || ""}</td><td>${esc(q.by)}</td><td>${is ? "#" + is.number : ""}</td>
-        <td style="text-align:right"><button class="btn small" data-act="rep-view" data-id="inspection:${q.id}">${icon("print")}View / Print</button></td></tr>`; }).join("")}
+        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="rep-view" data-id="inspection:${q.id}">${icon("print")}View / Print</button></div></td></tr>`; }).join("")}
     </tbody></table>`}</div>`;
 }
 async function inspForm(taskId) {
@@ -1715,7 +1715,7 @@ function vPM(group) {
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>Nothing here yet</b>${g.empty}</div>`
     : `<table class="plain"><thead><tr>${["Equipment / Area", "Job", "Repeats", "Last Done", "Next Due", "Status"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:300px"></th></tr></thead><tbody>
       ${list.map(t => `<tr><td>${esc([t.equipmentId ? eqName(t.equipmentId) : "", t.area].filter(Boolean).join(" · "))}${t.assetCode ? `<div class="hint">${esc(t.assetCode)}</div>` : ""}</td><td><b>${esc(t.name)}</b>${t.performer ? `<div class="hint">${esc(t.performer)}</div>` : ""}${t.notes ? `<div class="hint">${esc(t.notes)}</div>` : ""}</td><td>${esc(t.freqLabel || t.bucket)}<div class="hint">${t.unit === "asneeded" ? "not scheduled" : `every ${t.every} ${t.every === 1 ? t.unit.replace(/s$/, "") : t.unit}`}${t.code ? " · " + esc(t.code) : ""}</div></td><td>${fmtDate(t.lastDone) || '<span class="hint">Never</span>'}</td><td>${t.nextDue ? `${fmtDate(t.nextDue)}<div class="hint">${when(t)}</div>` : '<span class="hint">As needed</span>'}</td><td>${tag(t.state)}</td>
-        <td style="text-align:right;white-space:nowrap"><button class="btn small green" data-act="pm-done-ask" data-id="${t.id}">${icon("save")}Mark Done</button> ${eq ? `<button class="btn small" data-act="insp-new" data-task="${t.id}">Inspect</button> ` : ""}<button class="btn small" data-act="pm-edit" data-id="${t.id}" data-group="${esc(group)}">${icon("edit")}Edit</button></td></tr>`).join("")}
+        <td style="text-align:right"><div class="acts"><button class="btn small green" data-act="pm-done-ask" data-id="${t.id}">${icon("save")}Mark Done</button> ${eq ? `<button class="btn small" data-act="insp-new" data-task="${t.id}">Inspect</button> ` : ""}<button class="btn small" data-act="pm-edit" data-id="${t.id}" data-group="${esc(group)}">${icon("edit")}Edit</button></div></td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
 function pmForm(id, group) {
@@ -1757,7 +1757,7 @@ function vAssets() {
     : `<table class="plain"><thead><tr>${["Equipment", "Make / Model", "Serial Number", "Age", "Warranty", "Spent on Upkeep", "Last 12 Months", "Suggestion"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:120px"></th></tr></thead><tbody>
       ${list.map(e => { const a = A[e.id] || {}; return `<tr><td><b>${esc(e.name)}</b><div class="hint">${esc(e.type)}</div></td><td>${esc([e.make, e.model].filter(Boolean).join(" "))}</td><td>${esc(e.serial)}</td><td>${a.ageYears ? a.ageYears + " yr" : ""}</td><td>${esc(a.warranty || "")}${e.warrantyEnd ? `<div class="hint">${fmtDate(e.warrantyEnd)}</div>` : ""}</td>
         <td>${money(a.total)}${a.percent >= 0 ? `<div class="hint">${a.percent}% of a new unit</div>` : ""}</td><td>${money(a.last12)}</td><td>${a.advice ? tag(a.advice) : '<span class="hint">Add purchase cost</span>'}</td>
-        <td style="text-align:right"><button class="btn small" data-act="asset-open" data-id="${e.id}">Details</button></td></tr>`; }).join("")}
+        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="asset-open" data-id="${e.id}">Details</button></div></td></tr>`; }).join("")}
     </tbody></table>`}</div>`;
 }
 function assetDetail(id) {
