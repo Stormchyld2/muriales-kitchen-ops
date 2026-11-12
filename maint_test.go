@@ -812,3 +812,21 @@ func TestEquipmentAreasSetting(t *testing.T) {
 		t.Fatalf("saved list should trim and drop duplicates: %v", a)
 	}
 }
+
+func TestEquipmentTypesSetting(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/maint")
+	got := map[string]bool{}
+	for _, x := range o["types"].([]any) {
+		got[x.(string)] = true
+	}
+	for _, w := range []string{"Lowboy", "Cook Tops", "Ovens", "Mixer", "Misc Equip"} {
+		if !got[w] {
+			t.Errorf("missing default type %s", w)
+		}
+	}
+	_, o = e.post("/api/maint/settings", `{"types":["Lowboy","Salamander","lowboy"]}`)
+	if a := o["types"].([]any); len(a) != 2 || a[1] != "Salamander" {
+		t.Errorf("saved types: %v", a)
+	}
+}

@@ -31,7 +31,7 @@ header p{margin:1px 0 0;font-size:15px;color:#e4e4e4}
 .btn.green{background:linear-gradient(var(--green),var(--green2));border-color:#3aa24e}
 .btn.wine{background:linear-gradient(var(--wine),var(--wine2));border-color:#b23a4a}
 .btn.big{padding:10px 22px;font-size:15px}
-.btn.small{padding:5px 10px;font-weight:500;font-size:13px}
+.btn.small{padding:5px 10px;font-weight:500;font-size:13px;min-height:32px;box-sizing:border-box}.btn.small svg{width:15px;height:15px;flex:none}.acts{display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:nowrap}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .grow{flex:1}
 .field{background:#24262a;border:1px solid #6b6f78;border-radius:5px;color:var(--text);padding:7px 10px;width:100%}
@@ -513,7 +513,7 @@ function vCats() {
   </div>`;
 }
 
-const TABS = [["maintainx","MaintainX"],["eqareas","Equipment Areas"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
+const TABS = [["maintainx","MaintainX"],["eqareas","Equipment Areas & Types"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
 function loadTab() { if (state.view !== "settings") return; const f = {eqareas: loadMaint, tempsheet: loadTemps, maintainx: loadMaint, backup: loadBackups, recovery: loadRecovery, diagnostics: loadDiag}[state.tab]; if (f) f(); }
 async function loadBackups() { state.backups = await api("/api/backups"); if (state.view === "settings") render(); }
 async function loadRecovery() { state.rec = await api("/api/recovery"); if (state.view === "settings" && state.tab === "recovery") render(); }
@@ -1162,7 +1162,7 @@ function vEquip() {
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>No equipment yet</b>Click “Add Equipment” to list the walk-ins, fryers, mixers and other equipment you maintain.</div>`
     : `<table class="plain"><thead><tr>${["Equipment", "Area", "Type", "Make / Model", "Status", "Open Issues"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:450px"></th></tr></thead><tbody>
       ${list.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.area)}</td><td>${esc(e.type)}</td><td>${esc([e.make, e.model].filter(Boolean).join(" "))}</td><td>${tag(e.status)}${(state.maint.pm || []).some(t => t.equipmentId === e.id && t.state === "Overdue") ? " " + tag("Overdue") : ""}</td><td>${openIssues(e.id) || ""}</td>
-        <td style="text-align:right;white-space:nowrap">${e.status === "Out of Service" ? `<button class="btn small" data-act="tag-print" data-id="${e.id}">${icon("print")}Print Tag</button> <button class="btn small green" data-act="oos-clear-ask" data-id="${e.id}">Clear for Service</button>` : `<button class="btn small wine" data-act="oos-ask" data-id="${e.id}">Take Out of Service</button>`} <button class="btn small wine" data-act="issue-new" data-id="${e.id}">${icon("warn")}Report Issue</button> <button class="btn small" data-act="eq-edit" data-id="${e.id}">${icon("edit")}Edit</button></td></tr>`).join("")}
+        <td style="text-align:right"><div class="acts">${e.status === "Out of Service" ? `<button class="btn small" data-act="tag-print" data-id="${e.id}">${icon("print")}Print Tag</button> <button class="btn small green" data-act="oos-clear-ask" data-id="${e.id}">Clear for Service</button>` : `<button class="btn small wine" data-act="oos-ask" data-id="${e.id}">Take Out of Service</button>`} <button class="btn small wine" data-act="issue-new" data-id="${e.id}">${icon("warn")}Report Issue</button> <button class="btn small" data-act="eq-edit" data-id="${e.id}">${icon("edit")}Edit</button></div></td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
 const TAGPOS = {  // where each field sits on the tag picture (1536 x 1024)
@@ -1630,7 +1630,11 @@ function tEqAreas() {
   return `<div class="panel" style="max-width:760px"><h3 style="margin-top:0">Equipment Areas</h3>
     <p>The places equipment sits, used in the Area list when you add or edit equipment. Put one area per line, then Save. Removing an area here does not change equipment already assigned to it.</p>
     <textarea class="field" id="eqareaslist" rows="12" placeholder="One area per line">${esc((m.areas || []).join("\n"))}</textarea>
-    <div class="row" style="margin-top:10px"><button class="btn green" data-act="eqareas-save">${icon("save")}Save</button></div></div>`;
+    <div class="row" style="margin-top:10px"><button class="btn green" data-act="eqareas-save">${icon("save")}Save</button></div></div>
+  <div class="panel" style="max-width:760px"><h3 style="margin-top:0">Equipment Types</h3>
+    <p>The kinds of equipment, used in the Type list when you add or edit equipment. One type per line, then Save.</p>
+    <textarea class="field" id="eqtypeslist" rows="12" placeholder="One type per line">${esc((m.types || []).join("\n"))}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn green" data-act="eqtypes-save">${icon("save")}Save</button></div></div>`;
 }
 function tMaintainx() {
   const m = state.maint; if (!m) { loadMaint(); return `<p class="hint">Loading...</p>`; }
@@ -1653,7 +1657,7 @@ function eqForm(id) {
   showModal(`<h2>${icon("wrench")}${id ? "Edit" : "Add"} Equipment</h2><div class="body" id="eqbody" data-id="${esc(id)}"><div class="fields">
     ${f("name", "Name: <span class='req'>*</span>", "e.g. Walk-in Cooler 1")}
     <label>Area:</label><div><select class="field" data-eq="area" style="width:auto">${["", ...(state.maint.areas || []), ...(e.area && !(state.maint.areas || []).includes(e.area) ? [e.area] : [])].map(a => `<option ${a === (e.area || "") ? "selected" : ""}>${esc(a)}</option>`).join("")}</select> <span class="hint">Add more areas in Settings, Equipment Areas.</span></div>
-    <label>Type:</label><div><input class="field" data-eq="type" list="eqtypes" value="${esc(e.type || "")}" placeholder="Walk-in, fryer, HVAC, ice machine..."><datalist id="eqtypes">${EQ_TYPES.map(t => `<option value="${t}">`).join("")}</datalist></div>
+    <label>Type:</label><div><select class="field" data-eq="type" style="width:auto">${["", ...(state.maint.types || EQ_TYPES), ...(e.type && !(state.maint.types || EQ_TYPES).includes(e.type) ? [e.type] : [])].map(t => `<option ${t === (e.type || "") ? "selected" : ""}>${esc(t)}</option>`).join("")}</select> <span class="hint">Add more types in Settings, Equipment Areas &amp; Types.</span></div>
     ${f("make", "Make:")}${f("model", "Model:")}${f("serial", "Serial Number:")}
     <label>Installed:</label><input type="date" class="field" data-eq="installed" value="${esc(e.installed || "")}" style="width:190px">
     ${f("vendor", "Bought From:")}<label>Purchase Date:</label><input type="date" class="field" data-eq="purchaseDate" value="${esc(e.purchaseDate || "")}" style="width:190px">
@@ -2090,6 +2094,7 @@ const ACT = {
   "tag-print"(el) { const r = activeHold(el.dataset.id); if (r && r.tag) return tagPrint(r.tag); tagDetails(el.dataset.id); },
   async "oos-clear-go"() { const v = grab("[data-oc]", "oc"); rememberWho(v.by); await maintDone(await api("/api/maint/equipment/" + $("#oosbody").dataset.id + "/clear", {method: "POST", body: JSON.stringify(v)}), "Cleared for service."); },
   async "eqareas-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({areas: $("#eqareaslist").value.split("\n")})}); render(); toast("Saved."); },
+  async "eqtypes-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({types: $("#eqtypeslist").value.split("\n")})}); render(); toast("Saved."); },
   async "mgr-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({managers: $("#mgrs").value.split("\n")})}); render(); toast("Saved."); },
   "finds-all"(el) { state.findAll = el.checked; render(); },
   "find-new"() { findForm(); },
