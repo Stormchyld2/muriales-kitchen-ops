@@ -301,15 +301,15 @@ function visible() {
 }
 
 /* ---------- screens ---------- */
-const MAINT_VIEWS = ["equip", "assets", "issues", "pm", "cal", "clean", "fac", "summary"];
+const MAINT_VIEWS = ["finds", "equip", "assets", "issues", "pm", "cal", "clean", "fac", "summary"];
 const MODS = [
-  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["summary","Monthly Summary"]]},
+  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["finds","Inspection Items"],["summary","Monthly Summary"]]},
   {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
   {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
 ];
 const NAV_TOP = [["todo","list","To-Do List"],["settings","gear","Settings"],["about","info","About"]];
 const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
-const SUB = {summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
+const SUB = {finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
@@ -322,7 +322,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = lockBanner() + ({summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = lockBanner() + ({finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -1314,7 +1314,7 @@ function assetDetail(id) {
 }
 
 /* ---------- calendar ---------- */
-const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i"};
+const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i", "Inspection": "i"};
 const GFILTERS = [["all", "All"], ["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Issues"]];
 const FFILTERS = [["all", "Any Frequency"], ["Daily", "Daily"], ["Weekly", "Weekly"], ["Monthly", "Monthly"], ["Quarterly / Semi-Annual", "Quarterly / Semi-Annual"], ["Yearly", "Yearly"], ["As Needed", "As Needed"]];
 state.cal = {mode: "month", ref: new Date(), group: "all", freq: "all", events: null, key: ""};
@@ -1363,7 +1363,7 @@ function dayDialog(d) {
 
 /* ---------- master to-do list ---------- */
 const TODO_PERIODS = [["today", "Today"], ["tomorrow", "Tomorrow"], ["week", "This Week"], ["nextweek", "Next Week"], ["next7", "Next 7 Days"], ["month", "This Month"], ["nextmonth", "Next Month"], ["next30", "Next 30 Days"], ["overdue", "Overdue Only"], ["custom", "Pick Dates..."]];
-const TODO_SOURCES = [["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Open maintenance issues"], ["Equipment", "Repair or replace decisions"], ["SDS", "SDS follow-ups"], ["Other", "My own items"]];
+const TODO_SOURCES = [["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Open maintenance issues"], ["Inspection", "Inspection items"], ["Equipment", "Repair or replace decisions"], ["SDS", "SDS follow-ups"], ["Other", "My own items"]];
 state.todo = null; state.todoPick = {period: "today", sources: TODO_SOURCES.map(x => x[0]), from: "", to: ""};
 function todoRange(p, a, b) {
   const t = new Date(), day = new Date(t.getFullYear(), t.getMonth(), t.getDate());
@@ -1383,6 +1383,49 @@ function todoDialog() {
     <p class="hint">Overdue jobs and open issues always appear, whatever the period.</p></div>
     <div class="foot"><button class="btn green big" data-act="todo-go">${icon("list")}Create List</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
+async function loadFinds() { state.finds = await api("/api/maint/findings"); if (state.view === "finds") render(); }
+function vFinds() {
+  const d = state.finds; if (!d) { loadFinds(); return `<p class="hint">Loading...</p>`; }
+  if (!state.maint) { loadMaint().then(render); return `<p class="hint">Loading...</p>`; }
+  const all = state.findAll, today = ymd(new Date()), list = [...d.findings].reverse().filter(f => all || f.status !== "Done");
+  return `<p class="hint" style="margin-top:0">Write down anything you find on a walk-through that needs doing. Open items show on the To-Do List until they are marked Done. For a repair, enter it in MaintainX with Submit Work Order and write the number on the item.</p>
+  <div class="row"><button class="btn green big" data-act="find-new">${icon("plus")}Add Inspection Item</button>
+    <label style="font-weight:400"><input type="checkbox" data-act="finds-all" ${all ? "checked" : ""}> Show completed items too</label></div>
+  <div class="tablewrap">${!list.length ? `<div class="empty"><b>${all ? "Nothing logged yet" : "Nothing open"}</b>Use Add Inspection Item for anything that needs doing.</div>`
+    : `<table><thead><tr>${["#", "What needs doing", "Where", "Category", "Priority", "Assigned To", "Due", "Status"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}</tr></thead><tbody>
+      ${list.map(f => `<tr data-act="find-open" data-id="${f.id}"><td>${f.number}</td><td>${esc(f.what)}<div class="hint">Found ${fmtDate(f.date)} by ${esc(f.foundBy)}</div></td><td>${esc([f.area, f.equipmentId ? eqName(f.equipmentId) : ""].filter(Boolean).join(" · "))}</td><td>${esc(f.category)}</td><td>${tag(f.priority)}</td><td>${esc(f.assignedTo)}</td><td>${f.due ? fmtDate(f.due) + (f.due < today && f.status !== "Done" ? ' <span class="status Overdue">Overdue</span>' : "") : ""}</td><td>${tag(f.status)}</td></tr>`).join("")}
+    </tbody></table>`}</div>`;
+}
+function findForm() {
+  const m = state.maint, d = state.finds;
+  showModal(`<h2>${icon("list")}Add Inspection Item</h2><div class="body" id="fnbody"><div class="fields">
+    <label>What needs doing: <span class="req">*</span></label><textarea class="field" rows="3" data-fn="what" placeholder="e.g. Cove base peeling behind the dish machine"></textarea>
+    <label>Area:</label><div><input class="field" data-fn="area" list="fnareas" placeholder="Where it is"><datalist id="fnareas">${(state.lib.locations || []).map(l => `<option value="${esc(l)}">`).join("")}</datalist></div>
+    <label>Equipment:</label><select class="field" data-fn="equipmentId"><option value="">None / not equipment</option>${m.equipment.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join("")}</select>
+    <label>Category:</label><select class="field" data-fn="category">${d.categories.map(x => `<option>${x}</option>`).join("")}</select>
+    <label>Priority:</label><select class="field" data-fn="priority">${m.priorities.map(x => `<option ${x === "P3 - Routine" ? "selected" : ""}>${x}</option>`).join("")}</select>
+    <label>Assigned to:</label><input class="field" data-fn="assignedTo" placeholder="Optional">
+    <label>Due:</label><input type="date" class="field" data-fn="due" style="width:190px">
+    <label>Your name: <span class="req">*</span></label><input class="field" data-fn="foundBy" value="${esc(who())}"></div></div>
+    <div class="foot"><button class="btn green big" data-act="find-save">${icon("save")}Save Item</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
+async function findDetail(id) {
+  if (!state.finds) await loadFinds();
+  const f = state.finds.findings.find(x => x.id === id); if (!f) return;
+  showModal(`<h2>${icon("list")}#${f.number} ${esc(f.what.length > 60 ? f.what.slice(0, 60) + "..." : f.what)}</h2><div class="body" id="fdbody" data-id="${f.id}">
+    <p>${esc(f.what).replace(/\n/g, "<br>")}</p>
+    <p class="hint">${esc([f.area, f.equipmentId ? eqName(f.equipmentId) : "", f.category].filter(Boolean).join(" · "))}<br>Found ${fmtDate(f.date)} by ${esc(f.foundBy)}</p>
+    <div class="fields"><label>Status:</label><select class="field" data-fd="status">${state.finds.statuses.map(x => `<option ${x === f.status ? "selected" : ""}>${x}</option>`).join("")}</select>
+      <label>Priority:</label><select class="field" data-fd="priority">${state.maint.priorities.map(x => `<option ${x === f.priority ? "selected" : ""}>${x}</option>`).join("")}</select>
+      <label>Assigned to:</label><input class="field" data-fd="assignedTo" value="${esc(f.assignedTo)}">
+      <label>Due:</label><input type="date" class="field" data-fd="due" value="${esc(f.due)}" style="width:190px">
+      <label>Work order:</label><input class="field" data-fd="workOrder" value="${esc(f.workOrder)}" placeholder="Number from MaintainX, if one was entered">
+      <label>Add a note:</label><input class="field" data-fd="note" placeholder="Optional">
+      <label>Your name: <span class="req">*</span></label><input class="field" data-fd="by" value="${esc(who())}"></div>
+    <div class="hist">${[...f.history].reverse().map(h => `<div><b>${fmtDate(h.at)} ${esc(h.at.slice(11, 16))}</b> ${esc(h.by)}: ${esc(h.text)}</div>`).join("")}</div></div>
+    <div class="foot"><button class="btn green big" data-act="find-update">${icon("save")}Save</button><button class="btn big" data-act="close">Close</button></div>`);
+}
+
 async function loadSummary(month) {
   month = month || state.sumMonth || ymd(new Date()).slice(0, 7);
   state.sumMonth = month;
@@ -1450,7 +1493,7 @@ const ACT = {
     <div class="foot"><button class="btn green big" data-act="todo-done-go" data-id="${el.dataset.id}">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`); },
   async "todo-done-go"(el) { const by = $("#todoby").value; rememberWho(by); await api("/api/maint/todos/" + el.dataset.id + "/done", {method: "POST", body: JSON.stringify({by})}); closeModal(); await refreshTodo(); toast("Done."); },
   async "todo-act"(el) { const k = el.dataset.kind, id = el.dataset.id; if (!state.maint) state.maint = await api("/api/maint");
-    if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
+    if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
     if (k === "product") { state.id = id; state.view = "detail"; render(); } },
   "cal-nav"(el) { const c = state.cal, n = +el.dataset.d; if (n === 0) c.ref = new Date(); else if (c.mode === "week") c.ref = addDays(c.ref, 7 * n); else c.ref = new Date(c.ref.getFullYear(), c.ref.getMonth() + n, 1); c.events = null; render(); },
   "cal-mode"(el) { state.cal.mode = el.dataset.v; state.cal.events = null; render(); },
@@ -1475,6 +1518,11 @@ const ACT = {
   async "issue-save"() { const v = grab("[data-is]", "is"); rememberWho(v.reportedBy); await maintDone(await api("/api/maint/issues", {method: "POST", body: JSON.stringify(v)}), "Issue saved. Use Submit Work Order to enter it in MaintainX."); },
   "issue-open"(el) { issueDetail(el.dataset.id); },
   async "issue-update"() { const v = grab("[data-id-f]", "idF"); for (const k of ["parts", "labor", "downtime"]) v[k] = parseFloat(v[k]) || 0; rememberWho(v.by); await maintDone(await api("/api/maint/issues/" + $("#idbody").dataset.id, {method: "PUT", body: JSON.stringify(v)}), "Issue updated."); },
+  "finds-all"(el) { state.findAll = el.checked; render(); },
+  "find-new"() { findForm(); },
+  "find-open"(el) { findDetail(el.dataset.id); },
+  async "find-save"() { const v = grab("[data-fn]", "fn"); rememberWho(v.foundBy); state.finds = await api("/api/maint/findings", {method: "POST", body: JSON.stringify(v)}); closeModal(); render(); toast("Item added. It is on the To-Do List until it is done."); },
+  async "find-update"() { const v = grab("[data-fd]", "fd"); rememberWho(v.by); state.finds = await api("/api/maint/findings/" + $("#fdbody").dataset.id, {method: "PUT", body: JSON.stringify(v)}); closeModal(); if (state.view === "todo") await refreshTodo(); render(); toast("Saved."); },
   "sum-print"() { window.print(); },
   async "sum-save"() { const by = $("#sumBy").value.trim(); if (!by) return toast("Enter your name.", true); rememberWho(by);
     const v = grab("[data-sn]", "sn"); state.sum = await api("/api/maint/summary-notes", {method: "POST", body: JSON.stringify({...v, month: state.sumMonth, by})}); render(); toast("Notes saved."); },
@@ -1487,7 +1535,7 @@ const ACT = {
   mod(el) { const k = el.dataset.k, m = MODS.find(x => x.k === k);
     if (state.openMod === k) { state.openMod = null; return render(); }
     state.openMod = k; return ACT.nav({dataset: {v: m.subs[0][0]}}); },
-  nav(el) { const v = el.dataset.v; if (v === "summary") state.sum = null; if (v === "print") return state.lib.products.length ? printDialog("all") : toast("Add a product first."); if (v === "add") state.form = blankForm(); state.view = v; if (v === "settings") loadTab(); state.focusQ = false; render(); if (v === "library") return reload().then(render); },
+  nav(el) { const v = el.dataset.v; if (v === "finds") state.finds = null; if (v === "summary") state.sum = null; if (v === "print") return state.lib.products.length ? printDialog("all") : toast("Add a product first."); if (v === "add") state.form = blankForm(); state.view = v; if (v === "settings") loadTab(); state.focusQ = false; render(); if (v === "library") return reload().then(render); },
   open(el, e) { if (e.target.closest("input")) return; state.view = "detail"; state.id = el.dataset.id; render(); },
   toggle(el) { state.sel.has(el.dataset.id) ? state.sel.delete(el.dataset.id) : state.sel.add(el.dataset.id); render(); },
   selall() { visible().forEach(p => state.sel.add(p.id)); render(); },

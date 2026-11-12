@@ -285,3 +285,37 @@ func TestMonthlySummary(t *testing.T) {
 		t.Errorf("notes not kept: %v", s["notes"])
 	}
 }
+
+func TestInspectionItems(t *testing.T) {
+	e := newEnv(t)
+	if c, _ := e.post("/api/maint/findings", `{"what":"Fix cove base","foundBy":""}`); c != 400 {
+		t.Error("needs a name")
+	}
+	_, out := e.post("/api/maint/findings", `{"what":"Fix cove base","area":"Kitchen","category":"Facility / Grounds","priority":"P3 - Routine","foundBy":"GM","due":"`+time.Now().Format(dayFmt)+`"}`)
+	fs := out["findings"].([]any)
+	if len(fs) != 1 || fs[0].(map[string]any)["number"].(float64) != 1 {
+		t.Fatalf("item not added: %v", out)
+	}
+	id := fs[0].(map[string]any)["id"].(string)
+	_, td := e.get2("/api/todo?from=" + time.Now().Format(dayFmt) + "&to=" + time.Now().Format(dayFmt))
+	found := false
+	for _, x := range td["items"].([]any) {
+		if x.(map[string]any)["group"] == "Inspection" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("open item should be on the to-do list: %v", td)
+	}
+	e.do2("PUT", "/api/maint/findings/"+id, `{"status":"Done","by":"GM","note":"Fixed"}`)
+	_, out = e.get2("/api/maint/findings")
+	if out["findings"].([]any)[0].(map[string]any)["doneAt"] == "" {
+		t.Error("done date not set")
+	}
+	_, td = e.get2("/api/todo?from=" + time.Now().Format(dayFmt) + "&to=" + time.Now().Format(dayFmt))
+	for _, x := range td["items"].([]any) {
+		if x.(map[string]any)["group"] == "Inspection" {
+			t.Error("done item should leave the to-do list")
+		}
+	}
+}

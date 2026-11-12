@@ -34,7 +34,7 @@ type todoItem struct {
 	ID     string `json:"id"`
 }
 
-var todoSources = []string{"Cleaning", "Equipment PM", "Grounds / Facility", "Issue", "SDS", "Equipment", "Other"}
+var todoSources = []string{"Cleaning", "Equipment PM", "Grounds / Facility", "Issue", "Inspection", "SDS", "Equipment", "Other"}
 
 func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
@@ -82,6 +82,29 @@ func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 				state = "Overdue"
 			}
 			out = append(out, todoItem{Group: "Issue", Title: "#" + itoa(p.Number) + " " + p.Title, Detail: detail, Due: p.ReportedAt[:10], State: state, Kind: "issue", ID: p.ID})
+		}
+	}
+	if want["Inspection"] {
+		for _, f := range s.findingList() {
+			if f.Status == "Done" || (f.Due != "" && f.Due > to.Format(dayFmt)) {
+				continue
+			}
+			state := "Open"
+			if f.Due != "" {
+				if d, err := time.Parse(dayFmt, f.Due); err == nil {
+					if d.Before(today) {
+						state = "Overdue"
+					} else if d.Equal(today) {
+						state = "Due Today"
+					} else {
+						state = "Upcoming"
+					}
+				}
+			} else if strings.HasPrefix(f.Priority, "P1") || strings.HasPrefix(f.Priority, "P2") {
+				state = "Overdue"
+			}
+			detail := strings.TrimSpace(strings.Join(nonEmpty(f.Area, name[f.EquipmentID], f.Category, f.Priority, f.AssignedTo), " · "))
+			out = append(out, todoItem{Group: "Inspection", Title: "#" + itoa(f.Number) + " " + f.What, Detail: detail, Due: f.Due, State: state, Kind: "finding", ID: f.ID})
 		}
 	}
 	if want["Equipment"] {
@@ -217,4 +240,14 @@ func (s *store) todoRoutes(mux *http.ServeMux) {
 		}
 		fail(w, 404, "That item was not found.")
 	})
+}
+
+func nonEmpty(v ...string) []string {
+	out := []string{}
+	for _, x := range v {
+		if strings.TrimSpace(x) != "" {
+			out = append(out, x)
+		}
+	}
+	return out
 }
