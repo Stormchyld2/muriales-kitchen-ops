@@ -413,3 +413,42 @@ func TestReports(t *testing.T) {
 		t.Errorf("report file not saved: %v", err)
 	}
 }
+
+func TestOutOfServiceTag(t *testing.T) {
+	e := newEnv(t)
+	_, out := e.post("/api/maint/equipment", `{"name":"Fryer 2","area":"Line"}`)
+	id := out["equipment"].([]any)[0].(map[string]any)["id"].(string)
+	if c, _ := e.post("/api/maint/equipment/"+id+"/tag", "\x89PNG\r\n\x1a\nxx"); c != 400 {
+		t.Error("a tag needs an active hold")
+	}
+	_, out = e.post("/api/maint/equipment/"+id+"/out-of-service", `{"reason":"Burner out","by":"GM","safety":"Yes","foodSafety":"No","powerOff":"Yes","lockout":"No","tagPriority":"High","vendor":"ACME","workOrder":"WO-12","assetId":"K-007"}`)
+	rec := out["oosLog"].([]any)[0].(map[string]any)
+	if rec["safety"] != "Yes" || rec["tagPriority"] != "High" || rec["assetId"] != "K-007" || rec["lockout"] != "No" {
+		t.Errorf("tag details not kept: %v", rec)
+	}
+	if c, _ := e.post("/api/maint/equipment/"+id+"/tag", "not a png at all"); c != 400 {
+		t.Error("only a PNG is accepted")
+	}
+	c, out := e.post("/api/maint/equipment/"+id+"/tag", "\x89PNG\r\n\x1a\nfakeimage")
+	if c != 200 || !strings.HasSuffix(out["file"].(string), ".png") {
+		t.Fatalf("tag not saved: %v %v", c, out)
+	}
+	file := out["file"].(string)
+	if _, err := os.Stat(filepath.Join(e.s.tagsDir(), file)); err != nil {
+		t.Errorf("file missing: %v", err)
+	}
+	rec2 := out["payload"].(map[string]any)["oosLog"].([]any)[0].(map[string]any)
+	if rec2["tag"] != file {
+		t.Errorf("record should point at the file: %v", rec2)
+	}
+	rr := httptest.NewRecorder()
+	e.h.ServeHTTP(rr, httptest.NewRequest("GET", "/api/oos-tags/"+strings.ReplaceAll(file, " ", "%20")+"?print=1", nil))
+	if rr.Code != 200 || !strings.Contains(rr.Body.String(), "print()") {
+		t.Errorf("print page failed: %d", rr.Code)
+	}
+	rr = httptest.NewRecorder()
+	e.h.ServeHTTP(rr, httptest.NewRequest("GET", "/api/oos-tags/..%2Fsecret.png", nil))
+	if rr.Code == 200 {
+		t.Error("path traversal must be refused")
+	}
+}

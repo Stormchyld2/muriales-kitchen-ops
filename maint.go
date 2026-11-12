@@ -249,6 +249,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.summaryRoutes(mux)
 	s.findingRoutes(mux)
 	s.oosRoutes(mux)
+	s.tagRoutes(mux)
 	s.reportRoutes(mux)
 	mux.HandleFunc("GET /api/maint", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
