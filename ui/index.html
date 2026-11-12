@@ -87,10 +87,10 @@ dt{font-weight:600}dd{margin:0}
 .hint{color:var(--mute);font-size:13px}
 #modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20}
 #modal.show{display:flex}
-.dialog{background:var(--cream);color:#1b1b1b;border-radius:8px;width:min(560px,92vw);overflow:hidden;box-shadow:0 20px 60px #000}
+.dialog{background:var(--cream);color:#1b1b1b;border-radius:8px;width:min(560px,92vw);overflow:hidden;box-shadow:0 20px 60px #000;max-height:94vh;display:flex;flex-direction:column}.dialog:has(#inbody){width:min(900px,95vw)}
 .dialog h2{margin:0;padding:12px 18px;font-size:21px;color:#fff;background:linear-gradient(var(--wine),var(--wine2));display:flex;gap:12px;align-items:center}
 .dialog h2 svg{width:28px;height:28px}
-.dialog .body{padding:16px 20px}
+.dialog .body{padding:16px 20px;overflow:auto;flex:1 1 auto;min-height:0}.dialog h2,.dialog .foot{flex:none}
 .dialog .foot{display:flex;gap:14px;justify-content:center;padding:4px 20px 20px}
 .dialog .box{background:#f3dfb0;border:1px solid #d9b56a;border-radius:6px;padding:10px 14px;margin:12px 0}
 .dialog .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -301,15 +301,15 @@ function visible() {
 }
 
 /* ---------- screens ---------- */
-const MAINT_VIEWS = ["procs", "finds", "equip", "assets", "issues", "pm", "cal", "clean", "fac", "summary"];
+const MAINT_VIEWS = ["insp", "procs", "finds", "equip", "assets", "issues", "pm", "cal", "clean", "fac", "summary"];
 const MODS = [
-  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["finds","Inspection Items"],["summary","Monthly Summary"],["procs","Procedures"]]},
+  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["insp","PM Inspections"],["finds","Inspection Items"],["summary","Monthly Summary"],["procs","Procedures"]]},
   {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
   {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
 ];
 const NAV_TOP = [["todo","list","To-Do List"],["reports","print","Reports"],["settings","gear","Settings"],["about","info","About"]];
 const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
-const SUB = {procs:"Maintenance Procedures", reports:"Reports", finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
+const SUB = {insp:"PM Inspection Sheets", procs:"Maintenance Procedures", reports:"Reports", finds:"Inspection Items", summary:"Monthly Maintenance Summary", todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
@@ -322,7 +322,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = oosBanner() + lockBanner() + ({procs: vProcs, reports: vReports, finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = oosBanner() + lockBanner() + ({insp: vInsp, procs: vProcs, reports: vReports, finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -1239,6 +1239,41 @@ function oosClearAsk(id) {
     <div class="foot"><button class="btn green big" data-act="oos-clear-go">${icon("save")}Clear for Service</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
 
+async function loadInsp() { state.insp = await api("/api/inspections"); if (state.view === "insp") render(); }
+function vInsp() {
+  const d = state.insp; if (!d) { loadInsp(); return `<p class="hint">Loading...</p>`; }
+  if (!state.maint) { loadMaint().then(render); return `<p class="hint">Loading...</p>`; }
+  const list = [...d.inspections].reverse();
+  return `<p class="hint" style="margin-top:0">Do the 16-point check on a piece of equipment during its PM. A failed point needs a maintenance issue before the PM job can be marked done. You can also print a blank sheet to fill in by hand.</p>
+  <div class="row"><button class="btn green big" data-act="insp-new" data-task="">${icon("plus")}New Inspection</button><button class="btn" data-act="rep-view" data-id="inspection:blank">${icon("print")}Print Blank Sheet</button></div>
+  <div class="tablewrap">${!list.length ? `<div class="empty"><b>No inspections yet</b>Use New Inspection, or Inspect on the Equipment PM screen.</div>`
+    : `<table class="plain"><thead><tr>${["#", "Date", "Equipment", "PM Job", "Condition", "Failed", "By", "Issue"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
+      ${list.map(q => { const is = state.maint.issues.find(p => p.id === q.issueId); return `<tr><td>${q.number}</td><td>${fmtDate(q.date)}</td><td>${esc(eqName(q.equipmentId))}</td><td>${esc(q.taskName)}</td><td>${tag(q.condition)}</td><td>${q.fails || ""}</td><td>${esc(q.by)}</td><td>${is ? "#" + is.number : ""}</td>
+        <td style="text-align:right"><button class="btn small" data-act="rep-view" data-id="inspection:${q.id}">${icon("print")}View / Print</button></td></tr>`; }).join("")}
+    </tbody></table>`}</div>`;
+}
+async function inspForm(taskId) {
+  if (!state.insp) await loadInsp(); if (!state.maint) await loadMaint();
+  const t = (state.maint.pm || []).find(x => x.id === taskId) || {}, d = state.insp, eqs = state.maint.equipment;
+  showModal(`<h2>${icon("wrench")}PM Inspection${t.name ? ": " + esc(t.name) : ""}</h2><div class="body" id="inbody" data-task="${esc(taskId || "")}"><div class="fields">
+    <label>Equipment: <span class="req">*</span></label><select class="field" data-in="equipmentId"><option value="">Choose...</option>${eqs.map(e => `<option value="${e.id}" ${e.id === t.equipmentId ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select>
+    <label>PM job:</label><select class="field" data-in="taskId"><option value="">None</option>${(state.maint.pm || []).filter(x => x.group === "Equipment PM").map(x => `<option value="${x.id}" ${x.id === taskId ? "selected" : ""}>${esc(x.name)}${x.equipmentId ? " · " + esc(eqName(x.equipmentId)) : ""}</option>`).join("")}</select>
+    <label>Date:</label><input type="date" class="field" data-in="date" value="${ymd(new Date())}" style="width:190px">
+    <label>Condition: <span class="req">*</span></label><select class="field" data-in="condition" id="incond">${d.conditions.map(c => `<option>${c}</option>`).join("")}</select></div>
+    <table class="plain" style="margin:8px 0"><thead><tr><th class="nosort" style="width:auto">Inspection point</th><th class="nosort" style="width:auto">Result</th><th class="nosort" style="width:auto">Notes</th></tr></thead><tbody>
+    ${d.items.map(it => `<tr><td>${esc(it.label)}</td><td style="white-space:nowrap">${["Pass", "Fail", "N/A"].map(v => `<label style="font-weight:400;margin-right:8px"><input type="radio" name="in_${it.key}" value="${v}" ${v === "Pass" ? "checked" : ""}> ${v}</label>`).join("")}</td><td><input class="field" data-in-note="${it.key}" placeholder="Optional"></td></tr>`).join("")}
+    </tbody></table><div class="fields">
+    <label>Readings:</label><input class="field" data-in="readings" placeholder="Temperatures, pressures, amps...">
+    <label>Work performed:</label><textarea class="field" rows="2" data-in="work"></textarea>
+    <label>Parts used:</label><input class="field" data-in="parts" placeholder="Optional">
+    <label>Corrective action needed:</label><textarea class="field" rows="2" data-in="corrective" placeholder="Required if anything failed or the condition is Poor or Unsafe"></textarea>
+    <label>Priority:</label><select class="field" data-in="priority">${state.maint.priorities.map(x => `<option ${x === "P3 - Routine" ? "selected" : ""}>${x}</option>`).join("")}</select>
+    <label></label><label style="font-weight:400"><input type="checkbox" data-in="createIssue" checked> Create a maintenance issue for the corrective action</label>
+    <label></label><label style="font-weight:400"><input type="checkbox" data-in="markDone" ${taskId ? "checked" : ""}> Mark the PM job done</label>
+    <label>Your name: <span class="req">*</span></label><input class="field" data-in="by" value="${esc(who())}"></div></div>
+    <div class="foot"><button class="btn green big" data-act="insp-save">${icon("save")}Save Inspection</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
+
 function vProcs() {
   const p = state.procs; if (!p) { api("/api/procedures").then(r => { state.procs = r; render(); }); return `<p class="hint">Loading...</p>`; }
   return `<div class="row noprint"><button class="btn" data-act="rep-view" data-id="procedures">${icon("print")}Print</button><span class="hint">The wording is in Maintenance Data\\procedures.json if you want to change it.</span></div>
@@ -1366,9 +1401,9 @@ function vPM(group) {
   return `<div class="row"><button class="btn green big" data-act="pm-edit" data-id="" data-group="${esc(group)}">${icon("plus")}${g.add}</button>
     <span class="hint">${list.length} recurring job${list.length === 1 ? "" : "s"}${late ? ` · <b>${late} overdue</b>` : ""}</span></div>
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>Nothing here yet</b>${g.empty}</div>`
-    : `<table class="plain"><thead><tr>${["Equipment / Area", "Job", "Repeats", "Last Done", "Next Due", "Status"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:230px"></th></tr></thead><tbody>
+    : `<table class="plain"><thead><tr>${["Equipment / Area", "Job", "Repeats", "Last Done", "Next Due", "Status"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:300px"></th></tr></thead><tbody>
       ${list.map(t => `<tr><td>${esc([t.equipmentId ? eqName(t.equipmentId) : "", t.area].filter(Boolean).join(" · "))}${t.assetCode ? `<div class="hint">${esc(t.assetCode)}</div>` : ""}</td><td><b>${esc(t.name)}</b>${t.performer ? `<div class="hint">${esc(t.performer)}</div>` : ""}${t.notes ? `<div class="hint">${esc(t.notes)}</div>` : ""}</td><td>${esc(t.freqLabel || t.bucket)}<div class="hint">${t.unit === "asneeded" ? "not scheduled" : `every ${t.every} ${t.every === 1 ? t.unit.replace(/s$/, "") : t.unit}`}${t.code ? " · " + esc(t.code) : ""}</div></td><td>${fmtDate(t.lastDone) || '<span class="hint">Never</span>'}</td><td>${t.nextDue ? `${fmtDate(t.nextDue)}<div class="hint">${when(t)}</div>` : '<span class="hint">As needed</span>'}</td><td>${tag(t.state)}</td>
-        <td style="text-align:right;white-space:nowrap"><button class="btn small green" data-act="pm-done-ask" data-id="${t.id}">${icon("save")}Mark Done</button> <button class="btn small" data-act="pm-edit" data-id="${t.id}" data-group="${esc(group)}">${icon("edit")}Edit</button></td></tr>`).join("")}
+        <td style="text-align:right;white-space:nowrap"><button class="btn small green" data-act="pm-done-ask" data-id="${t.id}">${icon("save")}Mark Done</button> ${eq ? `<button class="btn small" data-act="insp-new" data-task="${t.id}">Inspect</button> ` : ""}<button class="btn small" data-act="pm-edit" data-id="${t.id}" data-group="${esc(group)}">${icon("edit")}Edit</button></td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
 function pmForm(id, group) {
@@ -1644,6 +1679,12 @@ const ACT = {
     try { localStorage.setItem("repTo", v.to); } catch (e) {}
     const o = await api("/api/reports/email", {method: "POST", body: JSON.stringify({...v, id: b.dataset.id, month: b.dataset.month})}); closeModal();
     toast(o.method === "outlook" ? "The message is open in Outlook with the report attached. Press Send there." : "Outlook could not be opened for you. A new message is open; attach the report from the folder that opened.", o.method !== "outlook"); },
+  "insp-new"(el) { inspForm(el.dataset.task); },
+  async "insp-save"() { const v = grab("[data-in]", "in"); rememberWho(v.by); v.results = {};
+    for (const it of state.insp.items) v.results[it.key] = {result: (document.querySelector(`[name=in_${it.key}]:checked`) || {}).value || "Pass", note: (document.querySelector(`[data-in-note=${it.key}]`) || {}).value || ""};
+    const o = await api("/api/inspections", {method: "POST", body: JSON.stringify(v)}); state.maint = o; state.insp = null; state.sum = null; closeModal(); if (state.view === "cal") await loadCal(true); if (state.view === "todo") await refreshTodo(); render();
+    toast(`Inspection #${o.inspection.number} saved.${o.inspection.issueId ? " A maintenance issue was created." : ""}${o.inspection.pmDone ? " The PM job is marked done." : ""}`);
+    if (o.inspection.condition === "Unsafe") { const e = o.equipment.find(x => x.id === o.inspection.equipmentId); if (e && e.status !== "Out of Service") showModal(`<h2>${icon("warn")}Condition is Unsafe</h2><div class="body"><p>Should <b>${esc(e.name)}</b> be taken out of service now?</p></div><div class="foot"><button class="btn wine big" data-act="oos-ask" data-id="${e.id}">Take Out of Service</button><button class="btn big" data-act="close">Not Now</button></div>`); } },
   "oos-ask"(el) { oosAsk(el.dataset.id); },
   "oos-clear-ask"(el) { oosClearAsk(el.dataset.id); },
   async "oos-go"() { const v = collectTag(); rememberWho(v.by); if (!v.reason.trim() || !v.by.trim()) return toast("Enter the reason and your name.", true);
@@ -1673,7 +1714,7 @@ const ACT = {
   mod(el) { const k = el.dataset.k, m = MODS.find(x => x.k === k);
     if (state.openMod === k) { state.openMod = null; return render(); }
     state.openMod = k; return ACT.nav({dataset: {v: m.subs[0][0]}}); },
-  nav(el) { const v = el.dataset.v; if (v === "finds") state.finds = null; if (v === "summary") state.sum = null; if (v === "print") return state.lib.products.length ? printDialog("all") : toast("Add a product first."); if (v === "add") state.form = blankForm(); state.view = v; if (v === "settings") loadTab(); state.focusQ = false; render(); if (v === "library") return reload().then(render); },
+  nav(el) { const v = el.dataset.v; if (v === "insp") state.insp = null; if (v === "finds") state.finds = null; if (v === "summary") state.sum = null; if (v === "print") return state.lib.products.length ? printDialog("all") : toast("Add a product first."); if (v === "add") state.form = blankForm(); state.view = v; if (v === "settings") loadTab(); state.focusQ = false; render(); if (v === "library") return reload().then(render); },
   open(el, e) { if (e.target.closest("input")) return; state.view = "detail"; state.id = el.dataset.id; render(); },
   toggle(el) { state.sel.has(el.dataset.id) ? state.sel.delete(el.dataset.id) : state.sel.add(el.dataset.id); render(); },
   selall() { visible().forEach(p => state.sel.add(p.id)); render(); },

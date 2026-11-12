@@ -48,6 +48,7 @@ var reportCatalog = []reportDef{
 	{"assets", "Maintenance", "Asset Costs and Replacement Advice", "Spending on upkeep for each unit, last 12 months, and the repair-or-replace suggestion.", false},
 	{"oos", "Maintenance", "Out-of-Service History", "Every time equipment was taken out of service: why, who, and who cleared it.", false},
 	{"findings", "Maintenance", "Inspection Items", "Things found on walk-throughs that still need doing.", false},
+	{"inspection:blank", "Maintenance", "Blank PM Inspection Sheet", "The 16-point checklist to print and fill in by hand.", false},
 	{"summary", "Maintenance", "Monthly Maintenance Summary", "The month at a glance for management, with the notes saved for that month.", true},
 	{"procedures", "Maintenance", "Maintenance Procedures", "How the department works: the steps, the review schedule and what each priority means.", false},
 	{"pm-equipment", "Schedule", "Equipment PM Schedule", "Recurring equipment maintenance jobs, when each was last done and when it is next due.", false},
@@ -61,6 +62,9 @@ var reportCatalog = []reportDef{
 }
 
 func (s *store) buildReport(id, month string) (*report, bool) {
+	if strings.HasPrefix(id, "inspection:") {
+		return s.inspectionReport(strings.TrimPrefix(id, "inspection:"))
+	}
 	eq, is, _ := s.loadMaint()
 	_, _, st := s.loadMaint()
 	names := map[string]string{}

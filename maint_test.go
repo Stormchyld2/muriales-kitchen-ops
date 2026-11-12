@@ -463,3 +463,40 @@ func TestProcedures(t *testing.T) {
 		t.Error("procedures should be copied into Maintenance Data")
 	}
 }
+
+func TestPMInspection(t *testing.T) {
+	e := newEnv(t)
+	_, out := e.post("/api/maint/equipment", `{"name":"Ice machine"}`)
+	eid := out["equipment"].([]any)[0].(map[string]any)["id"].(string)
+	_, out = e.post("/api/maint/pm", `{"group":"Equipment PM","name":"Quarterly service","equipmentId":"`+eid+`","every":3,"unit":"months","firstDue":"`+time.Now().Format(dayFmt)+`"}`)
+	tid := out["pm"].([]any)[0].(map[string]any)["id"].(string)
+	base := `"taskId":"` + tid + `","by":"Tech","condition":"Fair",`
+	if c, _ := e.post("/api/inspections", `{`+base+`"by":""}`); c != 400 {
+		t.Error("name required")
+	}
+	if c, _ := e.post("/api/inspections", `{`+base+`"results":{"seals":{"result":"Fail"}}}`); c != 400 {
+		t.Error("a failure needs a described action")
+	}
+	if c, _ := e.post("/api/inspections", `{`+base+`"results":{"seals":{"result":"Fail"}},"corrective":"Replace door gasket","markDone":true}`); c != 400 {
+		t.Error("cannot mark done with a failure and no issue")
+	}
+	c, out := e.post("/api/inspections", `{`+base+`"results":{"seals":{"result":"Fail","note":"torn"}},"corrective":"Replace door gasket","createIssue":true,"markDone":true,"readings":"36F"}`)
+	if c != 200 {
+		t.Fatalf("inspection refused: %v", out)
+	}
+	in := out["inspection"].(map[string]any)
+	if in["fails"].(float64) != 1 || in["pmDone"] != true || len(in["items"].([]any)) != 16 || in["issueId"] == "" {
+		t.Errorf("inspection record wrong: %v", in)
+	}
+	if len(out["issues"].([]any)) != 1 {
+		t.Error("a maintenance issue should have been created")
+	}
+	if pm := out["pm"].([]any)[0].(map[string]any); pm["lastDone"] == "" {
+		t.Errorf("PM job should be marked done: %v", pm)
+	}
+	rr := httptest.NewRecorder()
+	e.h.ServeHTTP(rr, httptest.NewRequest("GET", "/api/reports/inspection:"+in["id"].(string), nil))
+	if rr.Code != 200 || !strings.Contains(rr.Body.String(), "Replace door gasket") {
+		t.Errorf("printed sheet failed: %d", rr.Code)
+	}
+}
