@@ -13,12 +13,18 @@ import (
 	"time"
 )
 
+// Groups of recurring jobs. They all work the same way: how often, when first
+// due, when last done. The calendar draws them in different colours.
+var taskGroups = []string{"Equipment PM", "Cleaning", "Grounds / Facility"}
+
 type PMTask struct {
 	ID          string  `json:"id"`
+	Group       string  `json:"group"`
+	Area        string  `json:"area"`
 	EquipmentID string  `json:"equipmentId"`
 	Name        string  `json:"name"`
 	Every       int     `json:"every"`
-	Unit        string  `json:"unit"`     // days, weeks, months
+	Unit        string  `json:"unit"`     // days, weeks, months, years
 	FirstDue    string  `json:"firstDue"` // used until the first time it is done
 	LastDone    string  `json:"lastDone"`
 	Notes       string  `json:"notes"`
@@ -28,8 +34,9 @@ type PMTask struct {
 type pmView struct {
 	PMTask
 	NextDue string `json:"nextDue"`
-	State   string `json:"state"` // Overdue, Due Soon, OK
-	Days    int    `json:"days"`  // days until due (negative when overdue)
+	Bucket  string `json:"bucket"` // Daily, Weekly, Monthly, Quarterly / Semi-Annual, Yearly
+	State   string `json:"state"`  // Overdue, Due Soon, OK
+	Days    int    `json:"days"`   // days until due (negative when overdue)
 }
 
 const dayFmt = "2006-01-02"
@@ -43,6 +50,8 @@ func (t *PMTask) next() string {
 		return t.FirstDue
 	}
 	switch t.Unit {
+	case "years":
+		d = d.AddDate(t.Every, 0, 0)
 	case "weeks":
 		d = d.AddDate(0, 0, 7*t.Every)
 	case "months":
@@ -53,13 +62,53 @@ func (t *PMTask) next() string {
 	return d.Format(dayFmt)
 }
 
+// step moves a date forward by one interval of the task.
+func (t *PMTask) step(d time.Time) time.Time {
+	switch t.Unit {
+	case "years":
+		return d.AddDate(t.Every, 0, 0)
+	case "weeks":
+		return d.AddDate(0, 0, 7*t.Every)
+	case "months":
+		return d.AddDate(0, t.Every, 0)
+	}
+	return d.AddDate(0, 0, t.Every)
+}
+
+// bucket names how often a task repeats, for the calendar's views.
+func (t *PMTask) bucket() string {
+	days := t.Every
+	switch t.Unit {
+	case "weeks":
+		days *= 7
+	case "months":
+		days *= 30
+	case "years":
+		days *= 365
+	}
+	switch {
+	case days <= 1:
+		return "Daily"
+	case days <= 27:
+		return "Weekly"
+	case days <= 89:
+		return "Monthly"
+	case days < 360:
+		return "Quarterly / Semi-Annual"
+	}
+	return "Yearly"
+}
+
 func (s *store) pmList() []pmView {
 	var tasks []*PMTask
 	s.readMaint("pm.json", &tasks)
 	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
 	out := []pmView{}
 	for _, t := range tasks {
-		v := pmView{PMTask: *t, NextDue: t.next(), State: "OK"}
+		if t.Group == "" {
+			t.Group = "Equipment PM"
+		}
+		v := pmView{PMTask: *t, NextDue: t.next(), State: "OK", Bucket: t.bucket()}
 		if d, err := time.Parse(dayFmt, v.NextDue); err == nil {
 			v.Days = int(d.Sub(today).Hours() / 24)
 			if v.Days < 0 {
@@ -86,12 +135,23 @@ func (s *store) pmRoutes(mux *http.ServeMux, reply func(http.ResponseWriter)) {
 		}
 		return true
 	}
-	unitOK := func(u string) bool { return u == "days" || u == "weeks" || u == "months" }
+	unitOK := func(u string) bool { return u == "days" || u == "weeks" || u == "months" || u == "years" }
 
 	mux.HandleFunc("POST /api/maint/pm", func(w http.ResponseWriter, r *http.Request) {
 		var in2 PMTask
-		if json.NewDecoder(r.Body).Decode(&in2) != nil || strings.TrimSpace(in2.Name) == "" || in2.EquipmentID == "" {
-			fail(w, 400, "Choose the equipment and enter what needs doing.")
+		if json.NewDecoder(r.Body).Decode(&in2) != nil {
+			fail(w, 400, "Could not read that.")
+			return
+		}
+		if in2.Group == "" {
+			in2.Group = "Equipment PM"
+		}
+		if strings.TrimSpace(in2.Name) == "" || !oneOf(taskGroups, in2.Group) {
+			fail(w, 400, "Enter what needs doing.")
+			return
+		}
+		if in2.Group == "Equipment PM" && in2.EquipmentID == "" {
+			fail(w, 400, "Choose the equipment.")
 			return
 		}
 		if in2.Every < 1 || !unitOK(in2.Unit) {
@@ -159,7 +219,7 @@ func (s *store) pmRoutes(mux *http.ServeMux, reply func(http.ResponseWriter)) {
 		for _, t := range tasks {
 			if t.ID == r.PathValue("id") {
 				t.History = append(t.History, Entry{in2.Date, strings.TrimSpace(in2.By), strings.TrimSpace("Done. " + in2.Note)})
-				if in2.Cost > 0 {
+				if in2.Cost > 0 && t.EquipmentID != "" {
 					s.addService(ServiceRecord{EquipmentID: t.EquipmentID, PMID: t.ID, Date: in2.Date, Type: "Preventive", Description: t.Name, Cost: in2.Cost, By: strings.TrimSpace(in2.By)})
 				}
 				if in2.Date > t.LastDone {

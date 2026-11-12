@@ -124,7 +124,7 @@ dt{font-weight:600}dd{margin:0}
 .signal.Danger{background:#c8202f;color:#fff}.signal.Warning{background:#e7b416;color:#111}
 .plain td{cursor:default}.plain tbody tr{cursor:default}.plain tbody tr:hover{background:none}
 aside .navhead{margin:14px 10px 4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.6}
-aside .wo{margin:14px 10px 0;width:calc(100% - 20px)}
+aside .wo{margin:14px 10px 0;width:calc(100% - 20px);font-size:13px;padding:8px 6px;justify-content:center;white-space:nowrap}
 .status{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700;color:#111;background:#9aa0a8}
 .status.Operational,.status.Verified,.status.Closed{background:#58b368}.status.Needs\ Attention,.status.Open,.status.Medium{background:#e7b416}
 .status.Out\ of\ Service,.status.Urgent,.status.High{background:#e0525e}.status.Low{background:#9aa0a8}
@@ -133,6 +133,16 @@ aside .nav.mod{font-weight:700}.nav .grow{flex:1}.nav .chev{opacity:.6;font-size
 .nav.sub{padding:7px 12px 7px 42px;font-size:14px;margin:1px 0}.navsep{height:1px;background:var(--line);margin:10px 8px}
 .status.Overdue{background:#e0525e}.status.Due\ Soon{background:#e7b416}.status.OK{background:#58b368}
 .status.Watch{background:#e7b416}.status.Consider\ Replacing{background:#e0525e}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{background:#2d3036;border:1px solid var(--line);color:var(--text);border-radius:14px;padding:4px 12px;cursor:pointer;font-size:13px}.chip.on{background:#2f6fb7;border-color:#2f6fb7;color:#fff}
+.calbar{margin-bottom:8px}.calbar .grow{flex:1}
+.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line)}
+.calgrid .dow{background:#2a2d33;padding:5px;text-align:center;font-weight:700;font-size:12px}
+.day{background:#24262b;min-height:98px;padding:3px;cursor:pointer;overflow:hidden}.day.tall{min-height:380px}.day:hover{background:#2b2e34}.day.other{opacity:.45}.day.today{outline:2px solid #2f6fb7;outline-offset:-2px}
+.day .dn{font-size:12px;font-weight:700;opacity:.8;margin-bottom:2px}.day .more{font-size:11px;opacity:.7;padding-left:4px}
+.ev{font-size:11.5px;line-height:1.25;border-radius:3px;padding:1px 5px;margin-bottom:2px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ev small{opacity:.7}
+.ev.c{background:#6fa8dc}.ev.p{background:#e7b416}.ev.f{background:#8fcf8f}.ev.i{background:#d99ad9}.ev.od{box-shadow:inset 0 0 0 2px #e0525e}.ev.dn{opacity:.5;text-decoration:line-through}
+.day.tall .ev{white-space:normal}.agenda{margin-bottom:10px}.agenda b{display:block;margin-bottom:3px}.agenda .ev{white-space:normal;font-size:13px;padding:3px 8px}
+.legend{font-size:12px;opacity:.85}.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}.legend i.c{background:#6fa8dc}.legend i.p{background:#e7b416}.legend i.f{background:#8fcf8f}.legend i.i{background:#d99ad9}.legend i.od{box-shadow:inset 0 0 0 2px #e0525e;background:#24262b}
 code{background:#1f2125;border:1px solid #565a62;border-radius:4px;padding:2px 6px;word-break:break-all}
 </style>
 </head>
@@ -286,14 +296,15 @@ function visible() {
 }
 
 /* ---------- screens ---------- */
-const MAINT_VIEWS = ["equip", "assets", "issues", "pm"];
+const MAINT_VIEWS = ["equip", "assets", "issues", "pm", "cal", "clean", "fac"];
 const MODS = [
-  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Preventive Maintenance"]]},
+  {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"]]},
+  {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
   {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
 ];
 const NAV_TOP = [["settings","gear","Settings"],["about","info","About"]];
 const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
-const SUB = {assets:"Assets & Maintenance Costs", pm:"Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
+const SUB = {cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
@@ -306,7 +317,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = lockBanner() + ({assets: vAssets, pm: vPM, equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = lockBanner() + ({cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: vPM, equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -978,7 +989,7 @@ let pendingBook = null;
 function openBook(book) {
   const o = printOpt, idxOnly = o.scope === "index";
   const url = URL.createObjectURL(new Blob([book.bytes], {type: "application/pdf"}));
-  const stamp = new Date().toISOString().slice(0, 10), pages = `${book.pages} page${book.pages === 1 ? "" : "s"}, confirmed`;
+  const stamp = ymd(new Date()), pages = `${book.pages} page${book.pages === 1 ? "" : "s"}, confirmed`;
   if (idxOnly) return showPreview(url, true, `Muriales SDS Index ${stamp}.pdf`, `SDS Index — ${pages}`, "Check the pages, then click Print.");
   showPreview(url, true, `${book.complete ? "" : "INCOMPLETE "}Muriales SDS Book ${stamp}.pdf`,
     book.complete ? `SDS Book — ${pages}` : `INCOMPLETE SDS BOOK — ${book.problems.length} sheet${book.problems.length === 1 ? "" : "s"} left out — ${pages}`,
@@ -1011,7 +1022,7 @@ function parsePages(text, n) {
   return out.length ? out : null;
 }
 async function printOne() {
-  const p = byId(state.id), all = $('input[name="pp"]:checked').value === "all", stamp = new Date().toISOString().slice(0, 10);
+  const p = byId(state.id), all = $('input[name="pp"]:checked').value === "all", stamp = ymd(new Date());
   if (all) { closeModal(); return showPreview(`/pdf/${p.id}?v=${encodeURIComponent(p.pdfUpdatedAt || "")}`, false, `${p.name} SDS.pdf`, `${p.name} — complete SDS`, "This is the manufacturer's sheet exactly as supplied."); }
   const x = await loadSheet(p); if (!x.doc) throw new Error(`Pages cannot be picked from this sheet because ${x.why}.`);
   const want = parsePages($("#pprange").value, x.n);
@@ -1081,7 +1092,7 @@ const saveCats = (categories, renames = {}) => api("/api/categories", {method: "
 
 /* ---------- equipment and maintenance ---------- */
 const EQ_TYPES = ["Walk-in Cooler", "Walk-in Freezer", "Reach-in Refrigerator", "Freezer", "Fryer", "Range / Oven", "Grill / Flat Top", "Mixer", "Dish Machine", "Ice Machine", "Hood / Exhaust Fan", "Fire Suppression System", "HVAC / Rooftop Unit", "Make-up Air Unit", "Water Heater", "Grease Trap", "Water Filter", "Other"];
-const PM_TEMPLATES = [
+var PM_TEMPLATES = [
   ["HVAC: change filters", 3, "months", "Typical starting point. Check the unit's manual; dusty kitchens may need it monthly."],
   ["HVAC: service and clean coils", 6, "months", "Typically spring and fall, by a technician."],
   ["Hood / exhaust: clean", 3, "months", "How often depends on cooking volume and local code. Confirm with your inspector or hood cleaner."],
@@ -1095,6 +1106,31 @@ const PM_TEMPLATES = [
   ["Water filter: replace cartridge", 6, "months", ""],
   ["Thermometer: calibrate", 1, "months", ""],
 ];
+var CLEAN_TEMPLATES = [
+  ["Sanitize prep surfaces and cutting boards", 1, "days", ""],
+  ["Sweep and mop kitchen floors", 1, "days", ""],
+  ["Clean and sanitize restrooms", 1, "days", ""],
+  ["Empty and clean floor drains", 1, "weeks", ""],
+  ["Deep clean walk-in shelves and floor", 1, "weeks", ""],
+  ["Clean behind and under cooking equipment", 1, "weeks", ""],
+  ["Clean and sanitize reach-in refrigerators", 1, "weeks", ""],
+  ["Clean walls and ceiling tiles in prep areas", 1, "months", ""],
+  ["Clean light fixtures and vents", 1, "months", ""],
+  ["Clean dry storage shelving", 1, "months", ""],
+  ["Deep clean kitchen (hood, walls, ceilings)", 1, "years", ""],
+];
+var FAC_TEMPLATES = [
+  ["Pest control service", 1, "months", "Keep the service report with your records."],
+  ["Parking lot and grounds walk (litter, lighting)", 1, "weeks", ""],
+  ["Dumpster area clean", 1, "weeks", ""],
+  ["Check emergency lights and exit signs", 1, "months", ""],
+  ["Fire extinguisher inspection", 1, "months", "Monthly visual check; annual professional service."],
+  ["Clean gutters and downspouts", 6, "months", ""],
+  ["Roof inspection", 1, "years", ""],
+  ["Backflow preventer test", 1, "years", "Confirm requirements with your local authority."],
+];
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 const money = n => "$" + (Number(n) || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const who = () => { try { return localStorage.getItem("kitchenName") || ""; } catch (e) { return ""; } };
 const rememberWho = n => { try { localStorage.setItem("kitchenName", n); } catch (e) {} };
@@ -1178,25 +1214,35 @@ function issueDetail(id) {
     <div class="foot"><button class="btn green big" data-act="issue-update">${icon("save")}Save</button><button class="btn big" data-act="issue-wo" data-id="${p.id}">${icon("ext")}Copy &amp; Submit Work Order</button><button class="btn big" data-act="close">Close</button></div>`);
 }
 
-function vPM() {
+const GROUPS = {
+  "Equipment PM": {title: "equipment preventive maintenance", add: "Add Job", empty: "Add recurring jobs such as a fryer boil-out, a filter change or a thermometer check, and they will show here when they are due.", tpl: "PM_TEMPLATES"},
+  "Cleaning": {title: "cleaning task", add: "Add Cleaning Task", empty: "Add the daily, weekly, monthly and yearly cleaning your kitchen does, and they will show on the calendar. A manager marks each one done.", tpl: "CLEAN_TEMPLATES"},
+  "Grounds / Facility": {title: "grounds and facility job", add: "Add Facility Job", empty: "Add recurring building and grounds jobs such as pest control, gutters, parking lot and roof checks.", tpl: "FAC_TEMPLATES"},
+};
+const FREQS = ["Daily", "Weekly", "Monthly", "Quarterly / Semi-Annual", "Yearly"];
+function vPM(group) {
   const m = state.maint; if (!m) { loadMaint().then(render); return `<p class="hint">Loading...</p>`; }
-  const list = m.pm || [], late = list.filter(t => t.state === "Overdue").length;
+  const g = GROUPS[group], list = (m.pm || []).filter(t => t.group === group).sort((a, b) => FREQS.indexOf(a.bucket) - FREQS.indexOf(b.bucket) || a.nextDue.localeCompare(b.nextDue));
+  const late = list.filter(t => t.state === "Overdue").length, eq = group === "Equipment PM";
   const when = t => t.state === "Overdue" ? `${-t.days} day${t.days === -1 ? "" : "s"} overdue` : t.days === 0 ? "due today" : `in ${t.days} day${t.days === 1 ? "" : "s"}`;
-  return `<div class="row"><button class="btn green big" data-act="pm-edit" data-id="">${icon("plus")}Add Job</button>
+  return `<div class="row"><button class="btn green big" data-act="pm-edit" data-id="" data-group="${esc(group)}">${icon("plus")}${g.add}</button>
     <span class="hint">${list.length} recurring job${list.length === 1 ? "" : "s"}${late ? ` · <b>${late} overdue</b>` : ""}</span></div>
-  <div class="tablewrap">${!list.length ? `<div class="empty"><b>No preventive maintenance jobs yet</b>Add recurring jobs such as a fryer boil-out, a filter change or a thermometer check, and they will show here when they are due.</div>`
-    : `<table class="plain"><thead><tr>${["Equipment", "Job", "Every", "Last Done", "Next Due", "Status"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:230px"></th></tr></thead><tbody>
-      ${list.map(t => `<tr><td>${esc(eqName(t.equipmentId))}</td><td><b>${esc(t.name)}</b>${t.notes ? `<div class="hint">${esc(t.notes)}</div>` : ""}</td><td>${t.every} ${t.every === 1 ? t.unit.replace(/s$/, "") : t.unit}</td><td>${fmtDate(t.lastDone) || '<span class="hint">Never</span>'}</td><td>${fmtDate(t.nextDue)}<div class="hint">${when(t)}</div></td><td>${tag(t.state)}</td>
-        <td style="text-align:right;white-space:nowrap"><button class="btn small green" data-act="pm-done-ask" data-id="${t.id}">${icon("save")}Mark Done</button> <button class="btn small" data-act="pm-edit" data-id="${t.id}">${icon("edit")}Edit</button></td></tr>`).join("")}
+  <div class="tablewrap">${!list.length ? `<div class="empty"><b>Nothing here yet</b>${g.empty}</div>`
+    : `<table class="plain"><thead><tr>${[eq ? "Equipment" : "Area", "Job", "Repeats", "Last Done", "Next Due", "Status"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:230px"></th></tr></thead><tbody>
+      ${list.map(t => `<tr><td>${esc(eq ? eqName(t.equipmentId) : [t.area, t.equipmentId ? eqName(t.equipmentId) : ""].filter(Boolean).join(" · "))}</td><td><b>${esc(t.name)}</b>${t.notes ? `<div class="hint">${esc(t.notes)}</div>` : ""}</td><td>${t.bucket}<div class="hint">every ${t.every} ${t.every === 1 ? t.unit.replace(/s$/, "") : t.unit}</div></td><td>${fmtDate(t.lastDone) || '<span class="hint">Never</span>'}</td><td>${fmtDate(t.nextDue)}<div class="hint">${when(t)}</div></td><td>${tag(t.state)}</td>
+        <td style="text-align:right;white-space:nowrap"><button class="btn small green" data-act="pm-done-ask" data-id="${t.id}">${icon("save")}Mark Done</button> <button class="btn small" data-act="pm-edit" data-id="${t.id}" data-group="${esc(group)}">${icon("edit")}Edit</button></td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
-function pmForm(id) {
-  const t = (state.maint.pm || []).find(x => x.id === id) || {every: 3, unit: "months", firstDue: new Date().toISOString().slice(0, 10)};
-  showModal(`<h2>${icon("wrench")}${id ? "Edit" : "Add"} Preventive Maintenance Job</h2><div class="body" id="pmbody" data-id="${esc(id)}"><div class="fields">
-    <label>Equipment: <span class="req">*</span></label><select class="field" data-pm="equipmentId"><option value="">Choose...</option>${state.maint.equipment.map(e => `<option value="${e.id}" ${e.id === t.equipmentId ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select>
-    ${id ? "" : `<label>Start from:</label><select class="field" id="pmtpl"><option value="">A common job (optional)...</option>${PM_TEMPLATES.map((t, i) => `<option value="${i}">${t[0]}</option>`).join("")}</select>`}
-    <label>Job: <span class="req">*</span></label><input class="field" data-pm="name" value="${esc(t.name || "")}" placeholder="e.g. Fryer boil-out, change water filter">
-    <label>Repeats every:</label><div class="row"><input class="field" type="number" min="1" data-pm="every" value="${t.every}" style="width:80px"><select class="field" data-pm="unit" style="width:120px">${["days", "weeks", "months"].map(u => `<option ${u === t.unit ? "selected" : ""}>${u}</option>`).join("")}</select></div>
+function pmForm(id, group) {
+  const t = (state.maint.pm || []).find(x => x.id === id) || {every: 1, unit: "weeks", firstDue: ymd(new Date()), group};
+  group = t.group; const eq = group === "Equipment PM", tpls = window[GROUPS[group].tpl] || [];
+  state.tpls = tpls;
+  showModal(`<h2>${icon("wrench")}${id ? "Edit" : "Add"} ${GROUPS[group].title[0].toUpperCase() + GROUPS[group].title.slice(1)}</h2><div class="body" id="pmbody" data-id="${esc(id)}" data-group="${esc(group)}"><div class="fields">
+    ${id ? "" : `<label>Start from:</label><select class="field" id="pmtpl"><option value="">A common job (optional)...</option>${tpls.map((x, i) => `<option value="${i}">${x[0]}</option>`).join("")}</select>`}
+    <label>${eq ? "Equipment:" : "Equipment (optional):"} ${eq ? '<span class="req">*</span>' : ""}</label><select class="field" data-pm="equipmentId"><option value="">${eq ? "Choose..." : "None"}</option>${state.maint.equipment.map(e => `<option value="${e.id}" ${e.id === t.equipmentId ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select>
+    ${eq ? "" : `<label>Area:</label><div><input class="field" data-pm="area" list="pmareas" value="${esc(t.area || "")}" placeholder="Where it is done, e.g. Prep Area, Parking Lot"><datalist id="pmareas">${(state.lib.locations || []).map(l => `<option value="${esc(l)}">`).join("")}</datalist></div>`}
+    <label>Job: <span class="req">*</span></label><input class="field" data-pm="name" value="${esc(t.name || "")}" placeholder="What needs doing">
+    <label>Repeats every:</label><div class="row"><input class="field" type="number" min="1" data-pm="every" value="${t.every}" style="width:80px"><select class="field" data-pm="unit" style="width:120px">${["days", "weeks", "months", "years"].map(u => `<option ${u === t.unit ? "selected" : ""}>${u}</option>`).join("")}</select></div>
     <label>${t.lastDone ? "First due (before it was first done):" : "First due:"}</label><input type="date" class="field" data-pm="firstDue" value="${esc(t.firstDue)}" style="width:190px">
     <label>Notes:</label><textarea class="field" rows="2" data-pm="notes" placeholder="How it is done, who does it">${esc(t.notes || "")}</textarea></div>
     ${id ? `<div class="hist">${[...(t.history || [])].reverse().map(h => `<div><b>${fmtDate(h.at)}</b> ${esc(h.by)}: ${esc(h.text)}</div>`).join("") || "<div class='hint'>Not done yet.</div>"}</div>` : ""}</div>
@@ -1205,7 +1251,7 @@ function pmForm(id) {
 function pmDone(id) {
   const t = state.maint.pm.find(x => x.id === id);
   showModal(`<h2>${icon("save")}Mark Done</h2><div class="body" id="pdbody" data-id="${id}"><p><b>${esc(t.name)}</b> on ${esc(eqName(t.equipmentId))}</p><div class="fields">
-    <label>Date done:</label><input type="date" class="field" data-pd="date" value="${new Date().toISOString().slice(0, 10)}" style="width:190px">
+    <label>Date done:</label><input type="date" class="field" data-pd="date" value="${ymd(new Date())}" style="width:190px">
     <label>Cost ($):</label><input type="number" min="0" step="0.01" class="field" data-pd="cost" style="width:150px" placeholder="0.00 (optional)">
     <label>Note:</label><input class="field" data-pd="note" placeholder="Optional">
     <label>Your name: <span class="req">*</span></label><input class="field" data-pd="by" value="${esc(who())}"></div></div>
@@ -1235,7 +1281,7 @@ function assetDetail(id) {
     <h3 style="margin:10px 0 4px">Maintenance and repair history</h3>
     <div class="hist" style="max-height:150px">${recs.map(r => `<div><b>${fmtDate(r.date)}</b> ${esc(r.type)}: ${esc(r.description)} · <b>${money(r.cost)}</b>${r.vendor ? " · " + esc(r.vendor) : ""} <span class="hint">(${esc(r.by)})</span> <a href="#" data-act="svc-delete" data-id="${r.id}" class="hint">remove</a></div>`).join("") || "<div class='hint'>Nothing recorded yet.</div>"}</div>
     <h3 style="margin:12px 0 4px">Record maintenance</h3><div class="fields">
-      <label>Date:</label><input type="date" class="field" data-sv="date" value="${new Date().toISOString().slice(0, 10)}" style="width:190px">
+      <label>Date:</label><input type="date" class="field" data-sv="date" value="${ymd(new Date())}" style="width:190px">
       <label>Type:</label><select class="field" data-sv="type" style="width:190px">${["Repair", "Preventive", "Inspection", "Other"].map(t => `<option>${t}</option>`).join("")}</select>
       <label>What was done:</label><input class="field" data-sv="description" placeholder="e.g. Replaced compressor">
       <label>Cost ($):</label><input type="number" min="0" step="0.01" class="field" data-sv="cost" style="width:150px" placeholder="0.00">
@@ -1243,17 +1289,70 @@ function assetDetail(id) {
       <label>Your name: <span class="req">*</span></label><input class="field" data-sv="by" value="${esc(who())}"></div></div>
     <div class="foot"><button class="btn green big" data-act="svc-save">${icon("save")}Save Record</button><button class="btn big" data-act="eq-edit" data-id="${id}">${icon("edit")}Edit Asset Details</button><button class="btn big" data-act="close">Close</button></div>`);
 }
+
+/* ---------- calendar ---------- */
+const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i"};
+const GFILTERS = [["all", "All"], ["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Issues"]];
+const FFILTERS = [["all", "Any Frequency"], ["Daily", "Daily"], ["Weekly", "Weekly"], ["Monthly", "Monthly"], ["Quarterly / Semi-Annual", "Quarterly / Semi-Annual"], ["Yearly", "Yearly"]];
+state.cal = {mode: "month", ref: new Date(), group: "all", freq: "all", events: null, key: ""};
+function calRange() {
+  const c = state.cal, ref = new Date(c.ref.getFullYear(), c.ref.getMonth(), c.mode === "month" || c.mode === "list" ? 1 : c.ref.getDate());
+  if (c.mode === "week") { const s0 = addDays(ref, -ref.getDay()); return [s0, addDays(s0, 6)]; }
+  if (c.mode === "list") return [ref, new Date(ref.getFullYear(), ref.getMonth() + 1, 0)];
+  const s0 = addDays(ref, -ref.getDay()); return [s0, addDays(s0, 41)];
+}
+async function loadCal(force) {
+  const [a, b] = calRange(), key = ymd(a) + ymd(b); if (!force && state.cal.key === key && state.cal.events) return;
+  if (!state.maint) state.maint = await api("/api/maint");
+  state.cal.key = key; const r0 = await api(`/api/maint/calendar?from=${ymd(a)}&to=${ymd(b)}`); state.cal.events = r0.events; if (state.view === "cal") render();
+}
+const calShown = () => (state.cal.events || []).filter(e => (state.cal.group === "all" || e.group === state.cal.group) && (state.cal.freq === "all" || e.bucket === state.cal.freq));
+const evChip = (e, full) => `<div class="ev ${GSLUG[e.group]} ${e.state === "Overdue" ? "od" : ""} ${e.kind === "done" ? "dn" : ""}" title="${esc(e.group)}: ${esc(e.title)}${e.unit ? " (" + esc(e.unit) + ")" : ""}${e.bucket ? " · " + e.bucket : ""}">${e.kind === "done" ? "✓ " : e.kind === "issue" ? "⚠ " : ""}${esc(e.title)}${full && (e.area || e.unit) ? `<small> ${esc(e.area || e.unit)}</small>` : ""}</div>`;
+function vCal() {
+  const c = state.cal; if (!c.events || state.cal.key !== ymd(calRange()[0]) + ymd(calRange()[1])) { loadCal().catch(e => toast(e.message, true)); if (!c.events) return `<p class="hint">Loading...</p>`; }
+  const [a, b] = calRange(), today = ymd(new Date()), shown = calShown(), by = {};
+  for (const e of shown) (by[e.date] = by[e.date] || []).push(e);
+  const label = c.mode === "week" ? `${a.toLocaleDateString("en-US", {month: "short", day: "numeric"})} – ${b.toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}` : c.ref.toLocaleDateString("en-US", {month: "long", year: "numeric"});
+  const chips = (list, cur, act) => list.map(([k, l]) => `<button class="chip ${cur === k ? "on" : ""}" data-act="${act}" data-v="${esc(k)}">${l}</button>`).join("");
+  let grid;
+  if (c.mode === "list") {
+    const days = Object.keys(by).sort();
+    grid = days.length ? days.map(d => `<div class="agenda"><b>${new Date(d + "T12:00").toLocaleDateString("en-US", {weekday: "long", month: "long", day: "numeric"})}</b>${by[d].map(e => evChip(e, true)).join("")}</div>`).join("") : `<div class="empty"><b>Nothing scheduled</b>Nothing matches these filters this month.</div>`;
+  } else {
+    const n = c.mode === "week" ? 7 : 42, cells = [];
+    for (let i = 0; i < n; i++) { const d = addDays(a, i), k = ymd(d), ev = by[k] || [], max = c.mode === "week" ? 99 : 3;
+      cells.push(`<div class="day ${k === today ? "today" : ""} ${c.mode === "month" && d.getMonth() !== c.ref.getMonth() ? "other" : ""} ${c.mode === "week" ? "tall" : ""}" data-act="cal-day" data-d="${k}"><div class="dn">${d.getDate()}</div>${ev.slice(0, max).map(e => evChip(e, c.mode === "week")).join("")}${ev.length > max ? `<div class="more">+${ev.length - max} more</div>` : ""}</div>`); }
+    grid = `<div class="calgrid">${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(x => `<div class="dow">${x}</div>`).join("")}${cells.join("")}</div>`;
+  }
+  return `<div class="row calbar"><button class="btn small" data-act="cal-nav" data-d="-1">${icon("back")}</button><b style="min-width:190px;text-align:center;font-size:17px">${label}</b><button class="btn small" data-act="cal-nav" data-d="1" style="transform:scaleX(-1)">${icon("back")}</button><button class="btn small" data-act="cal-nav" data-d="0">Today</button>
+    <span class="grow"></span><div class="chips">${chips([["month", "Month"], ["week", "Week"], ["list", "List"]], c.mode, "cal-mode")}</div></div>
+  <div class="row calbar"><span class="hint">Show:</span><div class="chips">${chips(GFILTERS, c.group, "cal-group")}</div></div>
+  <div class="row calbar"><span class="hint">How often:</span><div class="chips">${chips(FFILTERS, c.freq, "cal-freq")}</div>
+    <span class="grow"></span><span class="legend"><i class="c"></i>Cleaning <i class="p"></i>Equipment PM <i class="f"></i>Facility <i class="i"></i>Issue <i class="od"></i>Overdue</span></div>
+  <div class="tablewrap" style="padding:8px">${grid}</div>`;
+}
+function dayDialog(d) {
+  const ev = calShown().filter(e => e.date === d), title = new Date(d + "T12:00").toLocaleDateString("en-US", {weekday: "long", month: "long", day: "numeric", year: "numeric"});
+  showModal(`<h2>${icon("list")}${title}</h2><div class="body">${ev.length ? ev.map(e => `<div class="catrow"><div class="grow">${evChip(e, false)}<div class="hint">${esc(e.group)}${e.bucket ? " · " + e.bucket : ""}${e.area ? " · " + esc(e.area) : ""}${e.unit ? " · " + esc(e.unit) : ""}${e.by ? " · " + esc(e.by) : ""}${e.kind === "due" ? " · " + e.state : ""}</div></div>
+      ${e.kind === "due" ? `<button class="btn small green" data-act="pm-done-ask" data-id="${e.taskId}">Mark Done</button>` : e.kind === "issue" ? `<button class="btn small" data-act="issue-open" data-id="${e.issueId}">Open</button>` : ""}</div>`).join("") : `<p class="hint">Nothing scheduled this day.</p>`}</div>
+    <div class="foot"><button class="btn big" data-act="close">Close</button></div>`);
+}
 const grab = (sel, attr) => Object.fromEntries([...document.querySelectorAll(sel)].map(el => [el.dataset[attr], el.type === "checkbox" ? el.checked : el.value]));
-const maintDone = async (data, msg) => { state.maint = data; closeModal(); render(); if (msg) toast(msg); };
+const maintDone = async (data, msg) => { state.maint = data; closeModal(); if (state.view === "cal") await loadCal(true); render(); if (msg) toast(msg); };
 
 const ACT = {
+  "cal-nav"(el) { const c = state.cal, n = +el.dataset.d; if (n === 0) c.ref = new Date(); else if (c.mode === "week") c.ref = addDays(c.ref, 7 * n); else c.ref = new Date(c.ref.getFullYear(), c.ref.getMonth() + n, 1); c.events = null; render(); },
+  "cal-mode"(el) { state.cal.mode = el.dataset.v; state.cal.events = null; render(); },
+  "cal-group"(el) { state.cal.group = el.dataset.v; render(); },
+  "cal-freq"(el) { state.cal.freq = el.dataset.v; render(); },
+  "cal-day"(el) { dayDialog(el.dataset.d); },
   "asset-open"(el) { assetDetail(el.dataset.id); },
   async "svc-save"() { const v = grab("[data-sv]", "sv"), id = $("#asbody").dataset.id; v.equipmentId = id; v.cost = parseFloat(v.cost) || 0; rememberWho(v.by);
     state.maint = await api("/api/maint/service", {method: "POST", body: JSON.stringify(v)}); render(); assetDetail(id); toast("Recorded."); },
   async "svc-delete"(el, e) { e && e.preventDefault(); const id = $("#asbody").dataset.id; state.maint = await api("/api/maint/service/" + el.dataset.id, {method: "DELETE"}); render(); assetDetail(id); },
   async "repct-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({replacePercent: parseInt($("#repct").value, 10) || 0})}); render(); toast("Saved."); },
-  "pm-edit"(el) { pmForm(el.dataset.id); },
-  async "pm-save"() { const v = grab("[data-pm]", "pm"); v.id = $("#pmbody").dataset.id; v.every = parseInt(v.every, 10) || 0; await maintDone(await api("/api/maint/pm", {method: "POST", body: JSON.stringify(v)}), "Job saved."); },
+  "pm-edit"(el) { pmForm(el.dataset.id, el.dataset.group); },
+  async "pm-save"() { const v = grab("[data-pm]", "pm"); v.id = $("#pmbody").dataset.id; v.group = $("#pmbody").dataset.group; v.every = parseInt(v.every, 10) || 0; await maintDone(await api("/api/maint/pm", {method: "POST", body: JSON.stringify(v)}), "Job saved."); },
   async "pm-delete"(el) { await maintDone(await api("/api/maint/pm/" + el.dataset.id, {method: "DELETE"}), "Job deleted."); },
   "pm-done-ask"(el) { pmDone(el.dataset.id); },
   async "pm-done-go"() { const v = grab("[data-pd]", "pd"); v.cost = parseFloat(v.cost) || 0; rememberWho(v.by); await maintDone(await api("/api/maint/pm/" + $("#pdbody").dataset.id + "/done", {method: "POST", body: JSON.stringify(v)}), "Recorded. The next due date has been updated."); },
@@ -1338,7 +1437,7 @@ const ACT = {
   async "folder-go"(el) { const path = $("#newfolder").value; if (!path.trim()) return toast("Paste the folder path first.", true); el.disabled = true;
     try { const r = await api("/api/data-folder", {method: "POST", body: JSON.stringify({path})}); closeModal(); state.sel.clear(); await reload(); await loadBackups(); toast(r.copied ? `Library copied to ${r.folder}. The old copy is still in ${r.previous}` : `Now using the library already in ${r.folder} (${r.products} products).`); }
     finally { el.disabled = false; } },
-  async emerg() { const p = byId(state.id), bytes = await emergencySheet(p), stamp = new Date().toISOString().slice(0, 10);
+  async emerg() { const p = byId(state.id), bytes = await emergencySheet(p), stamp = ymd(new Date());
     showPreview(URL.createObjectURL(new Blob([bytes], {type: "application/pdf"})), true, `${p.name} Emergency Sheet ${stamp}.pdf`, `Emergency Sheet — ${p.name}`, "One page. Check it, then click Print."); },
   async "extract-stored"(el) { const f = state.form; el.disabled = true;
     try { mergeDraft(f, await api(`/api/products/${f.id}/extract`, {method: "POST"}), false); } finally { render(); } },
@@ -1368,7 +1467,7 @@ const ACT = {
   async "integ-accept"(el) { await api(`/api/integrity/${el.dataset.id}/accept`, {method: "POST"}); await reload(); if (state.integ) state.integ = (await api("/api/integrity?full=1")).rows; render(); toast("File accepted. The binder will show this sheet as needing a reprint."); },
   async "integ-run"(el) { el.disabled = true; try { state.integ = (await api("/api/integrity?full=1")).rows; } finally { el.disabled = false; } render(); },
   async "diag-run"() { state.diag = null; render(); await loadDiag(); },
-  "diag-save"() { const a = document.createElement("a"), b = new Blob([state.diag.report], {type: "text/plain"}); a.href = URL.createObjectURL(b); a.download = `SDS Manager diagnostics ${new Date().toISOString().slice(0, 10)}.txt`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); },
+  "diag-save"() { const a = document.createElement("a"), b = new Blob([state.diag.report], {type: "text/plain"}); a.href = URL.createObjectURL(b); a.download = `SDS Manager diagnostics ${ymd(new Date())}.txt`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); },
   async "diag-copy"() { try { await navigator.clipboard.writeText(state.diag.report); toast("Report copied."); } catch (e) { toast("Could not copy. Use Save Report instead.", true); } },
   "import-pdfs"() { $("#importpdfs").click(); },
   "import-zip"() { $("#importzip").click(); },
@@ -1414,7 +1513,7 @@ document.addEventListener("change", e => {
   const t = e.target;
   if (t.id === "cat") { state.cat = t.value; state.focusQ = false; render(); }
   else if (t.id === "file") takeFile(t.files[0]);
-  else if (t.id === "pmtpl" && t.value !== "") { const x = PM_TEMPLATES[+t.value]; const set = (k, v) => { const el = document.querySelector(`[data-pm=${k}]`); if (el) el.value = v; }; set("name", x[0]); set("every", x[1]); set("unit", x[2]); set("notes", x[3]); }
+  else if (t.id === "pmtpl" && t.value !== "") { const x = state.tpls[+t.value]; const set = (k, v) => { const el = document.querySelector(`[data-pm=${k}]`); if (el) el.value = v; }; set("name", x[0]); set("every", x[1]); set("unit", x[2]); set("notes", x[3]); }
   else if (t.id === "importpdfs" && t.files.length) { const files = [...t.files]; t.value = "";
     upload("/api/import/pdfs", "pdf", files).then(async r => { await reload(); const sk = r.skipped || [];
       backfillPages();

@@ -124,3 +124,56 @@ func TestAssetCostsAndReplacementAdvice(t *testing.T) {
 func (e *env) do2(method, path, body string) (int, map[string]any) {
 	return e.do(httptest.NewRequest(method, path, strings.NewReader(body)))
 }
+
+func TestCalendarEvents(t *testing.T) {
+	e := newEnv(t)
+	today := time.Now()
+	d := func(n int) string { return today.AddDate(0, 0, n).Format(dayFmt) }
+	for _, body := range []string{
+		`{"group":"Cleaning","name":"Mop floors","every":1,"unit":"weeks","firstDue":"` + d(1) + `"}`,
+		`{"group":"Cleaning","name":"Deep clean hood","every":1,"unit":"years","firstDue":"` + d(10) + `"}`,
+		`{"group":"Grounds / Facility","name":"Pest control","every":1,"unit":"months","firstDue":"` + d(-3) + `"}`,
+	} {
+		if c, o := e.post("/api/maint/pm", body); c != 200 {
+			t.Fatalf("task refused: %v", o)
+		}
+	}
+	if c, _ := e.post("/api/maint/pm", `{"group":"Equipment PM","name":"x","every":1,"unit":"weeks","firstDue":"`+d(1)+`"}`); c != 400 {
+		t.Error("equipment PM still needs equipment")
+	}
+	if c, _ := e.post("/api/maint/pm", `{"group":"Nonsense","name":"x","every":1,"unit":"weeks","firstDue":"`+d(1)+`"}`); c != 400 {
+		t.Error("an unknown group should be refused")
+	}
+	_, out := e.get2("/api/maint/calendar?from=" + d(-7) + "&to=" + d(28))
+	var mop, hood, pest, overdue int
+	for _, x := range out["events"].([]any) {
+		ev := x.(map[string]any)
+		switch ev["title"] {
+		case "Mop floors":
+			mop++
+			if ev["bucket"] != "Weekly" {
+				t.Errorf("bucket: %v", ev["bucket"])
+			}
+		case "Deep clean hood":
+			hood++
+			if ev["bucket"] != "Yearly" {
+				t.Errorf("bucket: %v", ev["bucket"])
+			}
+		case "Pest control":
+			pest++
+			if ev["state"] == "Overdue" {
+				overdue++
+			}
+		}
+	}
+	if mop != 4 || hood != 1 || overdue != 1 {
+		t.Errorf("mop=%d hood=%d pest=%d overdue=%d", mop, hood, pest, overdue)
+	}
+	if c, _ := e.get2("/api/maint/calendar?from=2020-01-01&to=2026-01-01"); c != 400 {
+		t.Error("a multi-year range should be refused")
+	}
+}
+
+func (e *env) get2(path string) (int, map[string]any) {
+	return e.do(httptest.NewRequest("GET", path, nil))
+}
