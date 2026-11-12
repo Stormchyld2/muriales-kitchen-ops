@@ -177,3 +177,46 @@ func TestCalendarEvents(t *testing.T) {
 func (e *env) get2(path string) (int, map[string]any) {
 	return e.do(httptest.NewRequest("GET", path, nil))
 }
+
+func TestMasterTodo(t *testing.T) {
+	e := newEnv(t)
+	d := func(n int) string { return time.Now().AddDate(0, 0, n).Format(dayFmt) }
+	e.post("/api/maint/pm", `{"group":"Cleaning","name":"Late job","every":1,"unit":"months","firstDue":"`+d(-5)+`"}`)
+	e.post("/api/maint/pm", `{"group":"Cleaning","name":"Today job","every":1,"unit":"months","firstDue":"`+d(0)+`"}`)
+	e.post("/api/maint/pm", `{"group":"Cleaning","name":"Next week job","every":1,"unit":"months","firstDue":"`+d(8)+`"}`)
+	e.post("/api/maint/todos", `{"title":"Call the hood cleaner","createdBy":"M","due":"`+d(1)+`"}`)
+	_, eqo := e.post("/api/maint/equipment", `{"name":"Walk-in"}`)
+	eid := eqo["equipment"].([]any)[0].(map[string]any)["id"].(string)
+	e.post("/api/maint/issues", `{"equipmentId":"`+eid+`","title":"Door seal","reportedBy":"M","priority":"High"}`)
+	_, o := e.get2("/api/todo?from=" + d(0) + "&to=" + d(0))
+	titles := []string{}
+	for _, x := range o["items"].([]any) {
+		titles = append(titles, x.(map[string]any)["title"].(string))
+	}
+	has := func(s string) bool {
+		for _, x := range titles {
+			if strings.Contains(x, s) {
+				return true
+			}
+		}
+		return false
+	}
+	if !has("Late job") || !has("Today job") || has("Next week job") || has("Call the hood") || !has("Door seal") {
+		t.Errorf("today's list: %v", titles)
+	}
+	_, o = e.get2("/api/todo?from=" + d(0) + "&to=" + d(7) + "&sources=Cleaning")
+	if n := len(o["items"].([]any)); n != 2 {
+		t.Errorf("cleaning-only list for the week: %d items", n)
+	}
+	_, o = e.get2("/api/todo?from=" + d(0) + "&to=" + d(30))
+	titles = titles[:0]
+	for _, x := range o["items"].([]any) {
+		titles = append(titles, x.(map[string]any)["title"].(string))
+	}
+	if !has("Next week job") || !has("Call the hood") {
+		t.Errorf("month list: %v", titles)
+	}
+	if first := o["items"].([]any)[0].(map[string]any)["state"]; first != "Overdue" {
+		t.Errorf("overdue items should come first, got %v", first)
+	}
+}

@@ -9,6 +9,7 @@ A Windows program for Muriale's Italian Kitchen. Like the SDS Manager it was bui
 - **Assets & Costs** – model, serial number, purchase date and cost, warranty and normal life for each unit, plus a record of every repair or service and what it cost. When upkeep reaches a set share (default 50%) of the cost of a new unit, the program suggests considering a replacement. It is a rule of thumb, adjustable in Settings, MaintainX.
 - **Preventive Maintenance** – recurring jobs on any equipment, including HVAC, hoods and fire suppression, with common starting points to pick from. A manager marks each job done (with an optional cost) and the next due date follows.
 - **Schedule** – a calendar (month, week or list) that fills itself from every recurring job: Cleaning, Equipment PM and Grounds / Facility, plus done jobs and reported issues. Filter by group (for example Cleaning) and by how often (Daily, Weekly, Monthly, Quarterly / Semi-Annual, Yearly). Click a day to see its jobs and mark them done. Cleaning Tasks and Grounds / Facility have their own lists with common starting points to pick from.
+- **To-Do List** – the **Create To-Do List** button in the side bar works from anywhere. Choose Today, Tomorrow, This Week, Next Week, Next 7 Days, This Month, Next Month, Next 30 Days, Overdue Only or your own dates, and what to include. The program gathers overdue and due recurring jobs, open maintenance issues, repair-or-replace decisions, SDS follow-ups and your own one-off items into one list that can be printed. Jobs can be marked done straight from it.
 - **Submit Work Order** – a button in the side bar on every maintenance screen. It opens the MaintainX web portal in its own app-style window (Edge, kept signed in per computer). On an issue, **Copy & Submit Work Order** also copies the issue details so they can be pasted into MaintainX. The work order number can be written back on the issue. The program does not use the MaintainX API. Set the portal address in Settings, MaintainX.
 - **Safety Data Sheets** – the complete SDS Manager (library, auto-drafting from PDFs, emergency quick view, printable binder, handoff notes, backups, edit lock, 30-day removed-products clean-up). See `SDS-MANAGER.md`.
 
@@ -20,7 +21,7 @@ Who may use it is decided by who can open the folder: only people with access to
 SDS Data/                      the SDS library, same as the SDS Manager
   library.json  sheets/  removed/
 Maintenance Data/
-  equipment.json  issues.json  pm.json (all recurring jobs)  service.json  settings.json   (each with a .bak copy)
+  equipment.json  issues.json  pm.json (all recurring jobs)  service.json  todos.json  settings.json   (each with a .bak copy)
   Maintenance Log.md           readable copy, rewritten by the program
 Kitchen Backups/               SDS zips, plus a Maintenance zip with each backup
 ```

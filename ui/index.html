@@ -143,6 +143,10 @@ aside .nav.mod{font-weight:700}.nav .grow{flex:1}.nav .chev{opacity:.6;font-size
 .ev.c{background:#6fa8dc}.ev.p{background:#e7b416}.ev.f{background:#8fcf8f}.ev.i{background:#d99ad9}.ev.od{box-shadow:inset 0 0 0 2px #e0525e}.ev.dn{opacity:.5;text-decoration:line-through}
 .day.tall .ev{white-space:normal}.agenda{margin-bottom:10px}.agenda b{display:block;margin-bottom:3px}.agenda .ev{white-space:normal;font-size:13px;padding:3px 8px}
 .legend{font-size:12px;opacity:.85}.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}.legend i.c{background:#6fa8dc}.legend i.p{background:#e7b416}.legend i.f{background:#8fcf8f}.legend i.i{background:#d99ad9}.legend i.od{box-shadow:inset 0 0 0 2px #e0525e;background:#24262b}
+@media print{aside,.noprint,#toast,#modal,.flag,header .pictos{display:none!important}body{display:block!important;background:#fff!important;color:#000!important;height:auto!important;overflow:visible!important}
+main,#view{display:block!important;height:auto!important;overflow:visible!important;background:#fff!important;color:#000!important;padding:0!important;margin:0!important}header{background:#fff!important;color:#000!important}header h1,header p{color:#000!important}.panel{background:#fff!important;border:0!important;color:#000!important}.hint{color:#444!important}.status{border:1px solid #999}}
+.todolist h4{margin:16px 0 6px;border-bottom:1px solid var(--line);padding-bottom:3px}.trow{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #2f3238}.trow .grow{flex:1}.trow .when{text-align:right;font-size:12.5px;min-width:96px}
+.trow .box{width:16px;height:16px;border:2px solid #9aa0a8;border-radius:3px;flex:none}
 code{background:#1f2125;border:1px solid #565a62;border-radius:4px;padding:2px 6px;word-break:break-all}
 </style>
 </head>
@@ -302,22 +306,22 @@ const MODS = [
   {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
   {k: "sds", label: "SDS Manager", icon: "home", subs: [["library","Library"],["add","Add SDS"],["categories","Categories"],["print","Print / Export"],["notes","Handoff Notes"]]},
 ];
-const NAV_TOP = [["settings","gear","Settings"],["about","info","About"]];
+const NAV_TOP = [["todo","list","To-Do List"],["settings","gear","Settings"],["about","info","About"]];
 const modOf = v => (MODS.find(m => m.subs.some(([k]) => k === v || (v === "detail" && k === "library"))) || {}).k;
-const SUB = {cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
+const SUB = {todo:"To-Do List", cal:"Calendar", clean:"Cleaning Tasks", fac:"Grounds / Facility Maintenance", assets:"Assets & Maintenance Costs", pm:"Equipment Preventive Maintenance", equip:"Equipment", issues:"Maintenance Issues", library:"Safety Data Sheet (SDS) Management", detail:"Product Detail / Emergency Quick View", add:"Add / Edit Safety Data Sheet", categories:"Categories", notes:"Manager Handoff Notes", settings:"Settings", about:"About"};
 
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
   if (state.lastView !== state.view) { const cur = modOf(state.view); if (cur) state.openMod = cur; state.lastView = state.view; }
   $("#nav").innerHTML = MODS.map(m => `<button class="nav mod ${state.openMod === m.k ? "open" : ""}" data-act="mod" data-k="${m.k}">${icon(m.icon)}<span class="grow">${m.label}</span><span class="chev">${state.openMod === m.k ? "▾" : "▸"}</span></button>`
       + (state.openMod === m.k ? m.subs.map(([v, l]) => `<button class="nav sub ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${l}</button>`).join("") : "")).join("")
-    + `<div class="navsep"></div>` + NAV_TOP.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("")
+    + `<button class="btn green wo" data-act="todo-new" title="Gather everything due into one list">${icon("list")}Create To-Do List</button><div class="navsep"></div>` + NAV_TOP.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("")
     + (MAINT_VIEWS.includes(state.view) ? `<button class="btn green wo" data-act="submit-wo" title="Opens MaintainX in its own window">${icon("ext")}Submit Work Order</button>` : "");
   $("#subtitle").textContent = state.view === "add" && state.form && state.form.replaceMode ? "Replace SDS PDF" : SUB[state.view];
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = lockBanner() + ({cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: vPM, equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = lockBanner() + ({todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: vPM, equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -1337,10 +1341,74 @@ function dayDialog(d) {
       ${e.kind === "due" ? `<button class="btn small green" data-act="pm-done-ask" data-id="${e.taskId}">Mark Done</button>` : e.kind === "issue" ? `<button class="btn small" data-act="issue-open" data-id="${e.issueId}">Open</button>` : ""}</div>`).join("") : `<p class="hint">Nothing scheduled this day.</p>`}</div>
     <div class="foot"><button class="btn big" data-act="close">Close</button></div>`);
 }
+
+/* ---------- master to-do list ---------- */
+const TODO_PERIODS = [["today", "Today"], ["tomorrow", "Tomorrow"], ["week", "This Week"], ["nextweek", "Next Week"], ["next7", "Next 7 Days"], ["month", "This Month"], ["nextmonth", "Next Month"], ["next30", "Next 30 Days"], ["overdue", "Overdue Only"], ["custom", "Pick Dates..."]];
+const TODO_SOURCES = [["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Open maintenance issues"], ["Equipment", "Repair or replace decisions"], ["SDS", "SDS follow-ups"], ["Other", "My own items"]];
+state.todo = null; state.todoPick = {period: "today", sources: TODO_SOURCES.map(x => x[0]), from: "", to: ""};
+function todoRange(p, a, b) {
+  const t = new Date(), day = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  const eow = addDays(day, 6 - day.getDay()), nws = addDays(eow, 1);
+  const R = {today: [day, day], tomorrow: [addDays(day, 1), addDays(day, 1)], week: [day, eow], nextweek: [nws, addDays(nws, 6)], next7: [day, addDays(day, 6)],
+    month: [day, new Date(day.getFullYear(), day.getMonth() + 1, 0)], nextmonth: [new Date(day.getFullYear(), day.getMonth() + 1, 1), new Date(day.getFullYear(), day.getMonth() + 2, 0)],
+    next30: [day, addDays(day, 29)], overdue: [day, day]};
+  if (p === "custom") return [new Date(a + "T12:00"), new Date(b + "T12:00")];
+  return R[p];
+}
+function todoDialog() {
+  const k = state.todoPick;
+  showModal(`<h2>${icon("list")}Create To-Do List</h2><div class="body"><p style="margin-top:0"><b>Which period?</b></p>
+    <div class="chips" style="margin-bottom:10px">${TODO_PERIODS.map(([v, l]) => `<button class="chip ${k.period === v ? "on" : ""}" data-act="todo-period" data-v="${v}">${l}</button>`).join("")}</div>
+    ${k.period === "custom" ? `<div class="row" style="margin-bottom:10px"><label>From</label><input type="date" class="field" id="todofrom" value="${esc(k.from)}" style="width:170px"><label>to</label><input type="date" class="field" id="todoto" value="${esc(k.to)}" style="width:170px"></div>` : ""}
+    <p><b>What to include?</b></p>${TODO_SOURCES.map(([v, l]) => `<label style="display:block;font-weight:400;margin:3px 0"><input type="checkbox" data-src="${esc(v)}" ${k.sources.includes(v) ? "checked" : ""}> ${l}</label>`).join("")}
+    <p class="hint">Overdue jobs and open issues always appear, whatever the period.</p></div>
+    <div class="foot"><button class="btn green big" data-act="todo-go">${icon("list")}Create List</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
+async function refreshTodo() {
+  const t = state.todo; if (!t) return;
+  const r0 = await api(`/api/todo?from=${t.from}&to=${t.to}&sources=${encodeURIComponent(t.sources.join(","))}`);
+  t.items = r0.items; t.generated = r0.generated; if (state.view === "todo") render();
+}
+function vTodo() {
+  const t = state.todo;
+  if (!t) return `<div class="empty"><b>No to-do list yet</b>Choose a period and the program gathers everything that is due into one list.<br><br><button class="btn green big" data-act="todo-new">${icon("list")}Create To-Do List</button></div>`;
+  const items = t.items.filter(i => !t.overdueOnly || i.state === "Overdue");
+  const groups = TODO_SOURCES.map(([g, l]) => [g, l, items.filter(i => i.group === g)]).filter(x => x[2].length);
+  const late = items.filter(i => i.state === "Overdue").length;
+  const act = i => i.kind === "todo" ? `<button class="btn small green noprint" data-act="todo-done" data-id="${i.id}">Done</button>` : i.kind === "task" ? `<button class="btn small green noprint" data-act="todo-act" data-kind="task" data-id="${i.id}">Mark Done</button>` : `<button class="btn small noprint" data-act="todo-act" data-kind="${i.kind}" data-id="${i.id}">Open</button>`;
+  return `<div class="row noprint"><button class="btn green" data-act="todo-new">${icon("list")}Change Period</button><button class="btn" data-act="todo-refresh">${icon("swap")}Refresh</button><button class="btn" data-act="todo-add">${icon("plus")}Add My Own Item</button><button class="btn" data-act="todo-print">${icon("print")}Print</button></div>
+  <div class="panel todolist"><h3 style="margin-top:0">To-Do List: ${esc(t.label)}</h3><div class="hint">Made ${new Date(t.generated).toLocaleString("en-US", {dateStyle: "medium", timeStyle: "short"})} · ${items.length} item${items.length === 1 ? "" : "s"}${late ? ` · <b>${late} overdue</b>` : ""}</div>
+    ${groups.length ? groups.map(([g, l, list]) => `<h4>${l}</h4>${list.map(i => `<div class="trow"><span class="box"></span><div class="grow"><b>${esc(i.title)}</b><div class="hint">${esc(i.detail)}</div></div><div class="when">${i.due ? fmtDate(i.due) : ""}<div><span class="status ${({"Due Today": "Needs Attention", "Upcoming": "OK", "Open": "Open", "Overdue": "Overdue"})[i.state]}">${esc(i.state)}</span></div></div>${act(i)}</div>`).join("")}`).join("")
+      : `<p>Nothing to do for this period.</p>`}</div>`;
+}
 const grab = (sel, attr) => Object.fromEntries([...document.querySelectorAll(sel)].map(el => [el.dataset[attr], el.type === "checkbox" ? el.checked : el.value]));
-const maintDone = async (data, msg) => { state.maint = data; closeModal(); if (state.view === "cal") await loadCal(true); render(); if (msg) toast(msg); };
+const maintDone = async (data, msg) => { state.maint = data; closeModal(); if (state.view === "cal") await loadCal(true); if (state.view === "todo") await refreshTodo(); render(); if (msg) toast(msg); };
 
 const ACT = {
+  "todo-new"() { todoDialog(); },
+  "todo-period"(el) { state.todoPick.period = el.dataset.v; state.todoPick.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src); todoDialog(); },
+  async "todo-go"() { const k = state.todoPick; k.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src);
+    if (!k.sources.length) return toast("Choose at least one thing to include.", true);
+    if (k.period === "custom") { k.from = $("#todofrom").value; k.to = $("#todoto").value; if (!k.from || !k.to || k.to < k.from) return toast("Choose the dates, with the end on or after the start.", true); }
+    const [a, b] = todoRange(k.period, k.from, k.to), label = k.period === "custom" ? `${fmtDate(k.from)} to ${fmtDate(k.to)}` : TODO_PERIODS.find(x => x[0] === k.period)[1];
+    const full = label + (k.period === "custom" ? "" : a.getTime() === b.getTime() ? " (" + a.toLocaleDateString("en-US", {weekday: "long", month: "long", day: "numeric"}) + ")" : " (" + a.toLocaleDateString("en-US", {month: "short", day: "numeric"}) + " – " + b.toLocaleDateString("en-US", {month: "short", day: "numeric"}) + ")");
+    state.todo = {label: full, period: k.period, from: ymd(a), to: ymd(b), sources: [...k.sources], overdueOnly: k.period === "overdue", items: []};
+    await refreshTodo(); closeModal(); state.view = "todo"; render(); },
+  async "todo-refresh"() { await refreshTodo(); toast("Refreshed."); },
+  "todo-print"() { window.print(); },
+  "todo-add"() { showModal(`<h2>${icon("plus")}Add My Own Item</h2><div class="body"><div class="fields">
+    <label>To do: <span class="req">*</span></label><input class="field" data-td="title" placeholder="e.g. Call the hood cleaner">
+    <label>Due date:</label><input type="date" class="field" data-td="due" style="width:190px"><label>Notes:</label><input class="field" data-td="notes" placeholder="Optional">
+    <label>Your name: <span class="req">*</span></label><input class="field" data-td="createdBy" value="${esc(who())}"></div></div>
+    <div class="foot"><button class="btn green big" data-act="todo-add-go">${icon("save")}Add</button><button class="btn big" data-act="close">Cancel</button></div>`); },
+  async "todo-add-go"() { const v = grab("[data-td]", "td"); rememberWho(v.createdBy); await api("/api/maint/todos", {method: "POST", body: JSON.stringify(v)}); closeModal(); if (state.todo && !state.todo.sources.includes("Other")) state.todo.sources.push("Other"); await refreshTodo(); toast("Added."); },
+  "todo-done"(el) {
+    showModal(`<h2>${icon("save")}Done</h2><div class="body"><div class="fields"><label>Your name: <span class="req">*</span></label><input class="field" id="todoby" value="${esc(who())}"></div></div>
+    <div class="foot"><button class="btn green big" data-act="todo-done-go" data-id="${el.dataset.id}">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`); },
+  async "todo-done-go"(el) { const by = $("#todoby").value; rememberWho(by); await api("/api/maint/todos/" + el.dataset.id + "/done", {method: "POST", body: JSON.stringify({by})}); closeModal(); await refreshTodo(); toast("Done."); },
+  async "todo-act"(el) { const k = el.dataset.kind, id = el.dataset.id; if (!state.maint) state.maint = await api("/api/maint");
+    if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
+    if (k === "product") { state.id = id; state.view = "detail"; render(); } },
   "cal-nav"(el) { const c = state.cal, n = +el.dataset.d; if (n === 0) c.ref = new Date(); else if (c.mode === "week") c.ref = addDays(c.ref, 7 * n); else c.ref = new Date(c.ref.getFullYear(), c.ref.getMonth() + n, 1); c.events = null; render(); },
   "cal-mode"(el) { state.cal.mode = el.dataset.v; state.cal.events = null; render(); },
   "cal-group"(el) { state.cal.group = el.dataset.v; render(); },
