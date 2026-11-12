@@ -29,6 +29,7 @@ type OOSRecord struct {
 	ClearNote   string `json:"clearNote,omitempty"`
 	// Details printed on the out-of-service tag.
 	AssetID     string `json:"assetId,omitempty"`
+	Location    string `json:"location,omitempty"`
 	Safety      string `json:"safety,omitempty"`     // Yes / No: safety hazard
 	FoodSafety  string `json:"foodSafety,omitempty"` // Yes / No
 	PowerOff    string `json:"powerOff,omitempty"`   // Yes / No: power or gas disconnected
