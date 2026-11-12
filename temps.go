@@ -38,6 +38,7 @@ type TempPoint struct {
 	ID   string   `json:"id"`
 	Name string   `json:"name"`
 	Kind string   `json:"kind"`
+	Area string   `json:"area,omitempty"`
 	Min  *float64 `json:"min"` // lowest safe, nil for none
 	Max  *float64 `json:"max"` // highest safe, nil for none
 }
@@ -180,14 +181,29 @@ func suggestTempMap(h []string) tempMap {
 		}
 		return ""
 	}
-	m := tempMap{Timestamp: find("timestamp"), By: find("initials", "your name", "employee", "checked by", "completed by", "name"), Notes: find("note", "comment", "remark"), Action: find("corrective", "action")}
+	m := tempMap{Timestamp: find("timestamp", "completion"), By: find("initials", "your name", "employee", "checked by", "completed by", "name"), Notes: find("note", "comment", "remark"), Action: find("corrective", "action")}
 	if m.Timestamp == "" {
 		m.Timestamp = find("date", "time", "when")
 	}
 	m.Point = find("which", "unit", "equipment", "location", "station", "item", "cooler", "freezer", "area")
+	// Microsoft Forms style: every column after the standard ones is a unit.
+	meta := map[string]bool{"id": true, "start time": true, "completion time": true, "email": true, "name": true, "timestamp": true}
+	for _, c := range []string{m.Timestamp, m.By, m.Notes, m.Action} {
+		meta[strings.ToLower(strings.TrimSpace(c))] = true
+	}
+	var rest []string
 	for _, c := range h {
-		if isTemp(c) {
-			m.Temp = append(m.Temp, c)
+		if k := strings.ToLower(strings.TrimSpace(c)); k != "" && !meta[k] {
+			rest = append(rest, c)
+		}
+	}
+	if len(rest) >= 3 {
+		m.Temp, m.Point = rest, ""
+	} else {
+		for _, c := range h {
+			if isTemp(c) {
+				m.Temp = append(m.Temp, c)
+			}
 		}
 	}
 	if len(m.Temp) > 1 {
@@ -218,6 +234,10 @@ var tsLayouts = []string{"1/2/2006 15:04:05", "1/2/2006 3:04:05 PM", "1/2/2006 1
 
 func parseWhen(date, clock string) (string, bool) {
 	date, clock = strings.TrimSpace(date), strings.TrimSpace(clock)
+	if f, err := strconv.ParseFloat(date, 64); err == nil && f > 20000 && f < 80000 && clock == "" {
+		d := time.Date(1899, 12, 30, 0, 0, 0, 0, time.UTC).Add(time.Duration(f*86400+0.5) * time.Second)
+		return time.Date(d.Year(), d.Month(), d.Day(), d.Hour(), d.Minute(), 0, 0, time.Local).Format("2006-01-02 15:04"), true
+	}
 	if clock != "" {
 		for _, l := range tsLayouts {
 			if d, err := time.ParseInLocation(l, date, time.Local); err == nil {
@@ -315,10 +335,14 @@ func (s *store) importTemps(rows [][]string, m tempMap) (importResult, error) {
 			known[r.Key] = true
 		}
 	}
+	clean := func(h string) string {
+		n := regexp.MustCompile(`(?i)\b(temp(erature)?s?|reading|°?f)\b`).ReplaceAllString(h, "")
+		return strings.TrimSpace(strings.Trim(strings.TrimSpace(n), "-:()?"))
+	}
 	pts := s.tempPoints()
 	pointFor := func(name string) *TempPoint {
 		for _, p := range pts {
-			if strings.EqualFold(p.Name, name) {
+			if strings.EqualFold(p.Name, name) || strings.EqualFold(clean(p.Name), clean(name)) {
 				return p
 			}
 		}
@@ -326,10 +350,6 @@ func (s *store) importTemps(rows [][]string, m tempMap) (importResult, error) {
 		pts = append(pts, p)
 		res.NewPoints++
 		return p
-	}
-	clean := func(h string) string {
-		n := regexp.MustCompile(`(?i)\b(temp(erature)?s?|reading|°?f)\b`).ReplaceAllString(h, "")
-		return strings.TrimSpace(strings.Trim(strings.TrimSpace(n), "-:()?"))
 	}
 	for _, row := range rows[1:] {
 		at, ok := parseWhen(get(row, ts), get(row, tm))
@@ -344,12 +364,15 @@ func (s *store) importTemps(rows [][]string, m tempMap) (importResult, error) {
 			}
 			t, ok := parseTemp(raw)
 			if !ok {
+				if !strings.ContainsAny(raw, "0123456789") {
+					continue // "Not in use", "N/A" and the like
+				}
 				res.Unreadable++
 				continue
 			}
 			name := get(row, pc)
 			if len(tcols) > 1 || pc < 0 {
-				name = clean(rows[0][tc])
+				name = strings.TrimSpace(rows[0][tc])
 			}
 			if name == "" {
 				res.Unreadable++
@@ -545,6 +568,42 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			}
 		}
 		fail(w, 404, "That reading was not found.")
+	})
+	mux.HandleFunc("POST /api/temps/xlsx", func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(io.LimitReader(r.Body, 40<<20))
+		text, err := xlsxToCSV(b)
+		if err != nil {
+			fail(w, 400, err.Error())
+			return
+		}
+		writeJSON(w, 200, map[string]string{"csv": text})
+	})
+	// Adds Muriale's own temperature points and their limits (existing names are kept).
+	mux.HandleFunc("POST /api/temps/points/starter", func(w http.ResponseWriter, r *http.Request) {
+		b, _ := starterFiles.ReadFile("starter/temp_points.json")
+		var seed []*TempPoint
+		if json.Unmarshal(b, &seed) != nil {
+			fail(w, 500, "The starter list could not be read.")
+			return
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		pts := s.tempPoints()
+		have := map[string]bool{}
+		for _, p := range pts {
+			have[strings.ToLower(p.Name)] = true
+		}
+		for _, p := range seed {
+			if !have[strings.ToLower(p.Name)] {
+				p.ID = newID()
+				pts = append(pts, p)
+			}
+		}
+		if err := s.writeMaint("temp-points.json", pts); err != nil {
+			fail(w, 500, err.Error())
+			return
+		}
+		writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
 	})
 	mux.HandleFunc("POST /api/temps/import/preview", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct{ CSV string }

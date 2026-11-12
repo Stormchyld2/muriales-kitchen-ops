@@ -1261,7 +1261,7 @@ function tempEnter() {
   const d = state.temps;
   showModal(`<h2>${icon("list")}Enter Temperatures</h2><div class="body" id="tebody"><p class="hint" style="margin-top:0">Fill in only the ones you checked. If a reading is out of range, a box asks for the corrective action.</p>
     <table class="plain"><thead><tr><th class="nosort" style="width:auto">Point</th><th class="nosort" style="width:auto">Safe range</th><th class="nosort" style="width:auto">Temp °F</th><th class="nosort" style="width:auto">Notes / action</th></tr></thead><tbody>
-    ${d.points.map(p => { const lim = tLimit(p); return `<tr data-pid="${p.id}"><td><b>${esc(p.name)}</b></td><td class="hint">${esc(lim.text)}</td><td><input type="number" step="0.1" class="field" data-tt="${p.id}" style="width:90px"></td><td><input class="field" data-tn="${p.id}" placeholder="Optional"></td></tr>`; }).join("")}</tbody></table>
+    ${d.points.map(p => { const lim = tLimit(p); return `<tr data-pid="${p.id}"><td><b>${esc(p.name)}</b>${p.area ? `<div class="hint">${esc(p.area)}</div>` : ""}</td><td class="hint">${esc(lim.text)}</td><td><input type="number" step="0.1" class="field" data-tt="${p.id}" style="width:90px"></td><td><input class="field" data-tn="${p.id}" placeholder="Optional"></td></tr>`; }).join("")}</tbody></table>
     <div class="fields" style="margin-top:8px"><label>Your name or initials: <span class="req">*</span></label><input class="field" id="teby" value="${esc(who())}" style="width:220px"></div></div>
     <div class="foot"><button class="btn green big" data-act="temp-save">${icon("save")}Save Readings</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
@@ -1282,14 +1282,15 @@ function tempAction(id) {
 function vTPoints() {
   const d = state.temps; if (!d) { loadTemps(); return `<p class="hint">Loading...</p>`; }
   return `<p class="hint" style="margin-top:0">The places you check temperatures. The safe range comes from the type (FDA Food Code) unless you set your own. Confirm the limits with your health department.</p>
-  <div class="row"><button class="btn green big" data-act="tpt-edit" data-id="">${icon("plus")}Add Point</button></div>
-  <div class="tablewrap">${!d.points.length ? `<div class="empty"><b>No points yet</b>Add each cooler, freezer, hot well or other place you check.</div>` : `<table class="plain"><thead><tr>${["Point", "Type", "Safe range"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
-    ${d.points.map(p => `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.kind)}</td><td>${esc(tLimit(p).text)}</td><td style="text-align:right"><button class="btn small" data-act="tpt-edit" data-id="${p.id}">${icon("edit")}Edit</button> <button class="btn small wine" data-act="tpt-del" data-id="${p.id}">${icon("trash")}Delete</button></td></tr>`).join("")}</tbody></table>`}</div>`;
+  <div class="row"><button class="btn green big" data-act="tpt-edit" data-id="">${icon("plus")}Add Point</button><button class="btn" data-act="tpt-starter">${icon("down")}Load Muriale's Units (29)</button></div>
+  <div class="tablewrap">${!d.points.length ? `<div class="empty"><b>No points yet</b>Add each cooler, freezer, hot well or other place you check.</div>` : `<table class="plain"><thead><tr>${["Point", "Area", "Type", "Safe range"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
+    ${d.points.map(p => `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.area || "")}</td><td>${esc(p.kind)}</td><td>${esc(tLimit(p).text)}</td><td style="text-align:right"><button class="btn small" data-act="tpt-edit" data-id="${p.id}">${icon("edit")}Edit</button> <button class="btn small wine" data-act="tpt-del" data-id="${p.id}">${icon("trash")}Delete</button></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 function tptForm(id) {
   const p = state.temps.points.find(x => x.id === id) || {kind: "Cold Holding"};
   showModal(`<h2>${icon("list")}${id ? "Edit" : "Add"} Temperature Point</h2><div class="body" id="tpbody" data-id="${esc(id)}"><div class="fields">
     <label>Name: <span class="req">*</span></label><input class="field" data-tp="name" value="${esc(p.name || "")}" placeholder="e.g. Walk-in Cooler 1">
+    <label>Area / station:</label><input class="field" data-tp="area" value="${esc(p.area || "")}" placeholder="e.g. Back Line">
     <label>Type:</label><select class="field" data-tp="kind">${state.temps.kinds.map(k => `<option ${k.kind === p.kind ? "selected" : ""}>${k.kind}</option>`).join("")}</select>
     <label>Lowest safe °F:</label><input type="number" step="0.1" class="field" data-tp="min" value="${p.min != null ? p.min : ""}" style="width:130px" placeholder="Leave empty to use the type's limit">
     <label>Highest safe °F:</label><input type="number" step="0.1" class="field" data-tp="max" value="${p.max != null ? p.max : ""}" style="width:130px" placeholder="Leave empty to use the type's limit"></div>
@@ -1304,9 +1305,9 @@ function tTempSheet() {
     <p class="hint">Anyone with the link can read the sheet, so keep it to temperatures. Nothing is sent back to Google.</p>
     <label>Published sheet link:</label><input class="field" id="tsurl" value="${esc(d.url || "")}" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
     <div class="row" style="margin-top:10px"><button class="btn green" data-act="tsurl-save">${icon("save")}Save Link</button><button class="btn" data-act="temp-sync">${icon("down")}Sync Now</button><button class="btn" data-act="temp-cols" ${d.url ? "" : "disabled"}>Check Columns</button>${d.syncedAt ? `<span class="hint">Last synced ${esc(d.syncedAt)}</span>` : ""}</div></div>
-  <div class="panel" style="max-width:820px"><h3 style="margin-top:0">Import a CSV file instead</h3>
-    <p>In Google Sheets choose File, Download, Comma-separated values (.csv), then pick the file here. Responses already imported are skipped, so you can import the same sheet again.</p>
-    <label class="btn" style="display:inline-block">${icon("down")}Choose CSV File<input type="file" id="tempcsv" accept=".csv,text/csv" hidden></label></div>`;
+  <div class="panel" style="max-width:820px"><h3 style="margin-top:0">Import a file (Microsoft Forms or Google)</h3>
+    <p>From Microsoft Forms choose Open in Excel and save or download the workbook, or in Google Sheets download as .csv. Then pick the .xlsx or .csv file here. Responses already imported are skipped, so you can import the same sheet again.</p>
+    <label class="btn" style="display:inline-block">${icon("down")}Choose CSV or Excel File<input type="file" id="tempcsv" accept=".csv,.xlsx,text/csv" hidden></label></div>`;
 }
 function tempMapDialog(pv, src) {
   const H = pv.headers, m = pv.map, opt = (sel, none) => `<option value="">${none || "(none)"}</option>` + H.map(h => `<option ${h === sel ? "selected" : ""}>${esc(h)}</option>`).join("");
@@ -1783,6 +1784,7 @@ const ACT = {
     try { if (src.sheet) { state.temps = await api("/api/temps/settings", {method: "POST", body: JSON.stringify({map: m})}); const o = await api("/api/temps/sync", {method: "POST"}); state.temps = o.data; closeModal(); render(); toast(syncMsg(o)); }
       else { const o = await api("/api/temps/import", {method: "POST", body: JSON.stringify({csv: src.csv, map: m, save: true})}); state.temps = o.data; closeModal(); render(); toast(syncMsg(o)); } } catch (e) { toast(e.message, true); } },
   "tpt-edit"(el) { tptForm(el.dataset.id); },
+  async "tpt-starter"() { state.temps = await api("/api/temps/points/starter", {method: "POST"}); render(); toast("Units loaded. Existing ones were kept."); },
   async "tpt-save"() { const v = grab("[data-tp]", "tp"); const num = x => x === "" ? null : parseFloat(x); v.min = num(v.min); v.max = num(v.max); v.id = $("#tpbody").dataset.id;
     state.temps = await api("/api/temps/points", {method: "POST", body: JSON.stringify(v)}); closeModal(); render(); toast("Saved."); },
   async "tpt-del"(el) { if (!confirm("Delete this point? Its past readings are kept.")) return; state.temps = await api("/api/temps/points/" + el.dataset.id, {method: "DELETE"}); render(); },
@@ -1960,7 +1962,7 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   const t = e.target;
   if (t.id === "tdays") loadTemps(+t.value);
-  else if (t.id === "tempcsv" && t.files.length) { const f = t.files[0]; t.value = ""; f.text().then(async csv => { try { tempMapDialog(await api("/api/temps/import/preview", {method: "POST", body: JSON.stringify({csv})}), {csv}); } catch (e) { toast(e.message, true); } }); }
+  else if (t.id === "tempcsv" && t.files.length) { const f = t.files[0]; t.value = ""; (async () => { try { let csv; if (/\.xlsx$/i.test(f.name)) csv = (await api("/api/temps/xlsx", {method: "POST", body: await f.arrayBuffer()})).csv; else csv = await f.text(); tempMapDialog(await api("/api/temps/import/preview", {method: "POST", body: JSON.stringify({csv})}), {csv}); } catch (e) { toast(e.message, true); } })(); }
   else if (t.dataset.repMonth !== undefined) state.repMonth = t.value;
   else if (t.id === "sumMonth") { if (t.value) loadSummary(t.value); }
   else if (t.id === "cat") { state.cat = t.value; state.focusQ = false; render(); }

@@ -571,3 +571,32 @@ func TestTemperatureLogAndImport(t *testing.T) {
 }
 
 func jsonStr(s string) string { b, _ := json.Marshal(s); return string(b) }
+
+func TestMicrosoftFormImport(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.post("/api/temps/points/starter", `{}`)
+	if n := len(o["points"].([]any)); n != 29 {
+		t.Fatalf("starter points: %d", n)
+	}
+	csv := "ID,Start time,Completion time,Email,Name,Cooler 1 Temp,Freezer 1 Temp,Cooler 2,Sauce Jack - Manicotti Bain-Marie,Sauce Jack - Lasagna Bain-Marie\n" +
+		"4,8/26/2026 18:24,8/26/2026 18:26,j@x.com,Jason,31,20,40,210,210\n" +
+		"6,8/31/2026 11:47,8/31/2026 12:00,j@x.com,Jason,34,-17.5,36,Not in use,Not in use\n"
+	_, pv := e.post("/api/temps/import/preview", `{"csv":`+jsonStr(csv)+`}`)
+	m := pv["map"].(map[string]any)
+	if m["timestamp"] != "Completion time" || m["by"] != "Name" || len(m["temp"].([]any)) != 5 || m["point"] != "" {
+		t.Fatalf("map: %v", m)
+	}
+	mj, _ := json.Marshal(m)
+	c, r := e.post("/api/temps/import", `{"csv":`+jsonStr(csv)+`,"map":`+string(mj)+`}`)
+	res := r["result"].(map[string]any)
+	if c != 200 || res["Added"].(float64) != 8 || res["Unreadable"].(float64) != 0 || res["NewPoints"].(float64) != 0 {
+		t.Fatalf("import: %v", r)
+	}
+	// 20 and -17.5 on freezers, 31 on a 33-41 cooler, 210 on a 135-200 well,
+	if res["OutOfRange"].(float64) != 5 {
+		t.Errorf("out of range: %v", res)
+	}
+	if got, _ := parseWhen("46260.5", ""); got != "2026-08-26 12:00" {
+		t.Errorf("excel serial: %q", got)
+	}
+}

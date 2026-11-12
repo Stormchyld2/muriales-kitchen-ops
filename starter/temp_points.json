@@ -1,0 +1,234 @@
+[
+ {
+  "id": "",
+  "name": "Cooler 1 Temp",
+  "kind": "Cold Holding",
+  "area": "Walk-In / Storage",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Freezer 1 Temp",
+  "kind": "Freezer",
+  "area": "Walk-In / Storage",
+  "min": -10.0,
+  "max": 0.0
+ },
+ {
+  "id": "",
+  "name": "Cooler 2",
+  "kind": "Cold Holding",
+  "area": "Walk-In / Storage",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Freezer 2",
+  "kind": "Freezer",
+  "area": "Walk-In / Storage",
+  "min": -10.0,
+  "max": 0.0
+ },
+ {
+  "id": "",
+  "name": "Cooler 3",
+  "kind": "Cold Holding",
+  "area": "Walk-In / Storage",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Back Line 3 Door Cooler",
+  "kind": "Cold Holding",
+  "area": "Back Line",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Back Line 2 Door Freezer",
+  "kind": "Freezer",
+  "area": "Back Line",
+  "min": -10.0,
+  "max": 0.0
+ },
+ {
+  "id": "",
+  "name": "Back Line Single Door Cooler 1",
+  "kind": "Cold Holding",
+  "area": "Back Line",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Back Line Single Door Cooler 2",
+  "kind": "Freezer",
+  "area": "Back Line",
+  "min": -10.0,
+  "max": 0.0
+ },
+ {
+  "id": "",
+  "name": "Salad Single Door Glass Cooler",
+  "kind": "Cold Holding",
+  "area": "Salad",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Salad - Dressing Cooler",
+  "kind": "Cold Holding",
+  "area": "Salad",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Salad - Dressings Rail",
+  "kind": "Cold Holding",
+  "area": "Salad",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Salad - Salad Cooler",
+  "kind": "Cold Holding",
+  "area": "Salad",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Salad - Salad Topping Rail",
+  "kind": "Cold Holding",
+  "area": "Salad",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Hoagie Bench Cooler",
+  "kind": "Cold Holding",
+  "area": "Hoagie Bench",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Hoagie Bench Rail",
+  "kind": "Cold Holding",
+  "area": "Hoagie Bench",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Hoagie Bench Steam Table",
+  "kind": "Hot Holding",
+  "area": "Hoagie Bench",
+  "min": 135.0,
+  "max": 200.0
+ },
+ {
+  "id": "",
+  "name": "Middle - 3 Door Cooler",
+  "kind": "Cold Holding",
+  "area": "Middle",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Middle - 3 Door Cooler Rail",
+  "kind": "Cold Holding",
+  "area": "Middle",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Fryer - 2 Door Lowboy Left",
+  "kind": "Cold Holding",
+  "area": "Fryer",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Fryer - 2 Door Lowboy Right",
+  "kind": "Cold Holding",
+  "area": "Fryer",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Fryer - 1 Door Freezer",
+  "kind": "Freezer",
+  "area": "Fryer",
+  "min": -10.0,
+  "max": 0.0
+ },
+ {
+  "id": "",
+  "name": "Saute - Lowboy",
+  "kind": "Cold Holding",
+  "area": "Saute",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Saute - Rail",
+  "kind": "Cold Holding",
+  "area": "Saute",
+  "min": 33.0,
+  "max": 41.0
+ },
+ {
+  "id": "",
+  "name": "Spoon - Steam Table Temp",
+  "kind": "Hot Holding",
+  "area": "Spoon",
+  "min": 135.0,
+  "max": 200.0
+ },
+ {
+  "id": "",
+  "name": "Spoon - Meatball Temp",
+  "kind": "Hot Holding",
+  "area": "Spoon",
+  "min": 135.0,
+  "max": 200.0
+ },
+ {
+  "id": "",
+  "name": "Sauce Jack - Sauce Temp",
+  "kind": "Hot Holding",
+  "area": "Sauce Jack",
+  "min": 135.0,
+  "max": 200.0
+ },
+ {
+  "id": "",
+  "name": "Sauce Jack - Manicotti Bain-Marie",
+  "kind": "Hot Holding",
+  "area": "Sauce Jack",
+  "min": 135.0,
+  "max": 200.0
+ },
+ {
+  "id": "",
+  "name": "Sauce Jack - Lasagna Bain-Marie",
+  "kind": "Hot Holding",
+  "area": "Sauce Jack",
+  "min": 135.0,
+  "max": 200.0
+ }
+]
