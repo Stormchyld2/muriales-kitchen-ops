@@ -1174,7 +1174,7 @@ async function drawTag(id) {
   const img = new Image(); img.src = "/oos-tag.png"; await img.decode();
   const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
   const g = c.getContext("2d"); g.drawImage(img, 0, 0); g.fillStyle = "#111"; g.textBaseline = "middle";
-  const text = {equipment: e.name, assetId: r.assetId, location: e.area, when: when12(r.removedAt), reason: r.reason, workOrder: r.workOrder, vendor: r.vendor, by: r.removedBy};
+  const text = {equipment: e.name, assetId: r.assetId, location: r.location || e.area, when: when12(r.removedAt), reason: r.reason, workOrder: r.workOrder, vendor: r.vendor, by: r.removedBy};
   for (const [k, [x0, y0, x1, y1]] of Object.entries(TAGPOS.box)) {
     let s = String(text[k] || "").replace(/\s+/g, " ").trim(); if (!s) continue;
     let size = 30; const maxW = x1 - x0 - 24;
@@ -1206,6 +1206,7 @@ function tagFields(id, r, issue) {
   const pr = r.tagPriority || (issue ? (/^P[12]/.test(issue.priority) ? "High" : /^P3/.test(issue.priority) ? "Medium" : "Low") : "High");
   return `${yesNoRadio("safety", "Safety hazard?", r.safety)}${yesNoRadio("foodSafety", "Food safety risk?", r.foodSafety)}${yesNoRadio("powerOff", "Power / gas disconnected?", r.powerOff)}${yesNoRadio("lockout", "Lockout / tagout used?", r.lockout)}
     <label>Priority:</label><div class="row">${["High", "Medium", "Low"].map(v => `<label style="font-weight:400"><input type="radio" name="oos_tagPriority" value="${v}" ${pr === v ? "checked" : ""}> ${v}</label>`).join("")}</div>
+    <label>Location / area:</label><input class="field" data-oos="location" value="${esc(r.location || (m.equipment.find(x => x.id === id) || {}).area || "")}" placeholder="Where the equipment is">
     <label>Asset ID:</label><input class="field" data-oos="assetId" value="${esc(asset)}" placeholder="Optional, e.g. K-007">
     <label>Work order / MaintainX ref:</label><input class="field" data-oos="workOrder" value="${esc(r.workOrder || (issue && issue.workOrder) || "")}" placeholder="Optional">
     <label>Vendor / technician:</label><input class="field" data-oos="vendor" value="${esc(r.vendor || (issue && issue.assignedTo) || "")}" placeholder="Optional">`;

@@ -42,6 +42,7 @@ type OOSRecord struct {
 // tagFields are the details typed on the tag form.
 type tagFields struct {
 	AssetID     string `json:"assetId"`
+	Location    string `json:"location"`
 	Safety      string `json:"safety"`
 	FoodSafety  string `json:"foodSafety"`
 	PowerOff    string `json:"powerOff"`
@@ -59,6 +60,7 @@ func yesNo(v string) string {
 }
 
 func (t tagFields) apply(r *OOSRecord) {
+	r.Location = strings.TrimSpace(t.Location)
 	r.AssetID, r.WorkOrder, r.Vendor = strings.TrimSpace(t.AssetID), strings.TrimSpace(t.WorkOrder), strings.TrimSpace(t.Vendor)
 	r.Safety, r.FoodSafety, r.PowerOff, r.Lockout = yesNo(t.Safety), yesNo(t.FoodSafety), yesNo(t.PowerOff), yesNo(t.Lockout)
 	if t.TagPriority == "High" || t.TagPriority == "Medium" || t.TagPriority == "Low" {
