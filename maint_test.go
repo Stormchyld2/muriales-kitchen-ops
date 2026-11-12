@@ -256,3 +256,32 @@ func TestScheduleImportAndAsNeeded(t *testing.T) {
 		t.Error("an as-needed job needs no interval or date")
 	}
 }
+
+func TestMonthlySummary(t *testing.T) {
+	e := newEnv(t)
+	_, out := e.post("/api/maint/equipment", `{"name":"Walk-in cooler","type":"Refrigeration","by":"M"}`)
+	id := out["equipment"].([]any)[0].(map[string]any)["id"].(string)
+	month := time.Now().Format("2006-01")
+	for _, title := range []string{"Leak", "Door seal"} {
+		_, out = e.post("/api/maint/issues", `{"equipmentId":"`+id+`","title":"`+title+`","priority":"P2 - Urgent","reportedBy":"M"}`)
+	}
+	iid := out["issues"].([]any)[0].(map[string]any)["id"].(string)
+	e.do2("PUT", "/api/maint/issues/"+iid, `{"status":"Repaired","by":"M","parts":100,"labor":150,"downtime":3}`)
+	_, s := e.get2("/api/maint/summary?month=" + month)
+	if s["opened"].(float64) != 2 || s["completed"].(float64) != 1 || s["openNow"].(float64) != 2 || s["p1p2Open"].(float64) != 2 {
+		t.Errorf("counts wrong: %v", s)
+	}
+	if s["repairCost"].(float64) != 250 || s["downtime"].(float64) != 3 {
+		t.Errorf("repair cost/downtime wrong: %v", s)
+	}
+	if len(s["repeat"].([]any)) != 1 || len(s["major"].([]any)) != 1 {
+		t.Errorf("repeat/major wrong: %v", s)
+	}
+	if c, _ := e.post("/api/maint/summary-notes", `{"month":"`+month+`","highlights":"x"}`); c != 400 {
+		t.Error("notes need a name")
+	}
+	_, s = e.post("/api/maint/summary-notes", `{"month":"`+month+`","highlights":"Good month","concerns":"Cooler","actions":"Quote","by":"GM"}`)
+	if s["notes"].(map[string]any)["highlights"] != "Good month" {
+		t.Errorf("notes not kept: %v", s["notes"])
+	}
+}
