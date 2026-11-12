@@ -830,3 +830,78 @@ func TestEquipmentTypesSetting(t *testing.T) {
 		t.Errorf("saved types: %v", a)
 	}
 }
+
+func TestMissedAndLogAutoFeed(t *testing.T) {
+	e := newEnv(t)
+	old := time.Now().AddDate(0, 0, -10).Format(dayFmt)
+	_, o := e.get2("/api/reg/cleantasks")
+	row := o["rows"].([]any)[1].(map[string]any)
+	row["lastDone"] = old
+	row["frequency"] = "Weekly"
+	b, _ := json.Marshal(row)
+	if c, out := e.post("/api/reg/cleantasks", string(b)); c != 200 {
+		t.Fatalf("update: %v %v", c, out)
+	}
+	_, m := e.get2("/api/reg/missed")
+	rows := m["rows"].([]any)
+	if len(rows) != 1 || rows[0].(map[string]any)["status"] != "Open" || rows[0].(map[string]any)["source"] != "Cleaning Schedule" {
+		t.Fatalf("overdue task should feed Missed: %v", rows)
+	}
+	if _, m = e.get2("/api/reg/missed"); len(m["rows"].([]any)) != 1 {
+		t.Fatal("sync must not duplicate")
+	}
+	id := row["id"].(string)
+	if c, out := e.post("/api/clean/done", `{"id":"`+id+`","by":"AB"}`); c != 200 {
+		t.Fatalf("done: %v %v", c, out)
+	}
+	_, m = e.get2("/api/reg/missed")
+	if r := m["rows"].([]any)[0].(map[string]any); r["status"] != "Corrected" || r["corrected"] == "" {
+		t.Fatalf("done should close the entry: %v", r)
+	}
+	// a Cleaning PM job done goes to the completion log
+	_, pm := e.post("/api/maint/import-schedule", `{"pastDates":"keep"}`)
+	_ = pm
+	_, mp := e.get2("/api/maint")
+	var code string
+	for _, p := range mp["pm"].([]any) {
+		if x := p.(map[string]any); x["group"] == "Cleaning" {
+			code = x["id"].(string)
+			break
+		}
+	}
+	if code == "" {
+		t.Fatal("no cleaning PM job")
+	}
+	if c, out := e.post("/api/maint/pm/"+code+"/done", `{"by":"AB"}`); c != 200 {
+		t.Fatalf("pm done: %v %v", c, out)
+	}
+	_, l := e.get2("/api/reg/cleanlog")
+	found := false
+	for _, x := range l["rows"].([]any) {
+		if x.(map[string]any)["source"] == "PM job" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("PM cleaning job should feed the Completion Log")
+	}
+	// deep clean
+	_, d := e.get2("/api/reg/deepclean")
+	if len(d["rows"].([]any)) != 7 {
+		t.Fatalf("deep clean seeded: %d", len(d["rows"].([]any)))
+	}
+	if c, _ := e.post("/api/clean/deepdone", `{"id":"DEEP-001","by":"AB"}`); c != 200 {
+		t.Error("deep done")
+	}
+	if _, a := e.get2("/api/reg/cleanareas"); len(a["rows"].([]any)) != 10 {
+		t.Error("area matrix seeded")
+	}
+	// equipment from workbook
+	_, r1 := e.post("/api/maint/import-equipment", `{}`)
+	if r1["added"].(float64) != 85 || r1["linked"].(float64) < 70 {
+		t.Fatalf("equipment import: %v", r1)
+	}
+	if _, r2 := e.post("/api/maint/import-equipment", `{}`); r2["added"].(float64) != 0 {
+		t.Error("equipment import must be idempotent")
+	}
+}

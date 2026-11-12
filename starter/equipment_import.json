@@ -1,0 +1,597 @@
+[
+ {
+  "assetCode": "K-001",
+  "name": "Front Line Hood / Filters",
+  "type": "Hood / Exhaust Fan",
+  "area": "Front Line",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-002",
+  "name": "Back Line Hood / Filters",
+  "type": "Hood / Exhaust Fan",
+  "area": "Back Line",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-003",
+  "name": "Prep Oven",
+  "type": "Ovens",
+  "area": "Prep",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-004",
+  "name": "Back Line Oven",
+  "type": "Ovens",
+  "area": "Back Line",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-005",
+  "name": "Front Line Oven",
+  "type": "Ovens",
+  "area": "Front Line",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-006",
+  "name": "Smart Oven",
+  "type": "Ovens",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-007",
+  "name": "Front Line Burners / Grates",
+  "type": "Cook Tops",
+  "area": "Front Line",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-008",
+  "name": "Back Line Burners / Grates",
+  "type": "Cook Tops",
+  "area": "Back Line",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "D-001",
+  "name": "Ecolab / Hobart Dish Machine",
+  "type": "Dish Machine",
+  "area": "Dish",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "D-002",
+  "name": "Ecolab / Hobart Dish Machine",
+  "type": "Dish Machine",
+  "area": "Dish",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "D-003",
+  "name": "Dish Pit Racks / Shelves / Tables / Back Table",
+  "type": "Misc Equip",
+  "area": "Dish",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "D-004",
+  "name": "Dish Pit Floor Drains",
+  "type": "Misc Equip",
+  "area": "Dish",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "D-005",
+  "name": "Dish Pit Walls / Under Tables",
+  "type": "Misc Equip",
+  "area": "Dish",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "D-006",
+  "name": "Dish Machine / Shelving Stainless",
+  "type": "Dish Machine",
+  "area": "Dish",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "D-007",
+  "name": "InSinkErator",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-001",
+  "name": "Kitchen Refrigeration - Cooler Filters",
+  "type": "Walk-in Cooler",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "F-001",
+  "name": "Exterior / Grounds / Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-002",
+  "name": "Grounds / Facility Seasonal Review",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "K-009",
+  "name": "Fryers",
+  "type": "Fryer",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-010",
+  "name": "Fryers - Safety / Calibration",
+  "type": "Fryer",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-011",
+  "name": "Flat Top / Griddle",
+  "type": "Cook Tops",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-012",
+  "name": "Steam Tables / Bain-Marie Units",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-013",
+  "name": "Hot Holding / Heat Lamps",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-014",
+  "name": "Microwaves",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-015",
+  "name": "Food Processor / Mixer / Slicer",
+  "type": "Mixer",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "K-016",
+  "name": "Thermometers / Probe Thermometers",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "D-008",
+  "name": "Dish Machine - Wash/Rinse Performance",
+  "type": "Dish Machine",
+  "area": "Dish",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "D-009",
+  "name": "Dish Machine - Service Inspection",
+  "type": "Dish Machine",
+  "area": "Dish",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-002",
+  "name": "Walk-In Coolers / Freezers - Condenser Coils",
+  "type": "Walk-in Cooler",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-003",
+  "name": "Reach-In / Lowboy Refrigeration - Condenser Coils",
+  "type": "Lowboy",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-004",
+  "name": "Refrigeration - Door Gaskets / Closers",
+  "type": "Walk-in Cooler",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-005",
+  "name": "Refrigeration - Evaporators / Drain Pans / Drains",
+  "type": "Walk-in Cooler",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-006",
+  "name": "Refrigeration - Temperature Verification",
+  "type": "Walk-in Cooler",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-007",
+  "name": "Walk-In Doors / Strip Curtains / Sweeps",
+  "type": "Walk-in Cooler",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-008",
+  "name": "Refrigeration - Electrical / Compressor Condition",
+  "type": "Walk-in Cooler",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-009",
+  "name": "Ice Machine - Cleaning / Sanitizing",
+  "type": "Ice Machine",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "R-010",
+  "name": "Ice Machine - Condenser / Filter / Water System",
+  "type": "Ice Machine",
+  "area": "",
+  "group": "Equipment PM"
+ },
+ {
+  "assetCode": "F-003",
+  "name": "HVAC - Air Filters",
+  "type": "HVAC / Rooftop Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-004",
+  "name": "HVAC - Condenser Coils",
+  "type": "HVAC / Rooftop Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-005",
+  "name": "HVAC - Evaporator Coils / Drain Pans",
+  "type": "HVAC / Rooftop Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-006",
+  "name": "HVAC - Belts / Pulleys / Blower",
+  "type": "HVAC / Rooftop Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-007",
+  "name": "HVAC - Electrical / Controls",
+  "type": "HVAC / Rooftop Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-008",
+  "name": "HVAC - Heating Season Startup",
+  "type": "HVAC / Rooftop Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-009",
+  "name": "HVAC - Cooling Season Startup",
+  "type": "HVAC / Rooftop Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-010",
+  "name": "Kitchen Exhaust Fans",
+  "type": "Hood / Exhaust Fan",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-011",
+  "name": "Make-Up Air Unit",
+  "type": "Make-up Air Unit",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-012",
+  "name": "Commercial Hood / Duct Cleaning",
+  "type": "Hood / Exhaust Fan",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-013",
+  "name": "Kitchen Fire Suppression System",
+  "type": "Fire Suppression System",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-014",
+  "name": "Portable Fire Extinguishers - Visual",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-015",
+  "name": "Portable Fire Extinguishers - Annual Service",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-016",
+  "name": "Exit Signs / Emergency Lighting",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-017",
+  "name": "Emergency Lighting - Extended Test",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-018",
+  "name": "Grease Trap / Interceptor",
+  "type": "Grease Trap",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-019",
+  "name": "Floor Drains / Drain Lines - Kitchen-wide",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-020",
+  "name": "Plumbing Fixtures / Faucets / Pre-Rinse",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-021",
+  "name": "Water Heater",
+  "type": "Water Heater",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-022",
+  "name": "Backflow Preventer",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-023",
+  "name": "Water Filters / Treatment",
+  "type": "Water Filter",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-024",
+  "name": "Gas Lines / Shutoffs / Appliance Connectors",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-025",
+  "name": "Electrical Panels / Disconnects",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-026",
+  "name": "GFCI Receptacles",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-027",
+  "name": "Extension Cords / Power Strips / Equipment Cords",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-028",
+  "name": "Doors / Closers / Hardware",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-029",
+  "name": "Pest Exclusion - Building Envelope",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-030",
+  "name": "Roof / Gutters / Drains",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-031",
+  "name": "Exterior / Parking / Walkways",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-032",
+  "name": "Exterior / Parking Lot Lighting",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-033",
+  "name": "Interior Lighting / Guards",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-034",
+  "name": "Walls / Ceilings / Tile / FRP",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-035",
+  "name": "Winterization / Snow-Ice Readiness",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-036",
+  "name": "Spring Grounds / Drainage Readiness",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-037",
+  "name": "Asset Register / PM Program Review",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-038",
+  "name": "Vendor PM / Inspection Records Audit",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-039",
+  "name": "Critical Spare Parts / Belts / Filters Review",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-92",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "F-93",
+  "name": "Storage",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "D-088",
+  "name": "Dock",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-94",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "F-95",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "F-96",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "F-97",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "F-98",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-99",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ },
+ {
+  "assetCode": "F-100",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Cleaning"
+ },
+ {
+  "assetCode": "F-101",
+  "name": "Facility",
+  "type": "Misc Equip",
+  "area": "",
+  "group": "Grounds / Facility"
+ }
+]

@@ -247,7 +247,11 @@ func (s *store) pmRoutes(mux *http.ServeMux, reply func(http.ResponseWriter)) {
 				if in2.Date > t.LastDone {
 					t.LastDone = in2.Date
 				}
+				if t.Group == "Cleaning" {
+					s.logPMCleaning(t, strings.TrimSpace(in2.By), in2.Date, strings.TrimSpace(in2.Note))
+				}
 				if save(w, tasks) {
+					s.syncMissed()
 					reply(w)
 				}
 				return

@@ -1,0 +1,86 @@
+[
+ {
+  "id": "DEEP-001",
+  "day": "Monday",
+  "area": "Cook Line",
+  "task": "Pull movable equipment and clean beneath/behind",
+  "standard": "STD-007",
+  "role": "",
+  "chem": "",
+  "active": "Yes",
+  "notes": "",
+  "lastDone": ""
+ },
+ {
+  "id": "DEEP-002",
+  "day": "Tuesday",
+  "area": "Walk-In Cooler",
+  "task": "Clean shelving and wall surfaces",
+  "standard": "STD-008",
+  "role": "",
+  "chem": "",
+  "active": "Yes",
+  "notes": "",
+  "lastDone": ""
+ },
+ {
+  "id": "DEEP-003",
+  "day": "Wednesday",
+  "area": "Kitchen Walls",
+  "task": "Wash splash and soil areas",
+  "standard": "STD-009",
+  "role": "",
+  "chem": "",
+  "active": "Yes",
+  "notes": "",
+  "lastDone": ""
+ },
+ {
+  "id": "DEEP-004",
+  "day": "Thursday",
+  "area": "Dry Storage",
+  "task": "Detail shelves, corners and floor edges",
+  "standard": "STD-011",
+  "role": "",
+  "chem": "",
+  "active": "Yes",
+  "notes": "",
+  "lastDone": ""
+ },
+ {
+  "id": "DEEP-005",
+  "day": "Friday",
+  "area": "Dish / Stewarding",
+  "task": "Detail racks, walls, corners and floor edges",
+  "standard": "",
+  "role": "",
+  "chem": "",
+  "active": "Yes",
+  "notes": "",
+  "lastDone": ""
+ },
+ {
+  "id": "DEEP-006",
+  "day": "Saturday",
+  "area": "Cook Line",
+  "task": "Detail non-food-contact exterior surfaces and legs/casters",
+  "standard": "",
+  "role": "",
+  "chem": "",
+  "active": "Yes",
+  "notes": "",
+  "lastDone": ""
+ },
+ {
+  "id": "DEEP-007",
+  "day": "Sunday",
+  "area": "Walk-In / Freezer",
+  "task": "Inspect and clean door gaskets and accessible tracks",
+  "standard": "",
+  "role": "",
+  "chem": "",
+  "active": "Yes",
+  "notes": "",
+  "lastDone": ""
+ }
+]

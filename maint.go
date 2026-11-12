@@ -33,6 +33,7 @@ type Equipment struct {
 	Model       string `json:"model"`  //
 	Serial      string `json:"serial"` //
 	Installed   string `json:"installed"`
+	AssetCode   string `json:"assetCode"`   // asset ID from the maintenance workbook (K-001 ...)
 	MaintainXID string `json:"maintainxId"` // optional: the asset name or number in MaintainX
 	Notes       string `json:"notes"`
 	Status      string `json:"status"` // Operational, Needs Attention, Out of Service
@@ -287,6 +288,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.readinessRoutes(mux)
 	s.registryRoutes(mux)
 	s.cleanRoutes(mux)
+	s.cleanSyncRoutes(mux)
 	s.replRoutes(mux)
 	mux.HandleFunc("GET /api/maint", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()

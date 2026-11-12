@@ -55,7 +55,7 @@ func sel(k, l string, o []string, req bool) fieldDef {
 var regDefs = map[string]*collDef{
 	"cleantasks": {Name: "cleantasks", Title: "Cleaning Schedule", NewLabel: "Add Cleaning Task", Prefix: "CLN-", Digits: 4, Deletable: true, Report: "clean-schedule", Starter: "clean_tasks.json",
 		Intro:    "The master list of what gets cleaned, how often, by whom and to which standard. Use Done on a task to record it; the Today's Checklist screen works from this list.",
-		ListCols: []string{"id", "area", "task", "frequency", "timing", "role", "priority", "lastDone", "active"},
+		ListCols: []string{"id", "area", "task", "frequency", "timing", "role", "priority", "lastDone", "due", "state"},
 		Fields: []fieldDef{sel("type", "Task type", []string{"Area", "Equipment", "Periodic"}, true), txt("area", "Area / equipment", true), lng("task", "Cleaning task", true), sel("frequency", "Frequency", freqOpts, true), txt("cadence", "Cadence in days (leave blank to use the frequency)", false),
 			txt("timing", "Shift / timing", false), txt("role", "Assigned role", false), txt("backup", "Backup role", false), txt("chem", "Chemical / tool ref", false), txt("standard", "Standard ID", false), sel("priority", "Priority", prioOpts, true),
 			yn("verify", "Verification required?"), yn("foodContact", "Food-contact surface?"), yn("deep", "Deep clean?"), yn("active", "Active?"), dat("lastDone", "Last completed", false), lng("notes", "Notes", false)}},
@@ -71,19 +71,28 @@ var regDefs = map[string]*collDef{
 			txt("contact", "Contact time", false), yn("rinse", "Rinse required?"), yn("foodContactApproved", "Food-contact approved?"), txt("ppe", "PPE required", false), txt("storage", "Storage location", false), yn("sdsOnFile", "SDS on file?"), dat("sdsReview", "SDS review date", false), txt("vendor", "Vendor / product ref", false), lng("notes", "Notes", false)}},
 	"mgrchecks": {Name: "mgrchecks", Title: "Manager Inspection Schedule", NewLabel: "Add Inspection", Prefix: "KOM-", Digits: 3, Deletable: true, Report: "mgr-schedule", Starter: "mgr_checks.json",
 		Intro:    "The recurring checks the Kitchen Operations Manager walks. Use Done to record one in the Manager Inspection Log.",
-		ListCols: []string{"id", "frequency", "check", "area", "timing", "owner", "priority", "lastDone", "active"},
+		ListCols: []string{"id", "frequency", "check", "area", "timing", "owner", "priority", "lastDone", "due", "state"},
 		Fields: []fieldDef{sel("frequency", "Frequency", freqOpts, true), txt("check", "Inspection / check", true), txt("area", "Area", false), txt("timing", "Preferred timing", false), txt("owner", "Owner", false), lng("whatCheck", "What I check", false), txt("record", "Record / log", false),
 			sel("priority", "Priority", prioOpts, true), yn("active", "Active?"), dat("lastDone", "Last completed", false), lng("notes", "Notes", false)}},
 	"cleanlog": {Name: "cleanlog", Title: "Cleaning Completion Log", NewLabel: "Add Entry", Prefix: "LOG-", Digits: 5, Desc: true, Report: "clean-log",
 		Intro:    "The permanent record of cleaning completed. Entries are added when a task is marked Done. Open an entry to verify it.",
-		ListCols: []string{"id", "date", "shift", "area", "task", "completedBy", "verifyStatus", "issue"},
+		ListCols: []string{"id", "date", "shift", "area", "task", "completedBy", "source", "verifyStatus", "issue"},
 		Fields: []fieldDef{dat("date", "Date", true), txt("shift", "Shift", false), txt("taskId", "Task ID", false), txt("area", "Area / equipment", true), lng("task", "Cleaning task", true), txt("completedBy", "Completed by", true), txt("time", "Completion time", false),
-			txt("verifiedBy", "Verified by", false), txt("verifyTime", "Verification time", false), yn("issue", "Issue found?"), sel("verifyStatus", "Verification status", []string{"Pending", "Verified", "Failed", "Not required"}, false), txt("caRef", "Corrective action ref", false), lng("notes", "Notes", false)}},
+			txt("verifiedBy", "Verified by", false), txt("verifyTime", "Verification time", false), yn("issue", "Issue found?"), sel("verifyStatus", "Verification status", []string{"Pending", "Verified", "Failed", "Not required"}, false), txt("caRef", "Corrective action ref", false), txt("source", "Where it came from", false), lng("notes", "Notes", false)}},
 	"missed": {Name: "missed", Title: "Missed & Overdue Log", NewLabel: "Report Missed Cleaning", Prefix: "MISS-", Digits: 4, Desc: true, Report: "clean-missed",
 		Intro:    "Anything missed, overdue, rejected or not done to standard, and how it was put right.",
-		ListCols: []string{"id", "date", "area", "task", "reason", "priority", "assignedTo", "target", "status"},
+		ListCols: []string{"id", "date", "area", "task", "reason", "source", "priority", "assignedTo", "target", "status"},
 		Fields: []fieldDef{dat("date", "Date identified", true), txt("taskId", "Task ID", false), txt("area", "Area / equipment", true), lng("task", "Cleaning task", true), lng("reason", "Reason missed / failed", true), sel("priority", "Priority", prioOpts, true), txt("assignedTo", "Assigned to", false),
-			dat("target", "Target correction date", false), sel("status", "Status", []string{"Open", "In Progress", "Corrected", "Verified"}, true), dat("corrected", "Corrected date", false), txt("verifiedBy", "Verified by", false), yn("repeat", "Repeat issue?"), lng("action", "Corrective action", false), lng("notes", "Notes", false)}},
+			dat("target", "Target correction date", false), sel("status", "Status", []string{"Open", "In Progress", "Corrected", "Verified"}, true), dat("corrected", "Corrected date", false), txt("verifiedBy", "Verified by", false), yn("repeat", "Repeat issue?"), txt("source", "Where it came from", false), lng("action", "Corrective action", false), lng("notes", "Notes", false)}},
+	"deepclean": {Name: "deepclean", Title: "Weekly Deep Clean", NewLabel: "Add Deep-Clean Job", Prefix: "DEEP-", Digits: 3, Deletable: true, Report: "clean-weekly", Starter: "clean_deep.json",
+		Intro:    "The deep-clean job for each day of the week. Done logs it in the Completion Log; a job not done by the end of its day shows up in Missed & Overdue.",
+		ListCols: []string{"id", "day", "area", "task", "standard", "role", "lastDone", "due", "state"},
+		Fields:   []fieldDef{sel("day", "Day", []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}, true), txt("area", "Area / equipment", true), lng("task", "Cleaning task", true), txt("standard", "Standard ID", false), txt("role", "Assigned role", false), txt("chem", "Chemical / tool ref", false), yn("active", "Active?"), dat("lastDone", "Last completed", false), lng("notes", "Notes", false)}},
+	"cleanareas": {Name: "cleanareas", Title: "Area Cleaning Matrix", NewLabel: "Add Area Task", Prefix: "AREA-", Digits: 3, Deletable: true, Report: "clean-areas", Starter: "clean_areas.json",
+		Intro:    "How each part of the kitchen is cleaned: the feature, task, how often, who, with what, and what gets inspected.",
+		ListCols: []string{"id", "area", "feature", "task", "frequency", "timing", "role", "chem", "standard", "inspectionPoint"},
+		Fields: []fieldDef{txt("area", "Area", true), txt("feature", "Feature / surface", false), lng("task", "Cleaning task", true), txt("frequency", "Frequency", false), txt("timing", "Timing", false), txt("role", "Assigned role", false), txt("chem", "Chemical / tool ref", false), txt("standard", "Standard ID", false),
+			yn("foodContact", "Food-contact surface?"), txt("deep", "Deep clean?", false), txt("verify", "Verification", false), txt("inspectionPoint", "Inspection point", false), yn("active", "Active?"), lng("notes", "Notes", false)}},
 	"mgrlog": {Name: "mgrlog", Title: "Manager Inspection Log", NewLabel: "Add Entry", Prefix: "INSP-", Digits: 4, Desc: true, Report: "mgr-log",
 		Intro:    "Your record of receiving, storage, cleaning, temperature and other manager checks. Entries are added when an inspection is marked Done.",
 		ListCols: []string{"id", "date", "check", "area", "result", "by", "caNeeded", "followUp"},
@@ -205,7 +214,10 @@ func (s *store) registryRoutes(mux *http.ServeMux) {
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		writeJSON(w, 200, map[string]any{"def": c, "rows": s.regSorted(c)})
+		if c.Name == "missed" {
+			s.syncMissed()
+		}
+		writeJSON(w, 200, map[string]any{"def": c, "rows": s.decorate(c, s.regSorted(c))})
 	})
 	mux.HandleFunc("POST /api/reg/{c}", func(w http.ResponseWriter, r *http.Request) {
 		c := get(w, r)
@@ -228,7 +240,10 @@ func (s *store) registryRoutes(mux *http.ServeMux) {
 			found := false
 			for i, x := range rows {
 				if x["id"] == id {
-					n := rec{"id": id, "created": x["created"]}
+					n := rec{}
+					for k, v := range x {
+						n[k] = v
+					}
 					for _, f := range c.Fields {
 						n[f.Key] = in2[f.Key]
 					}
@@ -247,7 +262,7 @@ func (s *store) registryRoutes(mux *http.ServeMux) {
 			fail(w, 500, err.Error())
 			return
 		}
-		writeJSON(w, 200, map[string]any{"def": c, "rows": s.regSorted(c)})
+		writeJSON(w, 200, map[string]any{"def": c, "rows": s.decorate(c, s.regSorted(c))})
 	})
 	mux.HandleFunc("DELETE /api/reg/{c}/{id}", func(w http.ResponseWriter, r *http.Request) {
 		c := get(w, r)

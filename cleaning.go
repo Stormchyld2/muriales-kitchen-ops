@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 	"sort"
 	"strconv"
@@ -53,6 +52,7 @@ func isDaily(r rec) bool {
 }
 
 func (s *store) cleanToday() map[string]any {
+	s.syncMissed()
 	today := time.Now().Format(dayFmt)
 	view := func(c *collDef) []rec {
 		out := []rec{}
@@ -77,7 +77,23 @@ func (s *store) cleanToday() map[string]any {
 			pending = append(pending, r)
 		}
 	}
-	return map[string]any{"tasks": view(regDefs["cleantasks"]), "checks": view(regDefs["mgrchecks"]), "pending": pending, "today": today}
+	return map[string]any{"tasks": view(regDefs["cleantasks"]), "checks": view(regDefs["mgrchecks"]), "deep": s.deepToday(), "pending": pending, "today": today}
+}
+
+func (s *store) deepToday() []rec {
+	tt, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	out := []rec{}
+	for _, r := range s.regLoad(regDefs["deepclean"]) {
+		due, st := deepState(r, tt)
+		if st == "Overdue" || st == "Due Today" || st == "Done Today" {
+			v := rec{"due": due, "state": st}
+			for k, x := range r {
+				v[k] = x
+			}
+			out = append(out, v)
+		}
+	}
+	return out
 }
 
 func (s *store) cleanTodo(from, to time.Time, want map[string]bool) []todoItem {
@@ -137,18 +153,21 @@ func (s *store) cleanReport(id string) (*report, bool) {
 		from := time.Now().AddDate(0, 0, -30).Format(dayFmt)
 		return s.regReport(regDefs["cleanlog"], "Cleaning Completion Log (last 30 days)", "", func(r rec) bool { return r["date"] >= from }), true
 	case "clean-missed":
+		s.syncMissed()
 		return s.regReport(regDefs["missed"], "Missed & Overdue Cleaning Log", "", nil), true
+	case "clean-areas":
+		return s.regReport(regDefs["cleanareas"], "Area Cleaning Matrix", "", nil), true
 	case "mgr-log":
 		from := time.Now().AddDate(0, 0, -30).Format(dayFmt)
 		return s.regReport(regDefs["mgrlog"], "Manager Inspection Log (last 30 days)", "", func(r rec) bool { return r["date"] >= from }), true
 	case "clean-weekly":
-		var wk [][]string
-		b, _ := starterFiles.ReadFile("starter/clean_weekly.json")
-		_ = json.Unmarshal(b, &wk)
 		rows := [][]string{}
-		for _, w := range wk {
-			rows = append(rows, []string{w[0], w[1], w[2], "", "", "", "", ""})
-			rows = append(rows, []string{w[0], "Extra deep-clean job", "", "", "", "", "", ""})
+		for _, w := range s.regLoad(regDefs["deepclean"]) {
+			if w["active"] == "No" {
+				continue
+			}
+			rows = append(rows, []string{w["day"], w["area"], w["task"], w["role"], "", "", "", ""})
+			rows = append(rows, []string{w["day"], "Extra deep-clean job", "", "", "", "", "", ""})
 		}
 		return &report{Title: "Weekly Cleaning Schedule", Subtitle: "Week of: ______________   Kitchen manager: ______________   Posted: ____________   Week complete / verified by: ______________",
 			Sections: []reportSection{{Note: "Post this on the line each week. Initial each job when it is done; the manager verifies at the end of the week.", Cols: []string{"Day", "Area / Equipment", "Cleaning Task", "Assigned To", "Completed", "Initials", "Verified By", "Notes"}, Rows: rows}}}, true
