@@ -36,6 +36,14 @@ type Equipment struct {
 	MaintainXID string `json:"maintainxId"` // optional: the asset name or number in MaintainX
 	Notes       string `json:"notes"`
 	Status      string `json:"status"` // Operational, Needs Attention, Out of Service
+
+	// Asset record
+	Vendor        string  `json:"vendor"`
+	PurchaseDate  string  `json:"purchaseDate"`
+	PurchaseCost  float64 `json:"purchaseCost"`
+	WarrantyEnd   string  `json:"warrantyEnd"`
+	ReplaceCost   float64 `json:"replaceCost"`   // what a new unit would cost today
+	ExpectedYears int     `json:"expectedYears"` // normal useful life
 }
 
 type Entry struct {
@@ -61,7 +69,8 @@ type Issue struct {
 }
 
 type maintSettings struct {
-	PortalURL string `json:"portalUrl"`
+	PortalURL      string `json:"portalUrl"`
+	ReplacePercent int    `json:"replacePercent"` // repair spend, as a % of a new unit, at which to suggest replacing
 }
 
 const defaultPortal = "https://app.getmaintainx.com"
@@ -115,6 +124,9 @@ func (s *store) loadMaint() (eq []*Equipment, is []*Issue, st maintSettings) {
 	s.readMaint("settings.json", &st)
 	if st.PortalURL == "" {
 		st.PortalURL = defaultPortal
+	}
+	if st.ReplacePercent < 1 {
+		st.ReplacePercent = 50
 	}
 	return
 }
@@ -174,7 +186,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		eq, is, st := s.loadMaint()
 		sort.Slice(eq, func(i, j int) bool { return strings.ToLower(eq[i].Name) < strings.ToLower(eq[j].Name) })
 		writeJSON(w, 200, map[string]any{"equipment": eq, "issues": is, "portalUrl": st.PortalURL,
-			"statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses})
+			"pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses})
 	}
 	save := func(w http.ResponseWriter, eq []*Equipment, is []*Issue) bool {
 		if err := s.writeMaint("equipment.json", eq); err != nil {
@@ -189,6 +201,8 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		return true
 	}
 
+	s.pmRoutes(mux, reply)
+	s.serviceRoutes(mux, reply)
 	mux.HandleFunc("GET /api/maint", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -234,6 +248,18 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		defer s.mu.Unlock()
 		eq, is, _ := s.loadMaint()
 		id := r.PathValue("id")
+		for _, r := range s.serviceList() {
+			if r.EquipmentID == id {
+				fail(w, 400, "This equipment has service records. Keep it, or set its status instead of deleting it.")
+				return
+			}
+		}
+		for _, t := range s.pmList() {
+			if t.EquipmentID == id {
+				fail(w, 400, "This equipment has preventive maintenance jobs. Delete those first.")
+				return
+			}
+		}
 		for _, p := range is {
 			if p.EquipmentID == id {
 				fail(w, 400, "This equipment has maintenance history. Keep it, or set its status instead of deleting it.")
@@ -306,6 +332,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 			WorkOrder *string `json:"workOrder"`
 			Note      string  `json:"note"`
 			By        string  `json:"by"`
+			Cost      float64 `json:"cost"`
 		}
 		if json.NewDecoder(r.Body).Decode(&in2) != nil || strings.TrimSpace(in2.By) == "" {
 			fail(w, 400, "Enter your name.")
@@ -347,6 +374,11 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		if n := strings.TrimSpace(in2.Note); n != "" {
 			add(n)
 		}
+		if in2.Cost > 0 {
+			s.addService(ServiceRecord{EquipmentID: p.EquipmentID, IssueID: p.ID, Date: stamp()[:10], Type: "Repair",
+				Description: "#" + fmt.Sprint(p.Number) + " " + p.Title, Cost: in2.Cost, By: by})
+			add(fmt.Sprintf("Recorded a repair cost of $%.2f.", in2.Cost))
+		}
 		// Equipment goes back to Operational only when a manager has verified
 		// the last open issue on it.
 		for _, e := range eq {
@@ -372,24 +404,38 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	})
 
 	mux.HandleFunc("POST /api/maint/settings", func(w http.ResponseWriter, r *http.Request) {
-		var in2 maintSettings
+		var in2 struct {
+			PortalURL      *string `json:"portalUrl"`
+			ReplacePercent *int    `json:"replacePercent"`
+		}
 		if json.NewDecoder(r.Body).Decode(&in2) != nil {
 			fail(w, 400, "Could not read that.")
 			return
 		}
-		in2.PortalURL = strings.TrimSpace(in2.PortalURL)
-		if in2.PortalURL != "" {
-			if !strings.Contains(in2.PortalURL, "://") {
-				in2.PortalURL = "https://" + in2.PortalURL
-			}
-			if u, err := url.Parse(in2.PortalURL); err != nil || u.Scheme != "https" || u.Host == "" {
-				fail(w, 400, "Enter the MaintainX web address starting with https://")
-				return
-			}
-		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		if err := s.writeMaint("settings.json", in2); err != nil {
+		_, _, st := s.loadMaint()
+		if in2.PortalURL != nil {
+			u := strings.TrimSpace(*in2.PortalURL)
+			if u != "" {
+				if !strings.Contains(u, "://") {
+					u = "https://" + u
+				}
+				if p, err := url.Parse(u); err != nil || p.Scheme != "https" || p.Host == "" {
+					fail(w, 400, "Enter the MaintainX web address starting with https://")
+					return
+				}
+			}
+			st.PortalURL = u
+		}
+		if in2.ReplacePercent != nil {
+			if *in2.ReplacePercent < 5 || *in2.ReplacePercent > 200 {
+				fail(w, 400, "Enter a percentage between 5 and 200.")
+				return
+			}
+			st.ReplacePercent = *in2.ReplacePercent
+		}
+		if err := s.writeMaint("settings.json", st); err != nil {
 			s.maintFail(w, err)
 			return
 		}
