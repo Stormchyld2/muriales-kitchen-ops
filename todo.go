@@ -110,6 +110,15 @@ func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 	if want["Equipment"] {
 		a := s.assetSummaries(eq, st.ReplacePercent)
 		for _, e := range eq {
+			if e.Status == "Out of Service" {
+				why := "A manager must clear it before it is used"
+				for _, r := range s.oosList() {
+					if r.EquipmentID == e.ID && r.ClearedAt == "" {
+						why = r.Reason + " · " + why
+					}
+				}
+				out = append(out, todoItem{Group: "Equipment", Title: "Out of service: " + e.Name, Detail: why, State: "Overdue", Kind: "equipment", ID: e.ID})
+			}
 			if a[e.ID].Advice == "Consider Replacing" {
 				out = append(out, todoItem{Group: "Equipment", Title: "Decide: repair or replace " + e.Name, Detail: a[e.ID].Reason, State: "Open", Kind: "equipment", ID: e.ID})
 			}

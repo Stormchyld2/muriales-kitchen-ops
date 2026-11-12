@@ -78,6 +78,10 @@ type Issue struct {
 type maintSettings struct {
 	PortalURL      string `json:"portalUrl"`
 	ReplacePercent int    `json:"replacePercent"` // repair spend, as a % of a new unit, at which to suggest replacing
+	// Names allowed to clear equipment that was taken out of service. Empty
+	// means any name is accepted. The program has no logins, so this is a
+	// check on the name typed, not a security control.
+	Managers []string `json:"managers"`
 }
 
 const defaultPortal = "https://app.getmaintainx.com"
@@ -210,16 +214,20 @@ func (s *store) writeLog(eq []*Equipment, is []*Issue) {
 	open := func(p *Issue) bool { return p.Status != "Verified" && p.Status != "Closed" }
 	section("Open issues", open)
 	section("Completed", func(p *Issue) bool { return !open(p) })
+	b.WriteString(s.oosMarkdown(eq))
 	_ = os.WriteFile(filepath.Join(s.maintDir(), "Maintenance Log.md"), []byte(b.String()), 0o644)
 }
 
+func (s *store) maintPayload() map[string]any {
+	eq, is, st := s.loadMaint()
+	sort.Slice(eq, func(i, j int) bool { return strings.ToLower(eq[i].Name) < strings.ToLower(eq[j].Name) })
+	return map[string]any{"equipment": eq, "issues": is, "portalUrl": st.PortalURL,
+		"priorityUse": priorityUse, "pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses,
+		"managers": st.Managers, "oosLog": s.oosList()}
+}
+
 func (s *store) maintRoutes(mux *http.ServeMux) {
-	reply := func(w http.ResponseWriter) {
-		eq, is, st := s.loadMaint()
-		sort.Slice(eq, func(i, j int) bool { return strings.ToLower(eq[i].Name) < strings.ToLower(eq[j].Name) })
-		writeJSON(w, 200, map[string]any{"equipment": eq, "issues": is, "portalUrl": st.PortalURL,
-			"priorityUse": priorityUse, "pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses})
-	}
+	reply := func(w http.ResponseWriter) { writeJSON(w, 200, s.maintPayload()) }
 	save := func(w http.ResponseWriter, eq []*Equipment, is []*Issue) bool {
 		if err := s.writeMaint("equipment.json", eq); err != nil {
 			s.maintFail(w, err)
@@ -240,6 +248,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.todoRoutes(mux)
 	s.summaryRoutes(mux)
 	s.findingRoutes(mux)
+	s.oosRoutes(mux)
 	mux.HandleFunc("GET /api/maint", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -262,8 +271,19 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		found := false
 		for i, e := range eq {
 			if e.ID == in2.ID && in2.ID != "" {
+				// Out of service is only started and ended with the buttons
+				// that record the reason and who cleared it.
+				if e.Status == "Out of Service" {
+					in2.Status = "Out of Service"
+				} else if in2.Status == "Out of Service" {
+					fail(w, 400, "Use Take Out of Service on the equipment list, so the reason is recorded.")
+					return
+				}
 				eq[i], found = &in2, true
 			}
+		}
+		if !found && in2.Status == "Out of Service" {
+			in2.Status = "Operational"
 		}
 		if !found {
 			for _, e := range eq {
@@ -353,7 +373,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		p.History = []Entry{{p.ReportedAt, p.ReportedBy, "Reported the issue."}}
 		is = append(is, &p)
 		if in2.OutOfService {
-			e.Status = "Out of Service"
+			s.holdStart(e, "Reported issue #"+itoa(p.Number)+": "+p.Title, p.ReportedBy, p.ID)
 		} else if e.Status == "Operational" {
 			e.Status = "Needs Attention"
 		}
@@ -458,7 +478,9 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 					open = true
 				}
 			}
-			if !open && p.Status == "Verified" {
+			// A verified repair does not lift an out-of-service hold. A
+			// manager clears that on purpose with Clear for Service.
+			if !open && p.Status == "Verified" && e.Status != "Out of Service" {
 				e.Status = "Operational"
 			}
 			if open && e.Status == "Operational" {
@@ -472,8 +494,9 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 
 	mux.HandleFunc("POST /api/maint/settings", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct {
-			PortalURL      *string `json:"portalUrl"`
-			ReplacePercent *int    `json:"replacePercent"`
+			PortalURL      *string   `json:"portalUrl"`
+			ReplacePercent *int      `json:"replacePercent"`
+			Managers       *[]string `json:"managers"`
 		}
 		if json.NewDecoder(r.Body).Decode(&in2) != nil {
 			fail(w, 400, "Could not read that.")
@@ -482,6 +505,14 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		_, _, st := s.loadMaint()
+		if in2.Managers != nil {
+			st.Managers = []string{}
+			for _, n := range *in2.Managers {
+				if n = strings.TrimSpace(n); n != "" {
+					st.Managers = append(st.Managers, n)
+				}
+			}
+		}
 		if in2.PortalURL != nil {
 			u := strings.TrimSpace(*in2.PortalURL)
 			if u != "" {

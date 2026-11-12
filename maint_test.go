@@ -38,8 +38,12 @@ func TestMaintenanceFlow(t *testing.T) {
 		t.Error("a finished repair must not return equipment to service by itself")
 	}
 	out = put(`{"status":"Verified","by":"Manager"}`)
+	if out["equipment"].([]any)[0].(map[string]any)["status"] != "Out of Service" {
+		t.Error("verification must not lift an out-of-service hold")
+	}
+	_, out = e.post("/api/maint/equipment/"+id+"/clear", `{"by":"Manager","note":"Checked temperature holds","safe":true}`)
 	if out["equipment"].([]any)[0].(map[string]any)["status"] != "Operational" {
-		t.Error("manager verification should return the equipment to Operational")
+		t.Error("clearing should return the equipment to Operational")
 	}
 	if b, err := os.ReadFile(filepath.Join(e.s.maintDir(), "Maintenance Log.md")); err != nil || !strings.Contains(string(b), "verified by Manager") {
 		t.Errorf("readable log missing or incomplete: %v", err)
@@ -317,5 +321,56 @@ func TestInspectionItems(t *testing.T) {
 		if x.(map[string]any)["group"] == "Inspection" {
 			t.Error("done item should leave the to-do list")
 		}
+	}
+}
+
+func TestOutOfServiceWorkflow(t *testing.T) {
+	e := newEnv(t)
+	_, out := e.post("/api/maint/equipment", `{"name":"Fryer 1","type":"Fryer"}`)
+	id := out["equipment"].([]any)[0].(map[string]any)["id"].(string)
+	st := func(o map[string]any) string { return o["equipment"].([]any)[0].(map[string]any)["status"].(string) }
+	if c, _ := e.post("/api/maint/equipment/"+id+"/out-of-service", `{"by":"GM"}`); c != 400 {
+		t.Error("a reason is required")
+	}
+	c, out := e.post("/api/maint/equipment/"+id+"/out-of-service", `{"reason":"Oil leak","by":"GM"}`)
+	if c != 200 || st(out) != "Out of Service" || len(out["oosLog"].([]any)) != 1 {
+		t.Fatalf("not taken out of service: %v", out)
+	}
+	if c, _ := e.post("/api/maint/equipment/"+id+"/out-of-service", `{"reason":"again","by":"GM"}`); c != 400 {
+		t.Error("cannot be taken out twice")
+	}
+	// editing the record cannot lift the hold
+	_, out = e.post("/api/maint/equipment", `{"id":"`+id+`","name":"Fryer 1","status":"Operational"}`)
+	if st(out) != "Out of Service" {
+		t.Error("editing must not clear the hold")
+	}
+	// a verified work order does not lift it either
+	_, out = e.post("/api/maint/issues", `{"equipmentId":"`+id+`","title":"Leak","reportedBy":"M"}`)
+	iid := out["issues"].([]any)[0].(map[string]any)["id"].(string)
+	_, out = e.do2("PUT", "/api/maint/issues/"+iid, `{"status":"Verified","by":"GM"}`)
+	if st(out) != "Out of Service" {
+		t.Error("verifying a work order must not clear the hold")
+	}
+	e.post("/api/maint/settings", `{"managers":["Pat Manager"]}`)
+	if c, _ := e.post("/api/maint/equipment/"+id+"/clear", `{"by":"Cook","note":"Fixed","safe":true}`); c != 403 {
+		t.Error("only a listed manager can clear")
+	}
+	if c, _ := e.post("/api/maint/equipment/"+id+"/clear", `{"by":"pat manager","note":"","safe":true}`); c != 400 {
+		t.Error("a note is required")
+	}
+	if c, _ := e.post("/api/maint/equipment/"+id+"/clear", `{"by":"pat manager","note":"Fixed","safe":false}`); c != 400 {
+		t.Error("the safety confirmation is required")
+	}
+	c, out = e.post("/api/maint/equipment/"+id+"/clear", `{"by":"pat manager","note":"Seal replaced, test run","safe":true}`)
+	if c != 200 || st(out) != "Operational" {
+		t.Fatalf("not cleared: %v %v", c, out)
+	}
+	if r := out["oosLog"].([]any)[0].(map[string]any); r["clearedBy"] != "pat manager" || r["clearNote"] == "" {
+		t.Errorf("clear not recorded: %v", r)
+	}
+	// reporting an issue with "out of service" ticked records a hold
+	_, out = e.post("/api/maint/issues", `{"equipmentId":"`+id+`","title":"Burner out","reportedBy":"M","outOfService":true}`)
+	if st(out) != "Out of Service" || len(out["oosLog"].([]any)) != 2 {
+		t.Errorf("issue should start a hold: %v", out["oosLog"])
 	}
 }

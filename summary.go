@@ -155,12 +155,23 @@ func (s *store) monthSummary(month string) map[string]any {
 		}
 	}
 
+	outNow, outEvents := 0, 0
+	for _, e := range eq {
+		if e.Status == "Out of Service" {
+			outNow++
+		}
+	}
+	for _, r := range s.oosList() {
+		if inMonth(r.RemovedAt) {
+			outEvents++
+		}
+	}
 	notes := map[string]summaryNotes{}
 	s.readMaint("summary-notes.json", &notes)
 	return map[string]any{
 		"month": month, "label": label,
 		"opened": opened, "completed": completed, "openNow": openNow, "p1p2Open": hot,
-		"overduePM": overdue, "pmDone": pmDone, "pmDueThisMonth": pmDue,
+		"overduePM": overdue, "outNow": outNow, "outEvents": outEvents, "pmDone": pmDone, "pmDueThisMonth": pmDue,
 		"repairCost": repairCost, "partsCost": parts, "downtime": downtime, "preventiveCost": prevCost,
 		"byPriority": prios, "repeat": rep, "major": major, "notes": notes[month],
 	}

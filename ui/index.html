@@ -130,7 +130,7 @@ aside .wo{margin:14px 10px 0;width:calc(100% - 20px);font-size:13px;padding:8px 
 .status.Service,.status.Urgent,.status.High,.status.Overdue,.status.Replacing,.status.P1,.status.P2{background:#e0525e}
 .status.Low,.status.P4,.status.Needed{background:#9aa0a8}
 .status{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700;color:#111;background:#9aa0a8}
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0}.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}.stat .n{font-size:24px;font-weight:700}.stat.warn{border-color:#b45309;background:#fff7ed}
+.oos{background:#7f1d1d!important;border-color:#ef4444!important;color:#fff!important;font-size:15px}.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0}.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}.stat .n{font-size:24px;font-weight:700}.stat.warn{border-color:#b45309;background:#fff7ed}
 .hist{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px}.hist div{margin-bottom:6px}
 aside .nav.mod{font-weight:700}.nav .grow{flex:1}.nav .chev{opacity:.6;font-size:12px}
 .nav.sub{padding:7px 12px 7px 42px;font-size:14px;margin:1px 0}.navsep{height:1px;background:var(--line);margin:10px 8px}
@@ -322,7 +322,7 @@ function render() {
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")
     + pictosOf(shown).map(([k, label]) => `<figure title="${label}">${PICTO[k]}<figcaption>${label}</figcaption></figure>`).join("");
-  $("#view").innerHTML = lockBanner() + ({finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
+  $("#view").innerHTML = oosBanner() + lockBanner() + ({finds: vFinds, summary: vSummary, todo: vTodo, cal: vCal, clean: () => vPM("Cleaning"), fac: () => vPM("Grounds / Facility"), assets: vAssets, pm: () => vPM("Equipment PM"), equip: vEquip, issues: vIssues, library: vLibrary, detail: vDetail, add: vForm, categories: vCats, notes: vNotes, settings: vSettings, about: vAbout}[state.view])();
   if (state.view === "library") { const s = $("#q"); if (s && state.focusQ) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 }
 
@@ -678,6 +678,13 @@ function vNotes() {
 }
 
 /* ---------- the "someone is editing" lock ---------- */
+function oosBanner() {
+  const m = state.maint; if (!m) return "";
+  const out = m.equipment.filter(e => e.status === "Out of Service"); if (!out.length) return "";
+  const rec = id => [...(m.oosLog || [])].reverse().find(r => r.equipmentId === id && !r.clearedAt) || {};
+  return `<div class="note bad oos noprint" style="margin-bottom:10px"><span class="grow"><b>OUT OF SERVICE. DO NOT USE:</b> ${out.map(e => { const r = rec(e.id); return `<b>${esc(e.name)}</b>${r.reason ? " (" + esc(r.reason) + (r.removedAt ? ", since " + fmtDate(r.removedAt) : "") + ")" : ""}`; }).join(" · ")}</span>
+    <button class="btn small" data-act="nav" data-v="equip">View Equipment</button></div>`;
+}
 function lockBanner() {
   const L = state.lock, ro = L ? L.readOnly : state.lib.readOnly;
   if (!ro) return "";
@@ -1149,11 +1156,32 @@ function vEquip() {
   return `<div class="row"><button class="btn green big" data-act="eq-edit" data-id="">${icon("plus")}Add Equipment</button>
     <span class="hint">${list.length} piece${list.length === 1 ? "" : "s"} of equipment${down ? ` · <b>${down} need${down === 1 ? "s" : ""} attention</b>` : ""}</span></div>
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>No equipment yet</b>Click “Add Equipment” to list the walk-ins, fryers, mixers and other equipment you maintain.</div>`
-    : `<table class="plain"><thead><tr>${["Equipment", "Area", "Type", "Make / Model", "Status", "Open Issues"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:250px"></th></tr></thead><tbody>
+    : `<table class="plain"><thead><tr>${["Equipment", "Area", "Type", "Make / Model", "Status", "Open Issues"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:370px"></th></tr></thead><tbody>
       ${list.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.area)}</td><td>${esc(e.type)}</td><td>${esc([e.make, e.model].filter(Boolean).join(" "))}</td><td>${tag(e.status)}${(state.maint.pm || []).some(t => t.equipmentId === e.id && t.state === "Overdue") ? " " + tag("Overdue") : ""}</td><td>${openIssues(e.id) || ""}</td>
-        <td style="text-align:right;white-space:nowrap"><button class="btn small wine" data-act="issue-new" data-id="${e.id}">${icon("warn")}Report Issue</button> <button class="btn small" data-act="eq-edit" data-id="${e.id}">${icon("edit")}Edit</button></td></tr>`).join("")}
+        <td style="text-align:right;white-space:nowrap">${e.status === "Out of Service" ? `<button class="btn small green" data-act="oos-clear-ask" data-id="${e.id}">Clear for Service</button>` : `<button class="btn small wine" data-act="oos-ask" data-id="${e.id}">Take Out of Service</button>`} <button class="btn small wine" data-act="issue-new" data-id="${e.id}">${icon("warn")}Report Issue</button> <button class="btn small" data-act="eq-edit" data-id="${e.id}">${icon("edit")}Edit</button></td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
+function oosAsk(id) {
+  const e = state.maint.equipment.find(x => x.id === id);
+  const open = state.maint.issues.filter(p => p.equipmentId === id && p.status !== "Verified" && p.status !== "Closed");
+  showModal(`<h2>${icon("warn")}Take Out of Service</h2><div class="body" id="oosbody" data-id="${id}"><p><b>${esc(e.name)}</b> will show as OUT OF SERVICE at the top of every screen until a manager clears it.</p><div class="fields">
+    <label>Reason: <span class="req">*</span></label><textarea class="field" rows="3" data-oos="reason" placeholder="Why it must not be used, e.g. Holding 48°F, oil leak at the drain valve"></textarea>
+    <label>Related issue:</label><select class="field" data-oos="issueId"><option value="">None</option>${open.map(p => `<option value="${p.id}">#${p.number} ${esc(p.title)}</option>`).join("")}</select>
+    <label>Your name: <span class="req">*</span></label><input class="field" data-oos="by" value="${esc(who())}"></div></div>
+    <div class="foot"><button class="btn wine big" data-act="oos-go">${icon("warn")}Take Out of Service</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
+function oosClearAsk(id) {
+  const m = state.maint, e = m.equipment.find(x => x.id === id), r = [...(m.oosLog || [])].reverse().find(x => x.equipmentId === id && !x.clearedAt) || {};
+  const open = m.issues.filter(p => p.equipmentId === id && p.status !== "Verified" && p.status !== "Closed");
+  showModal(`<h2>${icon("save")}Clear for Service</h2><div class="body" id="oosbody" data-id="${id}"><p><b>${esc(e.name)}</b> has been out of service${r.removedAt ? " since " + fmtDate(r.removedAt) : ""}.<br><span class="hint">${r.reason ? "Reason: " + esc(r.reason) + (r.removedBy ? " (" + esc(r.removedBy) + ")" : "") : "The reason was not recorded."}</span></p>
+    ${open.length ? `<p class="note bad">${open.length} work order${open.length === 1 ? " is" : "s are"} still open on this equipment.</p>` : ""}
+    <div class="fields"><label>What was checked or repaired: <span class="req">*</span></label><textarea class="field" rows="3" data-oc="note" placeholder="e.g. Seal replaced, ran 2 hours, holding 38°F"></textarea>
+    <label></label><label style="font-weight:400"><input type="checkbox" data-oc="safe"> I have checked this equipment and it is safe for food production</label>
+    <label>Manager name: <span class="req">*</span></label><input class="field" data-oc="by" value="${esc(who())}" placeholder="${(m.managers || []).length ? "Must be on the authorized list" : ""}"></div>
+    ${(m.managers || []).length ? `<p class="hint">Authorized managers: ${esc(m.managers.join(", "))}</p>` : `<p class="hint">Anyone can clear this until you list authorized managers in Settings.</p>`}</div>
+    <div class="foot"><button class="btn green big" data-act="oos-clear-go">${icon("save")}Clear for Service</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
+
 function vIssues() {
   const m = state.maint; if (!m) { loadMaint().then(render); return `<p class="hint">Loading...</p>`; }
   const all = state.showAll, list = [...m.issues].reverse().filter(p => all || (p.status !== "Verified" && p.status !== "Closed"));
@@ -1179,6 +1207,10 @@ function tMaintainx() {
     <p>The <b>Submit Work Order</b> button opens your MaintainX web address in its own window, with no browser tabs or address bar. Sign in once and it stays signed in on that computer. This program does not connect to MaintainX; work orders are entered there, and the work order number can be written on the issue here.</p>
     <label>MaintainX web address:</label><input class="field" id="portal" value="${esc(m.portalUrl)}">
     <div class="row" style="margin-top:10px"><button class="btn green" data-act="portal-save">${icon("save")}Save</button><button class="btn" data-act="submit-wo">${icon("ext")}Open It Now</button></div></div>
+  <div class="panel" style="max-width:760px"><h3 style="margin-top:0">Who can clear out-of-service equipment</h3>
+    <p>When equipment is taken out of service it stays that way until one of these managers clears it, and says what was checked. Put one name per line. The program has no logins, so it checks the name typed when clearing; leave the list empty to let anyone clear it.</p>
+    <textarea class="field" id="mgrs" rows="4" placeholder="One manager per line">${esc((m.managers || []).join("\n"))}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn green" data-act="mgr-save">${icon("save")}Save</button></div></div>
   <div class="panel" style="max-width:760px"><h3 style="margin-top:0">Repair or replace</h3>
     <p>When the total spent on a unit's upkeep reaches this percentage of the cost of a new unit, the Assets screen suggests considering a replacement. It also flags units past their normal life that have reached half of this.</p>
     <label>Suggest replacing at (% of a new unit):</label><input class="field" type="number" id="repct" min="5" max="200" value="${m.replacePercent}" style="width:110px">
@@ -1199,7 +1231,7 @@ function eqForm(id) {
     <label>New Unit Costs ($):</label><input type="number" min="0" step="0.01" class="field" data-eq="replaceCost" value="${e.replaceCost || ""}" style="width:150px" title="What a replacement would cost today. Used to compare repair costs.">
     <label>Normal Life (years):</label><input type="number" min="0" class="field" data-eq="expectedYears" value="${e.expectedYears || ""}" style="width:110px">
     ${f("maintainxId", "MaintainX Asset:", "Optional: its name or number in MaintainX")}
-    <label>Status:</label><select class="field" data-eq="status">${state.maint.statuses.map(x => `<option ${x === e.status ? "selected" : ""}>${x}</option>`).join("")}</select>
+    <label>Status:</label>${e.status === "Out of Service" ? `<div><select class="field" data-eq="status" disabled><option>Out of Service</option></select><div class="hint">Out of service. A manager clears it with Clear for Service on the equipment list.</div></div>` : `<select class="field" data-eq="status">${state.maint.statuses.filter(x => x !== "Out of Service").map(x => `<option ${x === e.status ? "selected" : ""}>${x}</option>`).join("")}</select>`}
     <label>Notes:</label><textarea class="field" rows="2" data-eq="notes">${esc(e.notes || "")}</textarea></div></div>
     <div class="foot"><button class="btn green big" data-act="eq-save">${icon("save")}Save</button>${id ? `<button class="btn wine big" data-act="eq-delete" data-id="${esc(id)}">${icon("trash")}Delete</button>` : ""}<button class="btn big" data-act="close">Cancel</button></div>`);
 }
@@ -1518,6 +1550,11 @@ const ACT = {
   async "issue-save"() { const v = grab("[data-is]", "is"); rememberWho(v.reportedBy); await maintDone(await api("/api/maint/issues", {method: "POST", body: JSON.stringify(v)}), "Issue saved. Use Submit Work Order to enter it in MaintainX."); },
   "issue-open"(el) { issueDetail(el.dataset.id); },
   async "issue-update"() { const v = grab("[data-id-f]", "idF"); for (const k of ["parts", "labor", "downtime"]) v[k] = parseFloat(v[k]) || 0; rememberWho(v.by); await maintDone(await api("/api/maint/issues/" + $("#idbody").dataset.id, {method: "PUT", body: JSON.stringify(v)}), "Issue updated."); },
+  "oos-ask"(el) { oosAsk(el.dataset.id); },
+  "oos-clear-ask"(el) { oosClearAsk(el.dataset.id); },
+  async "oos-go"() { const v = grab("[data-oos]", "oos"); rememberWho(v.by); await maintDone(await api("/api/maint/equipment/" + $("#oosbody").dataset.id + "/out-of-service", {method: "POST", body: JSON.stringify(v)}), "Out of service. The alert shows on every screen."); },
+  async "oos-clear-go"() { const v = grab("[data-oc]", "oc"); rememberWho(v.by); await maintDone(await api("/api/maint/equipment/" + $("#oosbody").dataset.id + "/clear", {method: "POST", body: JSON.stringify(v)}), "Cleared for service."); },
+  async "mgr-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({managers: $("#mgrs").value.split("\n")})}); render(); toast("Saved."); },
   "finds-all"(el) { state.findAll = el.checked; render(); },
   "find-new"() { findForm(); },
   "find-open"(el) { findDetail(el.dataset.id); },
@@ -1705,7 +1742,7 @@ setInterval(() => refreshLock().catch(() => {}), 15000);
 setInterval(() => fetch("/api/ping").then(r => { if (!r.ok) throw 0; misses = 0; $("#lost").style.display = "none"; }).catch(() => { if (++misses >= 2) $("#lost").style.display = "block"; }), 5000);
 fetch("/api/ping");
 addEventListener("pagehide", () => { try { fetch("/api/closing", { keepalive: true }); } catch (e) {} });
-reload().then(() => { render(); refreshLock().catch(() => {}); backfillPages(); }).catch(e => toast(e.message, true));
+reload().then(() => { loadMaint().then(render).catch(() => {}); render(); refreshLock().catch(() => {}); backfillPages(); }).catch(e => toast(e.message, true));
 </script>
 </body>
 </html>
