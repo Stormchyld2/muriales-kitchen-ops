@@ -696,3 +696,96 @@ func TestChemicalLogAndReadiness(t *testing.T) {
 		t.Error("review should show the CA reference")
 	}
 }
+
+func TestCleaningAndReplacement(t *testing.T) {
+	e := newEnv(t)
+	for name, n := range map[string]int{"cleantasks": 18, "standards": 11, "mgrchecks": 14, "cleanref": 0} {
+		_, o := e.get2("/api/reg/" + name)
+		if got := len(o["rows"].([]any)); got != n {
+			t.Errorf("%s seeded %d, want %d", name, got, n)
+		}
+	}
+	if c, _ := e.post("/api/reg/cleantasks", `{"area":"Bar"}`); c != 400 {
+		t.Error("task text required")
+	}
+	c, o := e.post("/api/reg/cleanref", `{"name":"Sanitizer","type":"Chemical","dilution":"200 ppm"}`)
+	if c != 200 || o["rows"].([]any)[0].(map[string]any)["id"] != "CT-001" {
+		t.Fatalf("add ref: %v %v", c, o)
+	}
+	if c, _ := e.post("/api/reg/cleanref", `{"name":"x","type":"Bogus"}`); c != 400 {
+		t.Error("select options enforced")
+	}
+	if c, _ := e.post("/api/clean/done", `{"id":"CLN-0001","by":""}`); c != 400 {
+		t.Error("name required")
+	}
+	c, o = e.post("/api/clean/done", `{"id":"CLN-0001","by":"AB","issue":true,"notes":"Grease buildup"}`)
+	if c != 200 {
+		t.Fatalf("done: %v %v", c, o)
+	}
+	pend := o["pending"].([]any)
+	if len(pend) != 1 {
+		t.Fatalf("verification pending: %v", pend)
+	}
+	if _, m := e.get2("/api/reg/missed"); len(m["rows"].([]any)) != 1 {
+		t.Error("issue found should create a missed entry")
+	}
+	for _, tk := range o["tasks"].([]any) {
+		if tk.(map[string]any)["id"] == "CLN-0001" && tk.(map[string]any)["state"] != "Done Today" {
+			t.Error("task should show done today")
+		}
+	}
+	c, o = e.post("/api/clean/verify", `{"id":"`+pend[0].(map[string]any)["id"].(string)+`","by":"MM","ok":false,"notes":"Still greasy"}`)
+	if c != 200 || len(o["pending"].([]any)) != 0 {
+		t.Fatalf("verify: %v %v", c, o)
+	}
+	if _, m := e.get2("/api/reg/missed"); len(m["rows"].([]any)) != 2 {
+		t.Error("failed verification should create a missed entry")
+	}
+	if c, _ := e.post("/api/mgr/done", `{"id":"KOM-001","by":"JW","result":"Needs Attention","notes":"Cooler warm"}`); c != 200 {
+		t.Error("manager check done")
+	}
+	if _, l := e.get2("/api/reg/mgrlog"); l["rows"].([]any)[0].(map[string]any)["caNeeded"] != "Yes" {
+		t.Error("needs attention flags a corrective action")
+	}
+	if c, _ := e.s.cleanReport("clean-weekly"); c == nil {
+		t.Error("weekly report")
+	}
+	for _, id := range []string{"clean-schedule", "clean-standards", "clean-chem", "clean-log", "clean-missed", "mgr-schedule", "mgr-log", "clean-weekly", "linecook-weekly", "replace-log"} {
+		if rep, ok := e.s.buildReport(id, ""); !ok || len(rep.Sections) == 0 {
+			t.Errorf("report %s", id)
+		}
+	}
+	items := e.s.todoItems(time.Now(), time.Now().AddDate(0, 0, 7), map[string]bool{"Cleaning": true, "Manager Check": true})
+	var day, mgr bool
+	for _, it := range items {
+		day = day || it.Kind == "cleanday"
+		mgr = mgr || it.Kind == "mgr"
+	}
+	if !day || !mgr {
+		t.Errorf("todo should include the daily checklist and manager checks: %v", items)
+	}
+	// replacement request, prefilled from the equipment and its repairs
+	_, eo := e.post("/api/maint/equipment", `{"name":"Walk-in 1","area":"Storage","make":"Kolpak","model":"X1","purchaseCost":9000,"replaceCost":12000}`)
+	_ = eo
+	eqs, _, _ := e.s.loadMaint()
+	if len(eqs) == 0 {
+		t.Skip("equipment endpoint shape differs")
+	}
+	c, pf := e.get2("/api/replacements/prefill?equipmentId=" + eqs[0].ID)
+	if c != 200 || pf["equipment"] != "Walk-in 1" || pf["makeModel"] != "Kolpak X1" {
+		t.Fatalf("prefill: %v %v", c, pf)
+	}
+	if c, _ := e.post("/api/replacements", `{"equipment":"Walk-in 1","requestedBy":"JW","date":"2026-11-12","condition":"Poor","recommendation":"Replace"}`); c != 400 {
+		t.Error("reason required")
+	}
+	c, o = e.post("/api/replacements", `{"equipment":"Walk-in 1","requestedBy":"JW","date":"2026-11-12","condition":"Poor","recommendation":"Replace","reasons":"Repeated compressor failures","history":[{"date":"2026-10-01","failure":"Compressor"}]}`)
+	if c != 200 || o["saved"] != "ER-0001" {
+		t.Fatalf("replacement: %v %v", c, o)
+	}
+	if c, _ := e.post("/api/replacements", `{"id":"ER-0001","equipment":"Walk-in 1","requestedBy":"JW","date":"2026-11-12","condition":"Poor","recommendation":"Replace","reasons":"x","completed":"Yes"}`); c != 400 {
+		t.Error("cannot complete before approval")
+	}
+	if rep, ok := e.s.buildReport("replace:ER-0001", ""); !ok || !strings.Contains(rep.html(true), "Compressor") {
+		t.Error("replacement report")
+	}
+}

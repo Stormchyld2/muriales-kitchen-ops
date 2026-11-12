@@ -60,6 +60,16 @@ var reportCatalog = []reportDef{
 	{"chem-log", "Chemical Safety", "Chemical Incident Log", "Every chemical spill or exposure on record.", false},
 	{"readiness-blank", "Food Safety", "Blank Inspection Readiness Checklist", "The 30-point self-inspection to print and carry on a walk-through.", false},
 	{"readiness-log", "Food Safety", "Inspection Readiness History", "Every readiness review with the result and open actions.", false},
+	{"replace-log", "Maintenance", "Equipment Replacement History", "Every replacement request with the decision and cost.", false},
+	{"clean-schedule", "Cleaning & Sanitation", "Cleaning Schedule", "Every cleaning task with frequency, timing, role and standard.", false},
+	{"clean-weekly", "Cleaning & Sanitation", "Weekly Cleaning Schedule (to post)", "The week's deep-clean jobs with spaces for assignment, initials and verification.", false},
+	{"linecook-weekly", "Cleaning & Sanitation", "Line Cook Weekly Cleaning Schedule", "The nightly close and day-by-day detail cleaning for line cooks.", false},
+	{"clean-standards", "Cleaning & Sanitation", "Cleaning Standards", "What clean means for each job: steps, sanitizing and verification.", false},
+	{"clean-chem", "Cleaning & Sanitation", "Chemical & Tool Reference", "Approved chemicals and tools, dilution, PPE and storage.", false},
+	{"clean-log", "Cleaning & Sanitation", "Cleaning Completion Log", "Cleaning completed in the last 30 days and who verified it.", false},
+	{"clean-missed", "Cleaning & Sanitation", "Missed & Overdue Cleaning Log", "Cleaning missed or failed, and how it was corrected.", false},
+	{"mgr-schedule", "Cleaning & Sanitation", "Manager Inspection Schedule", "The recurring manager checks and when each is due.", false},
+	{"mgr-log", "Cleaning & Sanitation", "Manager Inspection Log", "Manager checks done in the last 30 days and their results.", false},
 	{"pm-equipment", "Schedule", "Equipment PM Schedule", "Recurring equipment maintenance jobs, when each was last done and when it is next due.", false},
 	{"pm-cleaning", "Schedule", "Cleaning Schedule", "Daily, weekly, monthly and yearly cleaning tasks with last done and next due.", false},
 	{"pm-facility", "Schedule", "Grounds and Facility Schedule", "Building and grounds jobs with last done and next due.", false},
@@ -73,6 +83,12 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if strings.HasPrefix(id, "inspection:") {
 		return s.inspectionReport(strings.TrimPrefix(id, "inspection:"))
+	}
+	if strings.HasPrefix(id, "clean-") || strings.HasPrefix(id, "mgr-") || id == "linecook-weekly" {
+		return s.cleanReport(id)
+	}
+	if strings.HasPrefix(id, "replace") {
+		return s.replReport(id)
 	}
 	if strings.HasPrefix(id, "chem") {
 		return s.chemReport(id)
@@ -350,7 +366,7 @@ h2{font-size:15px;margin:20px 0 4px;border-bottom:1px solid #999;padding-bottom:
 			b.WriteString("<h2>" + e(sec.Heading) + "</h2>")
 		}
 		if sec.Note != "" {
-			b.WriteString(`<div class="note">` + e(sec.Note) + `</div>`)
+			b.WriteString(`<div class="note">` + strings.ReplaceAll(e(sec.Note), "\n", "<br>") + `</div>`)
 		}
 		if len(sec.Cols) == 0 {
 			continue

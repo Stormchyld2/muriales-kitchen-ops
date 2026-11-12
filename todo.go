@@ -35,7 +35,7 @@ type todoItem struct {
 	ID     string `json:"id"`
 }
 
-var todoSources = []string{"Cleaning", "Equipment PM", "Grounds / Facility", "Issue", "Inspection", "Temperature", "Corrective Action", "SDS", "Equipment", "Other"}
+var todoSources = []string{"Cleaning", "Equipment PM", "Grounds / Facility", "Issue", "Inspection", "Temperature", "Corrective Action", "Manager Check", "SDS", "Equipment", "Other"}
 
 func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
@@ -107,6 +107,10 @@ func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 			detail := strings.TrimSpace(strings.Join(nonEmpty(f.Area, name[f.EquipmentID], f.Category, f.Priority, f.AssignedTo), " · "))
 			out = append(out, todoItem{Group: "Inspection", Title: "#" + itoa(f.Number) + " " + f.What, Detail: detail, Due: f.Due, State: state, Kind: "finding", ID: f.ID})
 		}
+	}
+	out = append(out, s.cleanTodo(from, to, want)...)
+	if want["Equipment"] {
+		out = append(out, s.replTodo()...)
 	}
 	if want["Corrective Action"] {
 		out = append(out, s.caTodo()...)
