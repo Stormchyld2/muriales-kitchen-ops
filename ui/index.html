@@ -513,14 +513,14 @@ function vCats() {
   </div>`;
 }
 
-const TABS = [["maintainx","MaintainX"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
-function loadTab() { if (state.view !== "settings") return; const f = {tempsheet: loadTemps, maintainx: loadMaint, backup: loadBackups, recovery: loadRecovery, diagnostics: loadDiag}[state.tab]; if (f) f(); }
+const TABS = [["maintainx","MaintainX"],["eqareas","Equipment Areas"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
+function loadTab() { if (state.view !== "settings") return; const f = {eqareas: loadMaint, tempsheet: loadTemps, maintainx: loadMaint, backup: loadBackups, recovery: loadRecovery, diagnostics: loadDiag}[state.tab]; if (f) f(); }
 async function loadBackups() { state.backups = await api("/api/backups"); if (state.view === "settings") render(); }
 async function loadRecovery() { state.rec = await api("/api/recovery"); if (state.view === "settings" && state.tab === "recovery") render(); }
 async function loadDiag() { state.diag = await api("/api/diagnostics"); if (state.view === "settings" && state.tab === "diagnostics") render(); }
 function vSettings() {
   const tabs = `<div class="tabs">${TABS.map(([k, l]) => `<button class="${state.tab === k ? "on" : ""}" data-act="tab" data-t="${k}">${l}</button>`).join("")}</div>`;
-  const body = ({storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, workbook: tWorkbook, tempsheet: tTempSheet, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag}[state.tab] || tStorage)();
+  const body = ({storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, workbook: tWorkbook, eqareas: tEqAreas, tempsheet: tTempSheet, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag}[state.tab] || tStorage)();
   return tabs + body;
 }
 function tAreas() {
@@ -1150,7 +1150,7 @@ const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); r
 const money = n => "$" + (Number(n) || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const who = () => { try { return localStorage.getItem("kitchenName") || ""; } catch (e) { return ""; } };
 const rememberWho = n => { try { localStorage.setItem("kitchenName", n); } catch (e) {} };
-async function loadMaint() { state.maint = await api("/api/maint"); if (state.view === "settings" && state.tab === "maintainx") render(); }
+async function loadMaint() { state.maint = await api("/api/maint"); if (state.view === "settings" && (state.tab === "maintainx" || state.tab === "eqareas")) render(); }
 const tag = v => `<span class="status ${esc(v)}">${esc(v)}</span>`;
 const openIssues = id => (state.maint.issues || []).filter(p => p.equipmentId === id && p.status !== "Verified" && p.status !== "Closed").length;
 const eqName = id => ((state.maint.equipment || []).find(e => e.id === id) || {}).name || "(removed)";
@@ -1298,7 +1298,7 @@ function tptForm(id) {
   const p = state.temps.points.find(x => x.id === id) || {kind: "Cold Holding"};
   showModal(`<h2>${icon("list")}${id ? "Edit" : "Add"} Temperature Point</h2><div class="body" id="tpbody" data-id="${esc(id)}"><div class="fields">
     <label>Name: <span class="req">*</span></label><input class="field" data-tp="name" value="${esc(p.name || "")}" placeholder="e.g. Walk-in Cooler 1">
-    <label>Area / station:</label><input class="field" data-tp="area" value="${esc(p.area || "")}" placeholder="e.g. Back Line">
+    <label>Area / station:</label><input class="field" data-tp="area" list="tpareas" value="${esc(p.area || "")}" placeholder="e.g. Back Line"><datalist id="tpareas">${((state.maint && state.maint.areas) || []).map(a => `<option value="${esc(a)}">`).join("")}</datalist>
     <label>Type:</label><select class="field" data-tp="kind">${state.temps.kinds.map(k => `<option ${k.kind === p.kind ? "selected" : ""}>${k.kind}</option>`).join("")}</select>
     <label>Lowest safe °F:</label><input type="number" step="0.1" class="field" data-tp="min" value="${p.min != null ? p.min : ""}" style="width:130px" placeholder="Leave empty to use the type's limit">
     <label>Highest safe °F:</label><input type="number" step="0.1" class="field" data-tp="max" value="${p.max != null ? p.max : ""}" style="width:130px" placeholder="Leave empty to use the type's limit"></div>
@@ -1625,6 +1625,13 @@ function tWorkbook() {
     <p class="hint">Jobs already loaded are skipped, so running this again does not create duplicates.</p>
     <div class="row"><button class="btn green big" data-act="wb-load">${icon("down")}Load the Jobs</button></div></div>`;
 }
+function tEqAreas() {
+  const m = state.maint; if (!m) { loadMaint(); return `<p class="hint">Loading...</p>`; }
+  return `<div class="panel" style="max-width:760px"><h3 style="margin-top:0">Equipment Areas</h3>
+    <p>The places equipment sits, used in the Area list when you add or edit equipment. Put one area per line, then Save. Removing an area here does not change equipment already assigned to it.</p>
+    <textarea class="field" id="eqareaslist" rows="12" placeholder="One area per line">${esc((m.areas || []).join("\n"))}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn green" data-act="eqareas-save">${icon("save")}Save</button></div></div>`;
+}
 function tMaintainx() {
   const m = state.maint; if (!m) { loadMaint(); return `<p class="hint">Loading...</p>`; }
   return `<div class="panel" style="max-width:760px"><h3 style="margin-top:0">MaintainX</h3>
@@ -1645,7 +1652,7 @@ function eqForm(id) {
   const f = (k, label, ph = "") => `<label>${label}</label><input class="field" data-eq="${k}" value="${esc(e[k] || "")}" placeholder="${ph}">`;
   showModal(`<h2>${icon("wrench")}${id ? "Edit" : "Add"} Equipment</h2><div class="body" id="eqbody" data-id="${esc(id)}"><div class="fields">
     ${f("name", "Name: <span class='req'>*</span>", "e.g. Walk-in Cooler 1")}
-    <label>Area:</label><div><input class="field" data-eq="area" list="eqareas" value="${esc(e.area || "")}" placeholder="Where it is"><datalist id="eqareas">${(state.lib.locations || []).map(l => `<option value="${esc(l)}">`).join("")}</datalist></div>
+    <label>Area:</label><div><select class="field" data-eq="area" style="width:auto">${["", ...(state.maint.areas || []), ...(e.area && !(state.maint.areas || []).includes(e.area) ? [e.area] : [])].map(a => `<option ${a === (e.area || "") ? "selected" : ""}>${esc(a)}</option>`).join("")}</select> <span class="hint">Add more areas in Settings, Equipment Areas.</span></div>
     <label>Type:</label><div><input class="field" data-eq="type" list="eqtypes" value="${esc(e.type || "")}" placeholder="Walk-in, fryer, HVAC, ice machine..."><datalist id="eqtypes">${EQ_TYPES.map(t => `<option value="${t}">`).join("")}</datalist></div>
     ${f("make", "Make:")}${f("model", "Model:")}${f("serial", "Serial Number:")}
     <label>Installed:</label><input type="date" class="field" data-eq="installed" value="${esc(e.installed || "")}" style="width:190px">
@@ -2082,6 +2089,7 @@ const ACT = {
   "tag-print-now"() { tagPrint($("#tgbody").dataset.file); },
   "tag-print"(el) { const r = activeHold(el.dataset.id); if (r && r.tag) return tagPrint(r.tag); tagDetails(el.dataset.id); },
   async "oos-clear-go"() { const v = grab("[data-oc]", "oc"); rememberWho(v.by); await maintDone(await api("/api/maint/equipment/" + $("#oosbody").dataset.id + "/clear", {method: "POST", body: JSON.stringify(v)}), "Cleared for service."); },
+  async "eqareas-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({areas: $("#eqareaslist").value.split("\n")})}); render(); toast("Saved."); },
   async "mgr-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({managers: $("#mgrs").value.split("\n")})}); render(); toast("Saved."); },
   "finds-all"(el) { state.findAll = el.checked; render(); },
   "find-new"() { findForm(); },

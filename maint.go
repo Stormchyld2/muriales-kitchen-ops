@@ -82,12 +82,23 @@ type maintSettings struct {
 	// means any name is accepted. The program has no logins, so this is a
 	// check on the name typed, not a security control.
 	Managers []string `json:"managers"`
+	// Where equipment sits. nil means the defaults below.
+	EquipmentAreas []string `json:"equipmentAreas"`
 
 	// Temperature log: the published Google Form response sheet and how its
 	// columns map to a reading.
 	TempsURL      string   `json:"tempsUrl"`
 	TempMap       *tempMap `json:"tempMap"`
 	TempsSyncedAt string   `json:"tempsSyncedAt"`
+}
+
+var defaultEquipmentAreas = []string{"Front Line", "Back Line", "Prep", "Salad", "Dish", "Cooler 1", "Freezer 1", "Cooler 2", "Freezer 2", "Cooler 3"}
+
+func (st maintSettings) areas() []string {
+	if st.EquipmentAreas == nil {
+		return defaultEquipmentAreas
+	}
+	return st.EquipmentAreas
 }
 
 const defaultPortal = "https://app.getmaintainx.com"
@@ -229,7 +240,7 @@ func (s *store) maintPayload() map[string]any {
 	sort.Slice(eq, func(i, j int) bool { return strings.ToLower(eq[i].Name) < strings.ToLower(eq[j].Name) })
 	return map[string]any{"equipment": eq, "issues": is, "portalUrl": st.PortalURL,
 		"priorityUse": priorityUse, "pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses,
-		"managers": st.Managers, "oosLog": s.oosList()}
+		"managers": st.Managers, "areas": st.areas(), "oosLog": s.oosList()}
 }
 
 func (s *store) maintRoutes(mux *http.ServeMux) {
@@ -515,6 +526,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 			PortalURL      *string   `json:"portalUrl"`
 			ReplacePercent *int      `json:"replacePercent"`
 			Managers       *[]string `json:"managers"`
+			Areas          *[]string `json:"areas"`
 		}
 		if json.NewDecoder(r.Body).Decode(&in2) != nil {
 			fail(w, 400, "Could not read that.")
@@ -528,6 +540,16 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 			for _, n := range *in2.Managers {
 				if n = strings.TrimSpace(n); n != "" {
 					st.Managers = append(st.Managers, n)
+				}
+			}
+		}
+		if in2.Areas != nil {
+			st.EquipmentAreas = []string{}
+			seen := map[string]bool{}
+			for _, n := range *in2.Areas {
+				if n = strings.TrimSpace(n); n != "" && !seen[strings.ToLower(n)] {
+					seen[strings.ToLower(n)] = true
+					st.EquipmentAreas = append(st.EquipmentAreas, n)
 				}
 			}
 		}

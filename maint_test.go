@@ -798,3 +798,17 @@ func TestCleaningAndReplacement(t *testing.T) {
 		t.Error("replacement report")
 	}
 }
+
+func TestEquipmentAreasSetting(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/maint")
+	a := o["areas"].([]any)
+	if len(a) != 10 || a[0] != "Front Line" || a[9] != "Cooler 3" {
+		t.Fatalf("defaults: %v", a)
+	}
+	_, o = e.post("/api/maint/settings", `{"areas":["Front Line"," Bar ","bar","Patio"]}`)
+	a = o["areas"].([]any)
+	if len(a) != 3 || a[1] != "Bar" || a[2] != "Patio" {
+		t.Fatalf("saved list should trim and drop duplicates: %v", a)
+	}
+}
