@@ -646,3 +646,53 @@ func TestCorrectiveActionAndDailyReport(t *testing.T) {
 		t.Errorf("report content: %v", err)
 	}
 }
+
+func TestChemicalLogAndReadiness(t *testing.T) {
+	e := newEnv(t)
+	bad := `{"at":"2026-11-12T10:30","kind":"Skin Contact","product":"Degreaser","area":"Fryer","summary":"Splash","by":"JW","emergency":"No","mgmtNotified":"Yes"}`
+	if c, _ := e.post("/api/chem", bad); c != 400 {
+		t.Error("exposure needs a person")
+	}
+	ok := strings.Replace(bad, `"area"`, `"persons":"Cook A","area"`, 1)
+	c, o := e.post("/api/chem", ok)
+	if c != 200 || o["saved"].(map[string]any)["id"] != "CHEM-0001" {
+		t.Fatalf("chem: %v %v", c, o)
+	}
+	for _, id := range []string{"chem:CHEM-0001", "chem-response", "chem-blank", "chem-log", "readiness-blank", "readiness-log"} {
+		if rep, found := e.s.buildReport(id, ""); !found || len(rep.Sections) == 0 {
+			t.Errorf("report %s missing", id)
+		}
+	}
+	items := ""
+	for i := 0; i < 30; i++ {
+		st := `"Ready"`
+		if i == 6 {
+			st = `"Needs Attention","finding":"Cooler at 45F","priority":"P2 - Urgent","owner":"Sous Chef"`
+		}
+		if i > 0 {
+			items += ","
+		}
+		items += `{"status":` + st + `}`
+	}
+	rv := `{"date":"2026-11-12","manager":"JW","type":"Internal Self-Inspection","overall":"No","critical":"No","items":[` + items + `]}`
+	c, o = e.post("/api/readiness", rv)
+	if c != 200 || o["saved"] != "IR-0001" || o["reviews"].([]any)[0].(map[string]any)["open"].(float64) != 1 {
+		t.Fatalf("readiness: %v %v", c, o)
+	}
+	if c, _ := e.post("/api/readiness", strings.Replace(rv, `"finding":"Cooler at 45F",`, "", 1)); c != 400 {
+		t.Error("a finding is needed when attention is needed")
+	}
+	c, o = e.post("/api/readiness/IR-0001/corrective", `{}`)
+	if c != 200 || o["made"].(float64) != 1 {
+		t.Fatalf("corrective: %v %v", c, o)
+	}
+	if c, _ := e.post("/api/readiness/IR-0001/corrective", `{}`); c != 400 {
+		t.Error("no duplicate forms")
+	}
+	if len(e.s.caForms()) != 1 || e.s.caForms()[0].Related == "" {
+		t.Error("corrective form not created")
+	}
+	if rep, _ := e.s.buildReport("readiness:IR-0001", ""); !strings.Contains(rep.html(true), "CA-0001") {
+		t.Error("review should show the CA reference")
+	}
+}

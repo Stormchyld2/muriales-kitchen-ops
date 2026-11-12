@@ -55,6 +55,11 @@ var reportCatalog = []reportDef{
 	{"temps-bad", "Food Safety", "Out-of-Range Temperatures", "Readings outside the safe range in the last 30 days, with the corrective action taken.", false},
 	{"ca-open", "Corrective Actions", "Open Corrective Actions", "Actions not yet closed, with owner, target date and whether they are overdue.", false},
 	{"ca-log", "Corrective Actions", "Corrective Action Log", "Every corrective action form on file.", false},
+	{"chem-response", "Chemical Safety", "Spill / Exposure Response Sheet", "The immediate-response steps and exposure quick reference to post or keep at hand.", false},
+	{"chem-blank", "Chemical Safety", "Blank Chemical Incident Form", "Fill in by hand during an incident, then enter it in the log.", false},
+	{"chem-log", "Chemical Safety", "Chemical Incident Log", "Every chemical spill or exposure on record.", false},
+	{"readiness-blank", "Food Safety", "Blank Inspection Readiness Checklist", "The 30-point self-inspection to print and carry on a walk-through.", false},
+	{"readiness-log", "Food Safety", "Inspection Readiness History", "Every readiness review with the result and open actions.", false},
 	{"pm-equipment", "Schedule", "Equipment PM Schedule", "Recurring equipment maintenance jobs, when each was last done and when it is next due.", false},
 	{"pm-cleaning", "Schedule", "Cleaning Schedule", "Daily, weekly, monthly and yearly cleaning tasks with last done and next due.", false},
 	{"pm-facility", "Schedule", "Grounds and Facility Schedule", "Building and grounds jobs with last done and next due.", false},
@@ -68,6 +73,12 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if strings.HasPrefix(id, "inspection:") {
 		return s.inspectionReport(strings.TrimPrefix(id, "inspection:"))
+	}
+	if strings.HasPrefix(id, "chem") {
+		return s.chemReport(id)
+	}
+	if strings.HasPrefix(id, "readiness") {
+		return s.readinessReport(id)
 	}
 	eq, is, _ := s.loadMaint()
 	_, _, st := s.loadMaint()
@@ -407,8 +418,12 @@ func (s *store) reportRoutes(mux *http.ServeMux) {
 			fail(w, 404, "That report does not exist.")
 			return
 		}
+		page := rep.html(false)
+		if r.URL.Query().Get("print") == "1" {
+			page = strings.Replace(page, "</body>", `<script>onload=function(){setTimeout(function(){print()},300)}</script></body>`, 1)
+		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = w.Write([]byte(rep.html(false)))
+		_, _ = w.Write([]byte(page))
 	})
 	// Opens an Outlook draft with the report attached. It never sends.
 	mux.HandleFunc("POST /api/reports/email", func(w http.ResponseWriter, r *http.Request) {
