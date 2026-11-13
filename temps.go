@@ -54,6 +54,7 @@ type TempReading struct {
 	Action  string  `json:"action"` // corrective action, needed when out of range
 	Source  string  `json:"source"` // entered, import
 	Key     string  `json:"key,omitempty"`
+	Edited  string  `json:"edited,omitempty"` // who corrected it, and when
 }
 
 type tempView struct {
@@ -545,6 +546,56 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			return
 		}
 		writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
+	})
+	// Correct a reading, including one pulled in from the form. The import key
+	// stays, so a later sync does not bring the original value back.
+	mux.HandleFunc("PUT /api/temps/{id}", func(w http.ResponseWriter, r *http.Request) {
+		var in2 struct {
+			Date, Time, PointID, By, Notes, Action, EditedBy string
+			Temp                                             float64
+		}
+		if json.NewDecoder(r.Body).Decode(&in2) != nil || strings.TrimSpace(in2.EditedBy) == "" {
+			fail(w, 400, "Enter your name.")
+			return
+		}
+		at, err := time.Parse("2006-01-02 15:04", strings.TrimSpace(in2.Date)+" "+strings.TrimSpace(in2.Time))
+		if err != nil {
+			fail(w, 400, "Enter the date and time of the reading.")
+			return
+		}
+		if in2.Temp < -80 || in2.Temp > 500 {
+			fail(w, 400, "That temperature does not look right.")
+			return
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		var p *TempPoint
+		for _, x := range s.tempPoints() {
+			if x.ID == in2.PointID {
+				p = x
+			}
+		}
+		if p == nil {
+			fail(w, 400, "Choose the temperature point.")
+			return
+		}
+		var all []*TempReading
+		s.readMaint("temps.json", &all)
+		for _, x := range all {
+			if x.ID != r.PathValue("id") {
+				continue
+			}
+			x.At, x.PointID, x.Point, x.Temp = at.Format("2006-01-02 15:04"), p.ID, p.Name, in2.Temp
+			x.By, x.Notes, x.Action = strings.TrimSpace(in2.By), strings.TrimSpace(in2.Notes), strings.TrimSpace(in2.Action)
+			x.Edited = strings.TrimSpace(in2.EditedBy) + ", " + time.Now().Format("1/2/2006")
+			if err := s.writeMaint("temps.json", all); err != nil {
+				s.maintFail(w, err)
+				return
+			}
+			writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
+			return
+		}
+		fail(w, 404, "That reading was not found.")
 	})
 	mux.HandleFunc("PUT /api/temps/{id}/action", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct{ Action, By string }

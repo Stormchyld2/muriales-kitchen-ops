@@ -519,14 +519,14 @@ function vCats() {
   </div>`;
 }
 
-const TABS = [["maintainx","MaintainX"],["eqareas","Equipment Areas & Types"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
+const TABS = [["maintainx","MaintainX"],["eqareas","Equipment Areas & Types"],["temppoints","Temperature Points"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
 function loadTab() { if (state.view !== "settings") return; const f = {eqareas: loadMaint, tempsheet: loadTemps, maintainx: loadMaint, backup: loadBackups, recovery: loadRecovery, diagnostics: loadDiag}[state.tab]; if (f) f(); }
 async function loadBackups() { state.backups = await api("/api/backups"); if (state.view === "settings") render(); }
 async function loadRecovery() { state.rec = await api("/api/recovery"); if (state.view === "settings" && state.tab === "recovery") render(); }
 async function loadDiag() { state.diag = await api("/api/diagnostics"); if (state.view === "settings" && state.tab === "diagnostics") render(); }
 function vSettings() {
   const tabs = `<div class="tabs">${TABS.map(([k, l]) => `<button class="${state.tab === k ? "on" : ""}" data-act="tab" data-t="${k}">${l}</button>`).join("")}</div>`;
-  const body = ({storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, workbook: tWorkbook, eqareas: tEqAreas, tempsheet: tTempSheet, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag}[state.tab] || tStorage)();
+  const body = ({storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, workbook: tWorkbook, eqareas: tEqAreas, temppoints: vTPoints, tempsheet: tTempSheet, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag}[state.tab] || tStorage)();
   return tabs + body;
 }
 function tAreas() {
@@ -1252,7 +1252,7 @@ function oosClearAsk(id) {
 /* ---------- temperature log ---------- */
 const dayLong = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, {weekday: "short", year: "numeric", month: "short", day: "numeric"}); };
 const trOpen = (f, print) => window.open("/api/temp-reports/" + encodeURIComponent(f) + (print ? "?print=1" : ""), "_blank");
-async function loadTemps(days) { try { state.treports = (await api("/api/temp-reports")).reports; } catch (e) { state.treports = []; } state.tdays = days || state.tdays || 7; const from = ymd(new Date(Date.now() - (state.tdays - 1) * 864e5)); state.temps = await api("/api/temps?from=" + from); if (state.view === "temps" || state.view === "tpoints" || (state.view === "settings" && state.tab === "tempsheet")) render(); }
+async function loadTemps(days) { try { state.treports = (await api("/api/temp-reports")).reports; } catch (e) { state.treports = []; } state.tdays = days || state.tdays || 7; const from = ymd(new Date(Date.now() - (state.tdays - 1) * 864e5)); state.temps = await api("/api/temps?from=" + from); if (state.view === "temps" || state.view === "tpoints" || (state.view === "settings" && (state.tab === "tempsheet" || state.tab === "temppoints"))) render(); }
 const tStatus = s => s === "OK" ? "OK" : s;
 function vTemps() {
   const d = state.temps; if (!d) { loadTemps(); return `<p class="hint">Loading...</p>`; }
@@ -1267,8 +1267,8 @@ function vTemps() {
   ${!d.points.length ? `<p class="note warn">Add the places you check (coolers, freezers, hot wells) under Temperature Points, or import your Google Form responses in Settings, Temperature Form.</p>` : ""}
   <div class="tablewrap">${!rows.length ? `<div class="empty"><b>No readings</b>Use Enter Temperatures for a round of checks.</div>`
     : `<table class="plain"><thead><tr>${["When", "Point", "Temp", "Safe Range", "Status", "By", "Notes / Corrective Action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td>${esc(when12(r.at))}</td><td><b>${esc(r.point)}</b></td><td>${r.temp}°F</td><td>${esc(r.limit)}</td><td>${tag(tStatus(r.status))}</td><td>${esc(r.by)}</td><td>${esc([r.notes, r.action].filter(Boolean).join(" · "))}</td>
-        <td style="text-align:right"><div class="acts">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button>` : ""}</div></td></tr>`).join("")}</tbody></table>`}</div>
+      ${rows.map(r => `<tr><td>${esc(when12(r.at))}</td><td><b>${esc(r.point)}</b></td><td>${r.temp}°F</td><td>${esc(r.limit)}</td><td>${tag(tStatus(r.status))}</td><td>${esc(r.by)}</td><td>${esc([r.notes, r.action].filter(Boolean).join(" · "))}${r.edited ? `<div class="hint">Edited by ${esc(r.edited)}</div>` : ""}</td>
+        <td style="text-align:right"><div class="acts">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button> ` : ""}<button class="btn small" data-act="temp-edit" data-id="${r.id}">${icon("edit")}Edit</button></div></td></tr>`).join("")}</tbody></table>`}</div>
   ${(state.treports || []).length ? `<h3>Saved Daily Reports</h3><div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Day</th><th class="nosort" style="width:auto">Saved</th><th class="nosort"></th></tr></thead><tbody>${state.treports.map(x => `<tr><td><b>${esc(dayLong(x.Date))}</b></td><td>${esc(x.Saved)}</td><td style="text-align:right"><div class="acts"><button class="btn small" data-act="tr-open" data-f="${esc(x.File)}">Open</button> <button class="btn small" data-act="tr-print" data-f="${esc(x.File)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table></div><p class="hint">Reports are also kept as files in the Temperature Reports folder beside the program.</p>` : ""}`;
 }
 function tempEnter() {
@@ -1284,6 +1284,21 @@ function tLimit(p) {
   return {min, max, text: min != null && max != null ? `${min} to ${max}°F` : max != null ? `${max}°F or below` : min != null ? `${min}°F or above` : "No limit"};
 }
 const tOut = (p, t) => { const l = tLimit(p); return (l.max != null && t > l.max) || (l.min != null && t < l.min); };
+function tempEdit(id) {
+  const r = state.temps && state.temps.readings.find(x => x.id === id); if (!r) return toast("That reading is not in the list.", true);
+  const [d, t] = r.at.split(" ");
+  showModal(`<h2>${icon("edit")}Edit Reading</h2><div class="body" id="tebody2" data-id="${id}"><div class="fields">
+    <label>Date:</label><input type="date" class="field" data-te="date" value="${esc(d)}" style="width:190px">
+    <label>Time:</label><input type="time" class="field" data-te="time" value="${esc(t || "")}" style="width:150px">
+    <label>Point:</label><select class="field" data-te="pointId">${state.temps.points.map(p => `<option value="${p.id}" ${p.id === r.pointId ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select>
+    <label>Temp °F:</label><input type="number" step="0.1" class="field" data-te="temp" value="${r.temp}" style="width:110px">
+    <label>Taken by:</label><input class="field" data-te="by" value="${esc(r.by)}">
+    <label>Notes:</label><textarea class="field" rows="2" data-te="notes">${esc(r.notes || "")}</textarea>
+    <label>Corrective action:</label><textarea class="field" rows="2" data-te="action">${esc(r.action || "")}</textarea>
+    <label>Your name: <span class="req">*</span></label><input class="field" data-te="editedBy" value="${esc(who())}"></div>
+    <p class="hint">${r.source === "import" ? "This reading came from the form. Your change stays when the form is synced again." : ""} The correction is recorded with your name and the date.</p></div>
+    <div class="foot"><button class="btn green big" data-act="temp-edit-go">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
 function tempAction(id) {
   const r = state.temps && state.temps.readings.find(x => x.id === id);
   const go = async () => { if (!state.temps) await loadTemps(); tempAction(id); };
@@ -2008,6 +2023,10 @@ const ACT = {
   async "todo-act"(el) { const k = el.dataset.kind, id = el.dataset.id; if (!state.maint) state.maint = await api("/api/maint");
     if (k === "deep") { state.today = null; await loadToday(); return deepDone(id); } if (k === "clean") return cleanDone(id); if (k === "cleanday") return ACT.nav({dataset: {v: "cltoday"}}); if (k === "mgr") return mgrDone(id); if (k === "repl") return replForm(id); if (k === "ca") return caForm(id); if (k === "temp") return tempAction(id); if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
     if (k === "product") { state.id = id; state.view = "detail"; render(); } },
+  "temp-edit"(el) { tempEdit(el.dataset.id); },
+  async "temp-edit-go"() { const v = grab("[data-te]", "te"); if (!v.editedBy.trim()) return toast("Enter your name.", true); rememberWho(v.editedBy); v.temp = parseFloat(v.temp);
+    if (isNaN(v.temp)) return toast("Enter the temperature.", true);
+    try { state.temps = await api("/api/temps/" + $("#tebody2").dataset.id, {method: "PUT", body: JSON.stringify(v)}); closeModal(); render(); toast("Reading corrected."); } catch (e) { toast(e.message, true); } },
   "cal-event-new"(el) { eventDialog(el.dataset.d); },
   async "cal-event-save"() { const v = grab("[data-ev]", "ev"); if (!v.title.trim() || !v.by.trim()) return toast("Enter what it is and your name.", true); if (!v.date) return toast("Choose the date.", true); rememberWho(v.by);
     try { await api("/api/maint/calendar/events", {method: "POST", body: JSON.stringify(v)}); closeModal(); await loadCal(true); toast("Added to the calendar."); } catch (e) { toast(e.message, true); } },

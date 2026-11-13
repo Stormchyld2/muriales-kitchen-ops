@@ -1027,3 +1027,30 @@ func TestMissedIncludesOverduePM(t *testing.T) {
 		t.Skipf("workbook dates are not past due in this run: %v", groups)
 	}
 }
+
+func TestEditImportedReading(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/temps/points/starter", `{}`)
+	_, o := e.get2("/api/temps?from=2020-01-01")
+	pts := o["points"].([]any)
+	pid := pts[0].(map[string]any)["id"].(string)
+	e.post("/api/temps", `{"by":"AB","readings":[{"pointId":"`+pid+`","temp":38}]}`)
+	_, o = e.get2("/api/temps?from=2020-01-01")
+	id := o["readings"].([]any)[0].(map[string]any)["id"].(string)
+	req := func(body string) int {
+		rec := httptest.NewRecorder()
+		e.h.ServeHTTP(rec, httptest.NewRequest("PUT", "/api/temps/"+id, strings.NewReader(body)))
+		return rec.Code
+	}
+	if req(`{"date":"2026-11-12","time":"09:30","pointId":"`+pid+`","temp":39.5,"by":"AB","editedBy":""}`) != 400 {
+		t.Error("editor name required")
+	}
+	if req(`{"date":"2026-11-12","time":"09:30","pointId":"`+pid+`","temp":39.5,"by":"CD","notes":"fixed typo","editedBy":"MM"}`) != 200 {
+		t.Fatal("edit failed")
+	}
+	_, o = e.get2("/api/temps?from=2020-01-01")
+	r := o["readings"].([]any)[0].(map[string]any)
+	if r["temp"].(float64) != 39.5 || r["by"] != "CD" || r["edited"] == "" || r["at"] != "2026-11-12 09:30" {
+		t.Fatalf("edit not saved: %v", r)
+	}
+}
