@@ -920,3 +920,83 @@ func TestHandoffReportEmail(t *testing.T) {
 		t.Fatalf("handoff email: %v %v", c, out)
 	}
 }
+
+func TestTodoByFrequency(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/maint/import-schedule", `{"pastDates":"keep"}`)
+	from := time.Now().Format(dayFmt)
+	to := time.Now().AddDate(0, 0, 364).Format(dayFmt)
+	_, o := e.get2("/api/todo?from=" + from + "&to=" + to + "&freq=Weekly,Yearly")
+	items := o["items"].([]any)
+	got := map[string]int{}
+	for _, x := range items {
+		if b, _ := x.(map[string]any)["bucket"].(string); b != "" {
+			got[b]++
+		}
+	}
+	if got["Weekly"] == 0 || got["Yearly"] == 0 || got["Daily"] != 0 || got["Monthly"] != 0 {
+		t.Fatalf("frequency list wrong: %v", got)
+	}
+	var deep, mgr bool
+	for _, x := range items {
+		switch x.(map[string]any)["kind"] {
+		case "deep":
+			deep = true
+		case "mgr":
+			mgr = true
+		}
+	}
+	if !deep {
+		t.Error("weekly deep clean should be in the weekly list")
+	}
+	_, d := e.get2("/api/todo?from=" + from + "&to=" + to + "&freq=Daily")
+	for _, x := range d["items"].([]any) {
+		if x.(map[string]any)["kind"] == "mgr" {
+			mgr = true
+		}
+	}
+	if !mgr {
+		t.Error("daily manager checks should be pulled")
+	}
+}
+
+func TestCalendarEventsAndSchedules(t *testing.T) {
+	e := newEnv(t)
+	if c, _ := e.post("/api/maint/calendar/events", `{"title":"","date":"2026-11-20","by":"AB"}`); c != 400 {
+		t.Error("title required")
+	}
+	if c, _ := e.post("/api/maint/calendar/events", `{"title":"Hood cleaning","date":"2026-11-20","group":"Bogus","by":"AB"}`); c != 400 {
+		t.Error("group checked")
+	}
+	c, o := e.post("/api/maint/calendar/events", `{"title":"Hood cleaning","date":"2026-11-20","group":"Cleaning","repeat":"Monthly","by":"AB"}`)
+	if c != 200 {
+		t.Fatalf("add event: %v %v", c, o)
+	}
+	_, cal := e.get2("/api/maint/calendar?from=2026-11-01&to=2027-02-28")
+	n := 0
+	for _, x := range cal["events"].([]any) {
+		if x.(map[string]any)["kind"] == "event" {
+			n++
+		}
+	}
+	if n != 4 {
+		t.Errorf("monthly event should appear 4 times, got %d", n)
+	}
+	// a weekly deep clean should reach the calendar, a daily task should not
+	_, cal = e.get2("/api/maint/calendar?from=2026-11-01&to=2026-12-31")
+	deep := 0
+	for _, x := range cal["events"].([]any) {
+		if x.(map[string]any)["src"] == "deepclean" {
+			deep++
+		}
+	}
+	if deep == 0 {
+		t.Error("weekly deep clean should be on the calendar")
+	}
+	req := httptest.NewRequest("DELETE", "/api/maint/calendar/events/"+o["id"].(string), nil)
+	rec := httptest.NewRecorder()
+	e.h.ServeHTTP(rec, req)
+	if rec.Code != 200 {
+		t.Fatalf("delete: %d", rec.Code)
+	}
+}

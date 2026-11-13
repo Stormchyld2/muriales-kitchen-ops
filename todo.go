@@ -47,7 +47,7 @@ func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 	}
 	// Recurring jobs: everything overdue, plus what falls inside the period.
 	for _, e := range s.calendarEvents(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), to) {
-		if e.Kind != "due" || !want[e.Group] {
+		if e.Kind != "due" || e.Src != "" || !want[e.Group] {
 			continue
 		}
 		d, _ := time.Parse(dayFmt, e.Date)
@@ -209,8 +209,18 @@ func (s *store) todoRoutes(mux *http.ServeMux) {
 				want[g] = true
 			}
 		}
+		freqs := map[string]bool{}
+		for _, f := range strings.Split(r.URL.Query().Get("freq"), ",") {
+			if oneOf(todoFreqs, f) {
+				freqs[f] = true
+			}
+		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		if len(freqs) > 0 {
+			writeJSON(w, 200, map[string]any{"items": s.withFrequencies(freqs, want), "generated": time.Now().Format("2006-01-02T15:04:05")})
+			return
+		}
 		writeJSON(w, 200, map[string]any{"items": s.todoItems(from, to, want), "generated": time.Now().Format("2006-01-02T15:04:05")})
 	})
 

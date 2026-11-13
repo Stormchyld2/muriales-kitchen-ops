@@ -141,9 +141,9 @@ aside .nav.mod{font-weight:700}.nav .grow{flex:1}.nav .chev{opacity:.6;font-size
 .day{background:#24262b;min-height:98px;padding:3px;cursor:pointer;overflow:hidden}.day.tall{min-height:380px}.day:hover{background:#2b2e34}.day.other{opacity:.45}.day.today{outline:2px solid #2f6fb7;outline-offset:-2px}
 .day .dn{font-size:12px;font-weight:700;opacity:.8;margin-bottom:2px}.day .more{font-size:11px;opacity:.7;padding-left:4px}
 .ev{font-size:11.5px;line-height:1.25;border-radius:3px;padding:1px 5px;margin-bottom:2px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ev small{opacity:.7}
-.ev.c{background:#6fa8dc}.ev.p{background:#e7b416}.ev.f{background:#8fcf8f}.ev.i{background:#d99ad9}.ev.od{box-shadow:inset 0 0 0 2px #e0525e}.ev.dn{opacity:.5;text-decoration:line-through}
+.ev.c{background:#6fa8dc}.ev.p{background:#e7b416}.ev.f{background:#8fcf8f}.ev.i{background:#d99ad9}.ev.o{background:#e0e0e0}.ev.od{box-shadow:inset 0 0 0 2px #e0525e}.ev.dn{opacity:.5;text-decoration:line-through}
 .day.tall .ev{white-space:normal}.agenda{margin-bottom:10px}.agenda b{display:block;margin-bottom:3px}.agenda .ev{white-space:normal;font-size:13px;padding:3px 8px}
-.legend{font-size:12px;opacity:.85}.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}.legend i.c{background:#6fa8dc}.legend i.p{background:#e7b416}.legend i.f{background:#8fcf8f}.legend i.i{background:#d99ad9}.legend i.od{box-shadow:inset 0 0 0 2px #e0525e;background:#24262b}
+.mm{margin-bottom:14px}.mm h4{margin:6px 0 4px}.mm .calgrid .day{min-height:44px;padding:2px 3px}.mm .calgrid .day .dn{margin:0}.mm .badge{display:inline-block;font-size:11px;font-weight:700;border-radius:9px;padding:0 6px;background:#2f6fb7;color:#fff;margin-top:2px}.mm .badge.od{background:#c4434f}.mmwrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px 16px}.legend{font-size:12px;opacity:.85}.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}.legend i.c{background:#6fa8dc}.legend i.p{background:#e7b416}.legend i.f{background:#8fcf8f}.legend i.i{background:#d99ad9}.legend i.od{box-shadow:inset 0 0 0 2px #e0525e;background:#24262b}
 @media print{aside,.noprint,#toast,#modal,.flag,header .pictos{display:none!important}body{display:block!important;background:#fff!important;color:#000!important;height:auto!important;overflow:visible!important}
 main,#view{display:block!important;height:auto!important;overflow:visible!important;background:#fff!important;color:#000!important;padding:0!important;margin:0!important}header{background:#fff!important;color:#000!important}header h1,header p{color:#000!important}.panel{background:#fff!important;border:0!important;color:#000!important}.hint{color:#444!important}.status{border:1px solid #999}}
 .todolist h4{margin:16px 0 6px;border-bottom:1px solid var(--line);padding-bottom:3px}.trow{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #2f3238}.trow .grow{flex:1}.trow .when{text-align:right;font-size:12.5px;min-width:96px}
@@ -1788,14 +1788,18 @@ function assetDetail(id) {
 }
 
 /* ---------- calendar ---------- */
-const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i", "Inspection": "i", "Temperature": "i", "Corrective Action": "i", "Manager Check": "i"};
-const GFILTERS = [["all", "All"], ["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Issues"]];
-const FFILTERS = [["all", "Any Frequency"], ["Daily", "Daily"], ["Weekly", "Weekly"], ["Monthly", "Monthly"], ["Quarterly / Semi-Annual", "Quarterly / Semi-Annual"], ["Yearly", "Yearly"], ["As Needed", "As Needed"]];
+const GSLUG = {"Cleaning": "c", "Equipment PM": "p", "Grounds / Facility": "f", "Issue": "i", "Inspection": "i", "Temperature": "i", "Corrective Action": "i", "Manager Check": "i", "Other": "o"};
+const GFILTERS = [["all", "All"], ["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Other", "Other Events"], ["Issue", "Issues"]];
+const FFILTERS = [["all", "Any Frequency"], ["Daily", "Daily"], ["Weekly", "Weekly"], ["Monthly", "Monthly"], ["Quarterly", "Quarterly"], ["Semi-Annually", "Semi-Annually"], ["Yearly", "Yearly"], ["As Needed", "As Needed"]];
 state.cal = {mode: "month", ref: new Date(), group: "all", freq: "all", events: null, key: ""};
 function calRange() {
-  const c = state.cal, ref = new Date(c.ref.getFullYear(), c.ref.getMonth(), c.mode === "month" || c.mode === "list" ? 1 : c.ref.getDate());
+  const c = state.cal, y = c.ref.getFullYear(), m = c.ref.getMonth(), ref = new Date(y, m, c.mode === "month" || c.mode === "list" ? 1 : c.ref.getDate());
+  if (c.mode === "day") { const d = new Date(y, m, c.ref.getDate()); return [d, d]; }
   if (c.mode === "week") { const s0 = addDays(ref, -ref.getDay()); return [s0, addDays(s0, 6)]; }
-  if (c.mode === "list") return [ref, new Date(ref.getFullYear(), ref.getMonth() + 1, 0)];
+  if (c.mode === "list") return [ref, new Date(y, m + 1, 0)];
+  if (c.mode === "quarter") { const q = m - m % 3; return [new Date(y, q, 1), new Date(y, q + 3, 0)]; }
+  if (c.mode === "semi") { const q = m - m % 6; return [new Date(y, q, 1), new Date(y, q + 6, 0)]; }
+  if (c.mode === "year") return [new Date(y, 0, 1), new Date(y, 11, 31)];
   const s0 = addDays(ref, -ref.getDay()); return [s0, addDays(s0, 41)];
 }
 async function loadCal(force) {
@@ -1803,16 +1807,26 @@ async function loadCal(force) {
   if (!state.maint) state.maint = await api("/api/maint");
   state.cal.key = key; const r0 = await api(`/api/maint/calendar?from=${ymd(a)}&to=${ymd(b)}`); state.cal.events = r0.events; if (state.view === "cal") render();
 }
-const calShown = () => (state.cal.events || []).filter(e => (state.cal.group === "all" || e.group === state.cal.group) && (state.cal.freq === "all" || e.bucket === state.cal.freq));
+const calShown = () => (state.cal.events || []).filter(e => (state.cal.group === "all" || e.group === state.cal.group) && (state.cal.freq === "all" || e.bucket === state.cal.freq || (e.bucket === "Quarterly / Semi-Annual" && (state.cal.freq === "Quarterly" || state.cal.freq === "Semi-Annually"))));
 const evChip = (e, full) => `<div class="ev ${GSLUG[e.group]} ${e.state === "Overdue" ? "od" : ""} ${e.kind === "done" ? "dn" : ""}" title="${esc(e.group)}: ${esc(e.title)}${e.unit ? " (" + esc(e.unit) + ")" : ""}${e.bucket ? " · " + e.bucket : ""}">${e.kind === "done" ? "✓ " : e.kind === "issue" ? "⚠ " : ""}${esc(e.title)}${full && (e.area || e.unit) ? `<small> ${esc(e.area || e.unit)}</small>` : ""}</div>`;
 function vCal() {
   const c = state.cal; if (!c.events || state.cal.key !== ymd(calRange()[0]) + ymd(calRange()[1])) { loadCal().catch(e => toast(e.message, true)); if (!c.events) return `<p class="hint">Loading...</p>`; }
   const [a, b] = calRange(), today = ymd(new Date()), shown = calShown(), by = {};
   for (const e of shown) (by[e.date] = by[e.date] || []).push(e);
-  const label = c.mode === "week" ? `${a.toLocaleDateString("en-US", {month: "short", day: "numeric"})} – ${b.toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}` : c.ref.toLocaleDateString("en-US", {month: "long", year: "numeric"});
+  const label = c.mode === "day" ? c.ref.toLocaleDateString("en-US", {weekday: "long", month: "long", day: "numeric", year: "numeric"}) : c.mode === "quarter" ? `Q${Math.floor(a.getMonth() / 3) + 1} ${a.getFullYear()}` : c.mode === "semi" ? `${a.getMonth() < 6 ? "First" : "Second"} half of ${a.getFullYear()}` : c.mode === "year" ? String(a.getFullYear()) : c.mode === "week" ? `${a.toLocaleDateString("en-US", {month: "short", day: "numeric"})} – ${b.toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}` : c.ref.toLocaleDateString("en-US", {month: "long", year: "numeric"});
   const chips = (list, cur, act) => list.map(([k, l]) => `<button class="chip ${cur === k ? "on" : ""}" data-act="${act}" data-v="${esc(k)}">${l}</button>`).join("");
   let grid;
-  if (c.mode === "list") {
+  if (c.mode === "day") {
+    const ev = by[ymd(a)] || [];
+    grid = `<div class="agenda">${ev.length ? ev.map(evRow).join("") : `<div class="empty"><b>Nothing scheduled</b>Nothing matches these filters today. Use Add Event to put something on this day.</div>`}</div>`;
+  } else if (c.mode === "quarter" || c.mode === "semi" || c.mode === "year") {
+    const months = c.mode === "quarter" ? 3 : c.mode === "semi" ? 6 : 12;
+    grid = `<div class="mmwrap">${Array.from({length: months}, (_, i) => { const first = new Date(a.getFullYear(), a.getMonth() + i, 1), last = new Date(first.getFullYear(), first.getMonth() + 1, 0), cells = [];
+      for (let k = 0; k < first.getDay(); k++) cells.push(`<div class="day" style="cursor:default;background:#1f2125"></div>`);
+      for (let d = 1; d <= last.getDate(); d++) { const k = ymd(new Date(first.getFullYear(), first.getMonth(), d)), ev = by[k] || [], od = ev.filter(e => e.state === "Overdue").length;
+        cells.push(`<div class="day ${k === today ? "today" : ""}" data-act="cal-day" data-d="${k}"><div class="dn">${d}</div>${ev.length ? `<span class="badge ${od ? "od" : ""}" title="${ev.length} scheduled${od ? ", " + od + " overdue" : ""}">${ev.length}</span>` : ""}</div>`); }
+      return `<div class="mm"><h4>${first.toLocaleDateString("en-US", {month: "long", year: "numeric"})}</h4><div class="calgrid">${["S", "M", "T", "W", "T", "F", "S"].map(x => `<div class="dow">${x}</div>`).join("")}${cells.join("")}</div></div>`; }).join("")}</div>`;
+  } else if (c.mode === "list") {
     const days = Object.keys(by).sort();
     grid = days.length ? days.map(d => `<div class="agenda"><b>${new Date(d + "T12:00").toLocaleDateString("en-US", {weekday: "long", month: "long", day: "numeric"})}</b>${by[d].map(e => evChip(e, true)).join("")}</div>`).join("") : `<div class="empty"><b>Nothing scheduled</b>Nothing matches these filters this month.</div>`;
   } else {
@@ -1821,24 +1835,39 @@ function vCal() {
       cells.push(`<div class="day ${k === today ? "today" : ""} ${c.mode === "month" && d.getMonth() !== c.ref.getMonth() ? "other" : ""} ${c.mode === "week" ? "tall" : ""}" data-act="cal-day" data-d="${k}"><div class="dn">${d.getDate()}</div>${ev.slice(0, max).map(e => evChip(e, c.mode === "week")).join("")}${ev.length > max ? `<div class="more">+${ev.length - max} more</div>` : ""}</div>`); }
     grid = `<div class="calgrid">${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(x => `<div class="dow">${x}</div>`).join("")}${cells.join("")}</div>`;
   }
-  return `<div class="row calbar"><button class="btn small" data-act="cal-nav" data-d="-1">${icon("back")}</button><b style="min-width:190px;text-align:center;font-size:17px">${label}</b><button class="btn small" data-act="cal-nav" data-d="1" style="transform:scaleX(-1)">${icon("back")}</button><button class="btn small" data-act="cal-nav" data-d="0">Today</button>
-    <span class="grow"></span><div class="chips">${chips([["month", "Month"], ["week", "Week"], ["list", "List"]], c.mode, "cal-mode")}</div></div>
+  return `<div class="row calbar"><button class="btn small" data-act="cal-nav" data-d="-1">${icon("back")}</button><b style="min-width:190px;text-align:center;font-size:17px">${label}</b><button class="btn small" data-act="cal-nav" data-d="1" style="transform:scaleX(-1)">${icon("back")}</button><button class="btn small" data-act="cal-nav" data-d="0">Today</button><button class="btn small green" data-act="cal-event-new" data-d="">${icon("plus")}Add Event</button>
+    <span class="grow"></span><div class="chips">${chips([["day", "Day"], ["week", "Week"], ["month", "Month"], ["quarter", "Quarter"], ["semi", "Semi-Annual"], ["year", "Year"], ["list", "List"]], c.mode, "cal-mode")}</div></div>
   <div class="row calbar"><span class="hint">Show:</span><div class="chips">${chips(GFILTERS, c.group, "cal-group")}</div></div>
   <div class="row calbar"><span class="hint">How often:</span><div class="chips">${chips(FFILTERS, c.freq, "cal-freq")}</div>
     <span class="grow"></span><span class="legend"><i class="c"></i>Cleaning <i class="p"></i>Equipment PM <i class="f"></i>Facility <i class="i"></i>Issue <i class="od"></i>Overdue</span></div>
   <div class="tablewrap" style="padding:8px">${grid}</div>`;
 }
+const evRow = e => `<div class="catrow"><div class="grow">${evChip(e, false)}<div class="hint">${esc(e.group)}${e.bucket ? " · " + e.bucket : ""}${e.area ? " · " + esc(e.area) : ""}${e.unit ? " · " + esc(e.unit) : ""}${e.by ? " · " + esc(e.by) : ""}${e.notes ? " · " + esc(e.notes) : ""}${e.kind === "due" ? " · " + esc(e.state) : ""}</div></div>
+  ${e.kind === "due" && e.src === "cleantasks" ? `<button class="btn small green" data-act="cl-done" data-id="${esc(e.taskId)}">Done</button>` : e.kind === "due" && e.src === "mgrchecks" ? `<button class="btn small green" data-act="mgr-done" data-id="${esc(e.taskId)}">Done</button>` : e.kind === "due" && e.src === "deepclean" ? `<button class="btn small green" data-act="deep-done" data-id="${esc(e.taskId)}">Done</button>` : e.kind === "due" ? `<button class="btn small green" data-act="pm-done-ask" data-id="${e.taskId}">Mark Done</button>` : e.kind === "issue" ? `<button class="btn small" data-act="issue-open" data-id="${e.issueId}">Open</button>` : e.kind === "event" ? `<button class="btn small wine" data-act="cal-event-del" data-id="${esc(e.eventId)}">${icon("trash")}Remove</button>` : ""}</div>`;
 function dayDialog(d) {
   const ev = calShown().filter(e => e.date === d), title = new Date(d + "T12:00").toLocaleDateString("en-US", {weekday: "long", month: "long", day: "numeric", year: "numeric"});
-  showModal(`<h2>${icon("list")}${title}</h2><div class="body">${ev.length ? ev.map(e => `<div class="catrow"><div class="grow">${evChip(e, false)}<div class="hint">${esc(e.group)}${e.bucket ? " · " + e.bucket : ""}${e.area ? " · " + esc(e.area) : ""}${e.unit ? " · " + esc(e.unit) : ""}${e.by ? " · " + esc(e.by) : ""}${e.kind === "due" ? " · " + e.state : ""}</div></div>
-      ${e.kind === "due" ? `<button class="btn small green" data-act="pm-done-ask" data-id="${e.taskId}">Mark Done</button>` : e.kind === "issue" ? `<button class="btn small" data-act="issue-open" data-id="${e.issueId}">Open</button>` : ""}</div>`).join("") : `<p class="hint">Nothing scheduled this day.</p>`}</div>
-    <div class="foot"><button class="btn big" data-act="close">Close</button></div>`);
+  showModal(`<h2>${icon("list")}${title}</h2><div class="body">${ev.length ? ev.map(evRow).join("") : `<p class="hint">Nothing scheduled this day.</p>`}</div>
+    <div class="foot"><button class="btn green big" data-act="cal-event-new" data-d="${d}">${icon("plus")}Add Event</button><button class="btn big" data-act="close">Close</button></div>`);
+}
+function eventDialog(d) {
+  const opts = (list, cur) => list.map(o => `<option ${o === cur ? "selected" : ""}>${esc(o)}</option>`).join("");
+  showModal(`<h2>${icon("plus")}Add Calendar Event</h2><div class="body"><div class="fields">
+    <label>What is it: <span class="req">*</span></label><input class="field" data-ev="title" placeholder="e.g. Hood cleaning, deep clean walk-in, health inspection">
+    <label>Date: <span class="req">*</span></label><input type="date" class="field" data-ev="date" value="${esc(d || ymd(state.cal.ref))}" style="width:190px">
+    <label>Type:</label><select class="field" data-ev="group" style="width:auto">${opts(["Cleaning", "Equipment PM", "Grounds / Facility", "Other"], "Other")}</select>
+    <label>Area / equipment:</label><input class="field" data-ev="area" placeholder="Optional">
+    <label>Repeats:</label><select class="field" data-ev="repeat" style="width:auto">${opts(["None", "Daily", "Weekly", "Monthly", "Quarterly", "Semi-Annually", "Yearly"], "None")}</select>
+    <label>Notes:</label><textarea class="field" rows="2" data-ev="notes"></textarea>
+    <label>Your name: <span class="req">*</span></label><input class="field" data-ev="by" value="${esc(who())}"></div>
+    <p class="hint">For a job you want tracked with a Mark Done and history, add it under Schedule instead. Calendar events are reminders that show on their day.</p></div>
+    <div class="foot"><button class="btn green big" data-act="cal-event-save">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
 
 /* ---------- master to-do list ---------- */
 const TODO_PERIODS = [["today", "Today"], ["tomorrow", "Tomorrow"], ["week", "This Week"], ["nextweek", "Next Week"], ["next7", "Next 7 Days"], ["month", "This Month"], ["nextmonth", "Next Month"], ["next30", "Next 30 Days"], ["overdue", "Overdue Only"], ["custom", "Pick Dates..."]];
 const TODO_SOURCES = [["Cleaning", "Cleaning"], ["Equipment PM", "Equipment PM"], ["Grounds / Facility", "Grounds / Facility"], ["Issue", "Open maintenance issues"], ["Inspection", "Inspection items"], ["Temperature", "Temperatures needing action"], ["Corrective Action", "Corrective action forms"], ["Manager Check", "Manager inspections"], ["Equipment", "Repair or replace decisions"], ["SDS", "SDS follow-ups"], ["Other", "My own items"]];
-state.todo = null; state.todoPick = {period: "today", sources: TODO_SOURCES.map(x => x[0]), from: "", to: ""};
+const TODO_FREQS = ["Daily", "Weekly", "Monthly", "Quarterly", "Semi-Annually", "Yearly"];
+state.todo = null; state.todoPick = {freqs: [], period: "today", sources: TODO_SOURCES.map(x => x[0]), from: "", to: ""};
 function todoRange(p, a, b) {
   const t = new Date(), day = new Date(t.getFullYear(), t.getMonth(), t.getDate());
   const eow = addDays(day, 6 - day.getDay()), nws = addDays(eow, 1);
@@ -1850,9 +1879,11 @@ function todoRange(p, a, b) {
 }
 function todoDialog() {
   const k = state.todoPick;
-  showModal(`<h2>${icon("list")}Create To-Do List</h2><div class="body"><p style="margin-top:0"><b>Which period?</b></p>
-    <div class="chips" style="margin-bottom:10px">${TODO_PERIODS.map(([v, l]) => `<button class="chip ${k.period === v ? "on" : ""}" data-act="todo-period" data-v="${v}">${l}</button>`).join("")}</div>
-    ${k.period === "custom" ? `<div class="row" style="margin-bottom:10px"><label>From</label><input type="date" class="field" id="todofrom" value="${esc(k.from)}" style="width:170px"><label>to</label><input type="date" class="field" id="todoto" value="${esc(k.to)}" style="width:170px"></div>` : ""}
+  showModal(`<h2>${icon("list")}Create To-Do List</h2><div class="body"><p style="margin-top:0"><b>Pull everything that repeats:</b> <span class="hint">pick one or more to print a handout for the crew or maintenance</span></p>
+    <div class="chips" style="margin-bottom:10px">${TODO_FREQS.map(f => `<button class="chip ${k.freqs.includes(f) ? "on" : ""}" data-act="todo-freq" data-v="${f}">${f}</button>`).join("")}</div>
+    <p><b>Or just what is due in a period:</b></p>
+    <div class="chips" style="margin-bottom:10px">${TODO_PERIODS.map(([v, l]) => `<button class="chip ${!k.freqs.length && k.period === v ? "on" : ""}" data-act="todo-period" data-v="${v}">${l}</button>`).join("")}</div>
+    ${!k.freqs.length && k.period === "custom" ? `<div class="row" style="margin-bottom:10px"><label>From</label><input type="date" class="field" id="todofrom" value="${esc(k.from)}" style="width:170px"><label>to</label><input type="date" class="field" id="todoto" value="${esc(k.to)}" style="width:170px"></div>` : ""}
     <p><b>What to include?</b></p>${TODO_SOURCES.map(([v, l]) => `<label style="display:block;font-weight:400;margin:3px 0"><input type="checkbox" data-src="${esc(v)}" ${k.sources.includes(v) ? "checked" : ""}> ${l}</label>`).join("")}
     <p class="hint">Overdue jobs and open issues always appear, whatever the period.</p></div>
     <div class="foot"><button class="btn green big" data-act="todo-go">${icon("list")}Create List</button><button class="btn big" data-act="close">Cancel</button></div>`);
@@ -1924,19 +1955,19 @@ function vSummary() {
 
 async function refreshTodo() {
   const t = state.todo; if (!t) return;
-  const r0 = await api(`/api/todo?from=${t.from}&to=${t.to}&sources=${encodeURIComponent(t.sources.join(","))}`);
+  const r0 = await api(`/api/todo?from=${t.from}&to=${t.to}&sources=${encodeURIComponent(t.sources.join(","))}${t.freqs ? "&freq=" + encodeURIComponent(t.freqs.join(",")) : ""}`);
   t.items = r0.items; t.generated = r0.generated; if (state.view === "todo") render();
 }
 function vTodo() {
   const t = state.todo;
   if (!t) return `<div class="empty"><b>No to-do list yet</b>Choose a period and the program gathers everything that is due into one list.<br><br><button class="btn green big" data-act="todo-new">${icon("list")}Create To-Do List</button></div>`;
   const items = t.items.filter(i => !t.overdueOnly || i.state === "Overdue");
-  const groups = TODO_SOURCES.map(([g, l]) => [g, l, items.filter(i => i.group === g)]).filter(x => x[2].length);
+  const groups = t.freqs ? [...TODO_FREQS, ""].map(f => [f, f || "Open items", items.filter(i => (i.bucket || "") === f)]).filter(x => x[2].length) : TODO_SOURCES.map(([g, l]) => [g, l, items.filter(i => i.group === g)]).filter(x => x[2].length);
   const late = items.filter(i => i.state === "Overdue").length;
   const act = i => i.kind === "todo" ? `<button class="btn small green noprint" data-act="todo-done" data-id="${i.id}">Done</button>` : i.kind === "task" ? `<button class="btn small green noprint" data-act="todo-act" data-kind="task" data-id="${i.id}">Mark Done</button>` : `<button class="btn small noprint" data-act="todo-act" data-kind="${i.kind}" data-id="${i.id}">Open</button>`;
   return `<div class="row noprint"><button class="btn green" data-act="todo-new">${icon("list")}Change Period</button><button class="btn" data-act="todo-refresh">${icon("swap")}Refresh</button><button class="btn" data-act="todo-add">${icon("plus")}Add My Own Item</button><button class="btn" data-act="todo-print">${icon("print")}Print</button></div>
   <div class="panel todolist"><h3 style="margin-top:0">To-Do List: ${esc(t.label)}</h3><div class="hint">Made ${new Date(t.generated).toLocaleString("en-US", {dateStyle: "medium", timeStyle: "short"})} · ${items.length} item${items.length === 1 ? "" : "s"}${late ? ` · <b>${late} overdue</b>` : ""}</div>
-    ${groups.length ? groups.map(([g, l, list]) => `<h4>${l}</h4>${list.map(i => `<div class="trow"><span class="box"></span><div class="grow"><b>${esc(i.title)}</b><div class="hint">${esc(i.detail)}</div></div><div class="when">${i.due ? fmtDate(i.due) : ""}<div><span class="status ${({"Due Today": "Needs Attention", "Upcoming": "OK", "Open": "Open", "Overdue": "Overdue"})[i.state]}">${esc(i.state)}</span></div></div>${act(i)}</div>`).join("")}`).join("")
+    ${groups.length ? groups.map(([g, l, list]) => `<h4>${l}</h4>${list.map(i => `<div class="trow"><span class="box"></span><div class="grow"><b>${esc(i.title)}</b><div class="hint">${esc(t.freqs ? [i.group, i.detail].filter(Boolean).join(" · ") : i.detail)}</div></div><div class="when">${i.due ? fmtDate(i.due) : ""}<div><span class="status ${({"Due Today": "Needs Attention", "Upcoming": "OK", "Open": "Open", "Overdue": "Overdue"})[i.state]}">${esc(i.state)}</span></div></div>${act(i)}</div>`).join("")}`).join("")
       : `<p>Nothing to do for this period.</p>`}</div>`;
 }
 const grab = (sel, attr) => Object.fromEntries([...document.querySelectorAll(sel)].map(el => [el.dataset[attr], el.type === "checkbox" ? el.checked : el.value]));
@@ -1946,9 +1977,11 @@ const ACT = {
   async "wb-load"() { const past = (document.querySelector("[name=past]:checked") || {}).value || "today"; const o = await api("/api/maint/import-schedule", {method: "POST", body: JSON.stringify({pastDates: past})});
     state.maint = await api("/api/maint"); state.cal.events = null; render(); toast(o.added ? `Loaded ${o.added} jobs${o.skipped ? ` (${o.skipped} were already there)` : ""}. See them under Schedule.` : `Nothing new to load. ${o.skipped} jobs were already there.`); },
   "todo-new"() { todoDialog(); },
-  "todo-period"(el) { state.todoPick.period = el.dataset.v; state.todoPick.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src); todoDialog(); },
+  "todo-freq"(el) { const k = state.todoPick; k.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src); const v = el.dataset.v; k.freqs = k.freqs.includes(v) ? k.freqs.filter(x => x !== v) : TODO_FREQS.filter(x => x === v || k.freqs.includes(x)); todoDialog(); },
+  "todo-period"(el) { state.todoPick.freqs = []; state.todoPick.period = el.dataset.v; state.todoPick.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src); todoDialog(); },
   async "todo-go"() { const k = state.todoPick; k.sources = [...document.querySelectorAll("[data-src]")].filter(x => x.checked).map(x => x.dataset.src);
     if (!k.sources.length) return toast("Choose at least one thing to include.", true);
+    if (k.freqs.length) { const a = new Date(), b = addDays(a, 364); state.todo = {label: k.freqs.join(", ") + " jobs and everything open now", period: "freq", freqs: [...k.freqs], from: ymd(a), to: ymd(b), sources: [...k.sources], overdueOnly: false, items: []}; await refreshTodo(); closeModal(); state.view = "todo"; render(); return; }
     if (k.period === "custom") { k.from = $("#todofrom").value; k.to = $("#todoto").value; if (!k.from || !k.to || k.to < k.from) return toast("Choose the dates, with the end on or after the start.", true); }
     const [a, b] = todoRange(k.period, k.from, k.to), label = k.period === "custom" ? `${fmtDate(k.from)} to ${fmtDate(k.to)}` : TODO_PERIODS.find(x => x[0] === k.period)[1];
     const full = label + (k.period === "custom" ? "" : a.getTime() === b.getTime() ? " (" + a.toLocaleDateString("en-US", {weekday: "long", month: "long", day: "numeric"}) + ")" : " (" + a.toLocaleDateString("en-US", {month: "short", day: "numeric"}) + " – " + b.toLocaleDateString("en-US", {month: "short", day: "numeric"}) + ")");
@@ -1967,9 +2000,13 @@ const ACT = {
     <div class="foot"><button class="btn green big" data-act="todo-done-go" data-id="${el.dataset.id}">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`); },
   async "todo-done-go"(el) { const by = $("#todoby").value; rememberWho(by); await api("/api/maint/todos/" + el.dataset.id + "/done", {method: "POST", body: JSON.stringify({by})}); closeModal(); await refreshTodo(); toast("Done."); },
   async "todo-act"(el) { const k = el.dataset.kind, id = el.dataset.id; if (!state.maint) state.maint = await api("/api/maint");
-    if (k === "clean") return cleanDone(id); if (k === "cleanday") return ACT.nav({dataset: {v: "cltoday"}}); if (k === "mgr") return mgrDone(id); if (k === "repl") return replForm(id); if (k === "ca") return caForm(id); if (k === "temp") return tempAction(id); if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
+    if (k === "deep") { state.today = null; await loadToday(); return deepDone(id); } if (k === "clean") return cleanDone(id); if (k === "cleanday") return ACT.nav({dataset: {v: "cltoday"}}); if (k === "mgr") return mgrDone(id); if (k === "repl") return replForm(id); if (k === "ca") return caForm(id); if (k === "temp") return tempAction(id); if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
     if (k === "product") { state.id = id; state.view = "detail"; render(); } },
-  "cal-nav"(el) { const c = state.cal, n = +el.dataset.d; if (n === 0) c.ref = new Date(); else if (c.mode === "week") c.ref = addDays(c.ref, 7 * n); else c.ref = new Date(c.ref.getFullYear(), c.ref.getMonth() + n, 1); c.events = null; render(); },
+  "cal-event-new"(el) { eventDialog(el.dataset.d); },
+  async "cal-event-save"() { const v = grab("[data-ev]", "ev"); if (!v.title.trim() || !v.by.trim()) return toast("Enter what it is and your name.", true); if (!v.date) return toast("Choose the date.", true); rememberWho(v.by);
+    try { await api("/api/maint/calendar/events", {method: "POST", body: JSON.stringify(v)}); closeModal(); await loadCal(true); toast("Added to the calendar."); } catch (e) { toast(e.message, true); } },
+  async "cal-event-del"(el) { if (!confirm("Remove this event? A repeating event is removed from every day.")) return; await api("/api/maint/calendar/events/" + el.dataset.id, {method: "DELETE"}); closeModal(); await loadCal(true); },
+  "cal-nav"(el) { const c = state.cal, n = +el.dataset.d, y = c.ref.getFullYear(), m = c.ref.getMonth(), step = {month: 1, list: 1, quarter: 3, semi: 6, year: 12}[c.mode]; if (n === 0) c.ref = new Date(); else if (c.mode === "day") c.ref = addDays(c.ref, n); else if (c.mode === "week") c.ref = addDays(c.ref, 7 * n); else c.ref = new Date(y, m + step * n, 1); c.events = null; render(); },
   "cal-mode"(el) { state.cal.mode = el.dataset.v; state.cal.events = null; render(); },
   "cal-group"(el) { state.cal.group = el.dataset.v; render(); },
   "cal-freq"(el) { state.cal.freq = el.dataset.v; render(); },
