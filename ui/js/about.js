@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.29.1", "Dashboard re-laid out: Needs Attention full width, icon shortcut tiles to every area, Last Backup beside Recent Changes."],
   ["2.29.0", "Lockout / Tagout: taking equipment out of service now adds a filled-in LOTO Log line and a pre-filled lock tag, and clearing it marks the lock removed; equipment procedures and annual inspections. Daily Readiness Walk (25 checks) with history. New Hire Training checklist, Safety Meetings, Incidents & Near Misses, Training Materials folder. Emergency Binder: index, contacts, critical equipment plan, vendor contacts, review log. Station checklist gauge on the dashboard."],
   ["2.28.0", "Stations group: 74 station guides (overviews, SOPs, par sheets, recipes, training programs) you can search, read, edit and print; tick-off Opening and Closing checklists for each station with a log; charcoal theme with meter colors; date and time at the top; Enter Temperatures button on the dashboard fixed."],
   ["2.27.0", "Dashboard home screen with gauges; Report a Problem button; Inspections grouped in one place; Shift Handoff on its own; Chemical Safety back under SDS; Training and Emergency grouped; a backup every day; Edit History in Settings; a Weekly Review report; names tidied up as they are saved."],

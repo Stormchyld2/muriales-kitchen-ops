@@ -194,3 +194,19 @@ header p{color:#ece6d6}
 .gmd blockquote{margin:6px 0;padding-left:10px;border-left:3px solid var(--gold);color:var(--mute)}.gmd code{background:#222;padding:0 4px}
 #clock{margin-left:auto;text-align:right;color:#e7b416;line-height:1.25;display:flex;flex-direction:column;font-size:15px}#clock span{font-size:20px;font-weight:700;color:#f4f1ea}
 .pictos{margin-left:0}
+
+/* Dashboard layout v2: six 176px columns, 88px row unit */
+.dgrid{grid-template-columns:repeat(6,176px);grid-auto-rows:88px;gap:12px}
+.dblock.w2{grid-column:span 2}.dblock.w3{grid-column:span 3}.dblock.wall{grid-column:1/-1}
+.dblock.g,.dblock.t,.dblock.r2{grid-row:span 2}.dblock.w2,.dblock.w3{grid-row:auto}.dblock.r3{grid-row:span 3}.dblock.r4{grid-row:span 4}
+.gsvg{width:150px;height:84px}.gnum{font-size:30px}
+.dlabel{display:flex;align-items:center;gap:6px;justify-content:center;font-size:11.5px}.dic svg{width:18px;height:18px;color:var(--gold)}
+.dblock.s{flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:8px 12px;font-weight:700;font-size:13px;line-height:1.2}
+.sic{flex:none;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#202226;border:1px solid var(--goldline)}.sic svg{width:28px;height:28px}
+.dblock.s.cb .sic{color:#5aa6f0}.dblock.s.cg .sic{color:#58b368}.dblock.s.ca .sic{color:#e7b416}.dblock.s.cr .sic{color:#e0525e}
+.drow.od{border-left:4px solid #e0525e;background:#e0525e18}.drow.td{border-left:4px solid #e7b416;background:#e7b41614}
+.dblock.t{padding:10px 12px}.dval{font-size:36px}
+.dgrid{grid-auto-flow:row}
+.dblock.w2.r2,.dblock.w2.r3,.dblock.w3.r3{grid-row:span 2}.dblock.w2.r3,.dblock.w3.r3{grid-row:span 3}.dblock.wall.r4{grid-row:span 4}
+.dqa{gap:6px}.dqa .btn{padding:5px 8px;font-size:12.5px;white-space:nowrap;gap:6px}.dqa .btn svg{width:15px;height:15px}
+.dblock.r2 .dhead{margin-bottom:4px}
