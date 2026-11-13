@@ -506,8 +506,14 @@ func (s *store) reportRoutes(mux *http.ServeMux) {
 			return
 		}
 		attach := file
-		if pdf := file[:len(file)-5] + ".pdf"; htmlToPDF(file, pdf) == nil {
-			attach = pdf
+		pdfNote := ""
+		if pdf := file[:len(file)-5] + ".pdf"; true {
+			if perr := htmlToPDF(file, pdf); perr == nil {
+				attach = pdf
+			} else {
+				pdfNote = perr.Error()
+				s.logf("PDF could not be made: %v", perr)
+			}
 		}
 		body := strings.TrimSpace(in2.Message)
 		if body != "" {
@@ -522,6 +528,6 @@ func (s *store) reportRoutes(mux *http.ServeMux) {
 		if len(short) > 6000 {
 			short = short[:6000]
 		}
-		writeJSON(w, 200, map[string]any{"method": method, "detail": detail, "text": short, "fileOnClipboard": onClip, "file": filepath.Base(attach), "folder": dir})
+		writeJSON(w, 200, map[string]any{"method": method, "detail": detail, "text": short, "fileOnClipboard": onClip, "pdfNote": pdfNote, "file": filepath.Base(attach), "folder": dir})
 	})
 }
