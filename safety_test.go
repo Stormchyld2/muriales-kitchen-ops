@@ -181,3 +181,58 @@ func TestMealRotation(t *testing.T) {
 		t.Fatal("recipe report")
 	}
 }
+
+func TestRoleTrainingMatrix(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/reg/employees", `{"name":"Dana","position":"Dish Machine","department":"Dish","status":"Active"}`)
+	e.post("/api/reg/employees", `{"name":"Pat","position":"Line Cook","department":"Prep","status":"Active"}`)
+	e.s.mu.Lock()
+	m := e.s.roleMatrix()
+	e.s.mu.Unlock()
+	roles := m["roles"].([]roleRowOut)
+	if len(roles) < 5 || roles[0].Role != "All Staff" {
+		t.Fatalf("roles: %v", len(roles))
+	}
+	var dish roleRowOut
+	for _, r := range roles {
+		if r.Role == "Dish" {
+			dish = r
+		}
+	}
+	if dish.People != 1 || !dish.Cells["TT-008"].Required || dish.Cells["TT-011"].Required {
+		t.Fatalf("dish row wrong: %+v", dish.Cells["TT-008"])
+	}
+	// excuse Dish from Allergen Awareness and give Dish a 6 month Handwashing refresh
+	e.post("/api/reg/trainreq", `{"role":"Dish","typeId":"TT-003","required":"No"}`)
+	e.post("/api/reg/trainreq", `{"role":"Dish","typeId":"TT-004","required":"Yes","refresh":"6"}`)
+	_, mx := e.get2("/api/training/matrix")
+	for _, r := range mx["rows"].([]any) {
+		row := r.(map[string]any)
+		if row["name"] == "Dana" {
+			cells := row["cells"].(map[string]any)
+			if _, ok := cells["TT-003"]; ok {
+				t.Fatal("excused training still on Dana's row")
+			}
+			if _, ok := cells["TT-008"]; !ok {
+				t.Fatal("dish training missing for Dana")
+			}
+		}
+		if row["name"] == "Pat" {
+			if _, ok := row["cells"].(map[string]any)["TT-003"]; !ok {
+				t.Fatal("Pat should still need allergen training")
+			}
+		}
+	}
+	code, _ := e.post("/api/reg/training", `{"employeeId":"EMP-001","typeId":"TT-004","completed":"2026-01-15"}`)
+	if code != 200 {
+		t.Fatal("record refused")
+	}
+	for _, r := range e.s.regLoad(regDefs["training"]) {
+		if r["typeId"] == "TT-004" && r["expires"] != "2026-07-15" {
+			t.Fatalf("refresh override ignored: %v", r["expires"])
+		}
+	}
+	if rep, ok := e.s.buildReport("training-roles", ""); !ok || !strings.Contains(rep.html(true), "Dish") {
+		t.Fatal("role report")
+	}
+}

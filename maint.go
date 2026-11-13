@@ -312,6 +312,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.cleanRoutes(mux)
 	s.cleanSyncRoutes(mux)
 	s.trainingRoutes(mux)
+	s.trainRoleRoutes(mux)
 	s.guideRoutes(mux)
 	s.safetyRoutes(mux)
 	s.mealRoutes(mux)

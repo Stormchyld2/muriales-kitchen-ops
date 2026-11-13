@@ -32,8 +32,8 @@ function regForm(name, id, preset) {
 Object.assign(ACT, {
   "reg-new"(el) { regForm(el.dataset.c, ""); },
   "reg-open"(el) { regForm(el.dataset.c, el.dataset.id); },
-  async "reg-del"(el) { if (!confirm("Delete this record?")) return; state.reg[el.dataset.c] = await api("/api/reg/" + el.dataset.c + "/" + encodeURIComponent(el.dataset.id), {method: "DELETE"}); render(); },
+  async "reg-del"(el) { if (!confirm("Delete this record?")) return; state.reg[el.dataset.c] = await api("/api/reg/" + el.dataset.c + "/" + encodeURIComponent(el.dataset.id), {method: "DELETE"}); state.trr = null; state.trm = null; render(); },
   async "reg-save"() { const c = $("#rgbody").dataset.c, v = grab("[data-rg]", "rg"); v.id = $("#rgbody").dataset.id;
-    try { state.reg[c] = await api("/api/reg/" + c, {method: "POST", body: JSON.stringify(v)}); state.today = null; state.trm = null; closeModal(); render(); toast("Saved."); } catch (e) { toast(e.message, true); } },
+    try { state.reg[c] = await api("/api/reg/" + c, {method: "POST", body: JSON.stringify(v)}); state.today = null; state.trm = null; state.trr = null; closeModal(); render(); toast("Saved."); } catch (e) { toast(e.message, true); } },
   "reg-print"(el) { repPrint(el.dataset.id); },
 });

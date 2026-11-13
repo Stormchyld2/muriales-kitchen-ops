@@ -54,11 +54,23 @@ func (s *store) trainingExpiry(r rec) {
 	if r["expires"] != "" {
 		return
 	}
+	var emp rec
+	for _, e := range s.regLoad(regDefs["employees"]) {
+		if e["id"] == r["employeeId"] {
+			emp = e
+		}
+	}
 	for _, t := range s.regLoad(regDefs["trainingtypes"]) {
 		if t["id"] != r["typeId"] {
 			continue
 		}
-		if m, err := strconv.Atoi(strings.TrimSpace(t["renewMonths"])); err == nil && m > 0 {
+		m, _ := strconv.Atoi(strings.TrimSpace(t["renewMonths"]))
+		if emp != nil {
+			if _, _, rm := s.roleRule(emp, t["id"]); rm > 0 {
+				m = rm
+			}
+		}
+		if m > 0 {
 			if d, err := time.Parse(dayFmt, r["completed"]); err == nil {
 				r["expires"] = d.AddDate(0, m, 0).Format(dayFmt)
 			}
@@ -149,7 +161,7 @@ func (s *store) trainingMatrix() trainMatrix {
 		}
 		row := trainRow{ID: e["id"], Name: e["name"], Position: e["position"], Department: e["department"], Cells: map[string]trainCell{}}
 		for _, t := range types {
-			if !trainApplies(t["appliesTo"], e) {
+			if !s.trainNeeded(t, e) {
 				continue
 			}
 			c := trainCell{State: "Missing"}
@@ -232,6 +244,8 @@ func (s *store) trainingReport(id string) (*report, bool) {
 		return &report{Title: "Training Records", Subtitle: today, Sections: []reportSection{{Cols: []string{"ID", "Completed", "Employee", "Training", "Expires", "Trained by", "Status"}, Rows: rows}}}, true
 	case "training-employees":
 		return s.regReport(regDefs["employees"], "Employee List", "", nil), true
+	case "training-roles":
+		return s.roleReport(), true
 	case "training-types":
 		return s.regReport(regDefs["trainingtypes"], "Training Types", "", nil), true
 	case "training-signin":

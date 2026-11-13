@@ -226,3 +226,6 @@ header p{color:#ece6d6}
 .mcov .dot{display:inline-block;min-width:26px;margin:1px;padding:1px 4px;border-radius:6px;font-size:11px;font-weight:700;color:#111}
 .mcov .dot.ok{background:#58b368}.mcov .dot.no{background:#e0525e}
 .dblock.w3.r3{grid-row:span 3}.mtoday{grid-template-columns:1fr}.dblock.w3.r3 .dqa{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rmc{text-align:center;cursor:pointer;min-width:88px}.rmc b{display:block;font-size:15px}.rmc .hint{display:block;font-size:10.5px}
+.rmc.ok{background:#27402e;color:#7bd48a}.rmc.mid{background:#473c1c;color:#e7b416}.rmc.bad{background:#472427;color:#ee7b85}.rmc.none{background:#2f3a4a;color:#8fc0f3}.rmc:hover{outline:1px solid var(--gold)}
+.mxr th{white-space:normal;font-size:11px;line-height:1.15;vertical-align:bottom;max-width:84px}.mxr td.rmc{min-width:62px;padding:4px}.mxr td:first-child{min-width:104px}

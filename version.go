@@ -2,6 +2,6 @@ package main
 
 import ()
 
-const appVersion = "2.31.1"
+const appVersion = "2.32.0"
 
 // ---------------------------------------------------------------- notes

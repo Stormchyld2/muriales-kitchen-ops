@@ -50,6 +50,10 @@ func (s *store) decorate(c *collDef, rows []rec) []rec {
 		s.decorateTraining(rows)
 		return rows
 	}
+	if c.Name == "trainreq" {
+		s.decorateTrainReq(rows)
+		return rows
+	}
 	if c.Name == "mealrecipes" || c.Name == "mealplan" {
 		s.decorateMeals(c, rows)
 		return rows

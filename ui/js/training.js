@@ -17,3 +17,26 @@ Object.assign(ACT, {
   async "train-cell"(el) { if (!state.reg.training) state.reg.training = await api("/api/reg/training"); regForm("training", "", {employeeId: el.dataset.e, typeId: el.dataset.t}); },
   async "train-new"() { if (!state.reg.training) state.reg.training = await api("/api/reg/training"); regForm("training", ""); },
 });
+
+// Required training by role: positions down the side, trainings across the top.
+function vTrRole() {
+  const m = state.trr; if (!m) { api("/api/training/rolematrix").then(o => { state.trr = o; render(); }); return `<p class="hint">Loading...</p>`; }
+  const cell = (ro, t) => {
+    const c = ro.cells[t.id];
+    if (!c.required) return `<td class="rmc" data-act="role-cell" data-r="${esc(ro.role)}" data-t="${esc(t.id)}" data-q="${esc(c.reqId || "")}" title="Click to require this"><span class="hint">-</span></td>`;
+    const tone = !c.people ? "none" : c.current === c.people ? "ok" : c.current === 0 ? "bad" : "mid";
+    return `<td class="rmc ${tone}" data-act="role-cell" data-r="${esc(ro.role)}" data-t="${esc(t.id)}" data-q="${esc(c.reqId)}"><b>${c.people ? c.current + "/" + c.people : "Req"}</b>${c.signoff ? `<span class="hint">sign-off</span>` : ""}${c.refresh ? `<span class="hint">${esc(c.refresh)} mo</span>` : ""}</td>`;
+  };
+  return `<div class="row"><button class="btn green big" data-act="role-add">${icon("plus")}Add Requirement</button><button class="btn" data-act="nav" data-v="trreq">Requirements List</button><button class="btn" data-act="rep-print" data-id="training-roles">${icon("print")}Print</button></div>
+  <p class="hint" style="margin:6px 0">Each box shows how many of the people in that position are current on the training. A dash means it is not required for that position. Click a box to change it. All Staff trainings apply to everyone.</p>
+  <div class="tablewrap">${!m.roles.length ? `<div class="empty"><b>No requirements yet</b>Add one to start the matrix.</div>`
+    : `<table class="plain mxr"><thead><tr><th class="nosort" style="width:auto">Position</th>${m.types.map(t => `<th class="nosort" style="width:auto">${esc(t.name)}</th>`).join("")}</tr></thead><tbody>${m.roles.map(ro => `<tr><td><b>${esc(ro.role)}</b><div class="hint">${ro.people} ${ro.people === 1 ? "person" : "people"}</div></td>${m.types.map(t => cell(ro, t)).join("")}</tr>`).join("")}</tbody></table>`}</div>`;
+}
+
+Object.assign(ACT, {
+  async "role-add"() { if (!state.reg.trainreq) state.reg.trainreq = await api("/api/reg/trainreq"); regForm("trainreq", ""); },
+  async "role-cell"(el) {
+    if (!state.reg.trainreq) state.reg.trainreq = await api("/api/reg/trainreq");
+    if (el.dataset.q) regForm("trainreq", el.dataset.q); else regForm("trainreq", "", {role: el.dataset.r, typeId: el.dataset.t, required: "Yes"});
+  },
+});
