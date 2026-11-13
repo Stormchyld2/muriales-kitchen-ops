@@ -13,7 +13,6 @@ import (
 	"html"
 	"net/http"
 	"net/mail"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -494,41 +493,15 @@ func (s *store) reportRoutes(mux *http.ServeMux) {
 			fail(w, 400, "The subject or message is too long.")
 			return
 		}
-		dir := s.reportsDir()
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			fail(w, 500, "The reports folder could not be made: "+err.Error())
-			return
-		}
-		base := strings.TrimSpace(safeName.ReplaceAllString(rep.Title+" "+time.Now().Format("2006-01-02"), ""))
-		file := filepath.Join(dir, base+".html")
-		if err := os.WriteFile(file, []byte(rep.html(true)), 0o644); err != nil {
-			fail(w, 500, "The report could not be saved: "+err.Error())
-			return
-		}
-		attach := file
-		pdfNote := ""
-		if pdf := file[:len(file)-5] + ".pdf"; true {
-			if perr := htmlToPDF(file, pdf); perr == nil {
-				attach = pdf
-				_ = os.Remove(file)
-			} else {
-				pdfNote = perr.Error()
-				s.logf("PDF could not be made: %v", perr)
-			}
-		}
 		body := strings.TrimSpace(in2.Message)
 		if body != "" {
 			body += "\r\n\r\n"
 		}
 		body += rep.text()
-		method, detail, onClip := composeEmail(addrs, subject, body, attach, dir)
+		method, detail, cut := composeEmail(addrs, subject, body)
 		if detail != "" {
 			s.logf("Outlook draft failed: %v", detail)
 		}
-		short := body
-		if len(short) > 6000 {
-			short = short[:6000]
-		}
-		writeJSON(w, 200, map[string]any{"method": method, "detail": detail, "text": short, "fileOnClipboard": onClip, "pdfNote": pdfNote, "file": filepath.Base(attach), "folder": dir})
+		writeJSON(w, 200, map[string]any{"method": method, "detail": detail, "text": body, "cut": cut})
 	})
 }

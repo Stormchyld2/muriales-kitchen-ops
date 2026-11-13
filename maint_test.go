@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"encoding/json"
-	"fmt"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -420,8 +419,8 @@ func TestReports(t *testing.T) {
 	if c != 200 || out["method"] != "outlook" {
 		t.Fatalf("email draft failed: %v %v", c, out)
 	}
-	if _, err := os.Stat(filepath.Join(e.s.reportsDir(), fmt.Sprint(out["file"]))); err != nil {
-		t.Errorf("report file not saved: %v", err)
+	if txt, _ := out["text"].(string); !strings.HasPrefix(txt, "Please review") || !strings.Contains(txt, "Equipment List") {
+		t.Errorf("the message text should carry the note and the report: %q", txt)
 	}
 }
 
@@ -1258,23 +1257,5 @@ func TestEditServiceAndInspection(t *testing.T) {
 	q := o["inspections"].([]any)[0].(map[string]any)
 	if q["condition"] != "Fair" || q["fails"].(float64) != 1 || !strings.HasPrefix(q["edited"].(string), "CD") {
 		t.Fatalf("%v", q)
-	}
-}
-
-func TestWriteEML(t *testing.T) {
-	dir := t.TempDir()
-	f := filepath.Join(dir, "Report.pdf")
-	os.WriteFile(f, pdf("x"), 0o644)
-	p := writeEML([]string{"a@b.com", "c@d.com"}, "Handoff\r\nBcc: x@y.com", "Hello\nWorld", f, dir)
-	b, err := os.ReadFile(p)
-	if err != nil {
-		t.Fatal(err)
-	}
-	s := string(b)
-	if !strings.HasPrefix(s, "X-Unsent: 1") || !strings.Contains(s, "To: a@b.com; c@d.com") || !strings.Contains(s, `filename="Report.pdf"`) {
-		t.Fatal(s)
-	}
-	if strings.Contains(s, "\r\nBcc:") {
-		t.Fatal("header injection")
 	}
 }
