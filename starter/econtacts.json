@@ -1,0 +1,122 @@
+[
+ {
+  "id": "EC-001",
+  "type": "Emergency",
+  "company": "911",
+  "purpose": "Fire / Police / EMS",
+  "phone": "911",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-002",
+  "type": "Gas Utility",
+  "company": "",
+  "purpose": "Gas leak / utility emergency",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-003",
+  "type": "Electric Utility",
+  "company": "",
+  "purpose": "Power outage / electrical emergency",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-004",
+  "type": "Water Utility",
+  "company": "",
+  "purpose": "Water service / major leak",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-005",
+  "type": "Fire Suppression Vendor",
+  "company": "",
+  "purpose": "Suppression system / hood emergency",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-006",
+  "type": "HVAC / Refrigeration",
+  "company": "",
+  "purpose": "Walk-in/freezer/HVAC emergency",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-007",
+  "type": "Plumbing",
+  "company": "",
+  "purpose": "Sewage / drain / major plumbing emergency",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-008",
+  "type": "Dish Machine / Chemical Vendor",
+  "company": "",
+  "purpose": "Dish machine / chemical system emergency",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-009",
+  "type": "General Maintenance",
+  "company": "Brian",
+  "purpose": "Internal maintenance escalation",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EC-010",
+  "type": "Management",
+  "company": "",
+  "purpose": "Management escalation",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ }
+]

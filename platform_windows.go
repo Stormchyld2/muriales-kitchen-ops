@@ -60,6 +60,10 @@ func openFolder(path string) {
 	_ = exec.Command("explorer.exe", path).Start()
 }
 
+func openFile(path string) {
+	_ = exec.Command("rundll32", "url.dll,FileProtocolHandler", path).Start()
+}
+
 func fatal(msg string) {
 	text, _ := syscall.UTF16PtrFromString(msg)
 	title, _ := syscall.UTF16PtrFromString("Muriale's Kitchen Operations")

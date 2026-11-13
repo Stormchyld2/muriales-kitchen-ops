@@ -16,6 +16,8 @@ func openWindow(url string) (*exec.Cmd, error) {
 
 func openFolder(path string) { fmt.Println("open folder", path) }
 
+func openFile(path string) { fmt.Println("open file", path) }
+
 func fatal(msg string) {
 	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(1)

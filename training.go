@@ -23,7 +23,7 @@ func init() {
 	regDefs["trainingtypes"] = &collDef{Name: "trainingtypes", Title: "Training Types", NewLabel: "Add Training", Prefix: "TT-", Digits: 3, Report: "training-types", Starter: "training_types.json",
 		Intro:    "The training the kitchen tracks. Who it applies to is All, or one or more department names or words from a position, separated by commas (for example Dish, Prep or Manager). Months until it expires is blank or 0 if it never does. Your health department and state decide what is actually required, so change these to match.",
 		ListCols: []string{"id", "name", "appliesTo", "renewMonths", "active"},
-		Fields:   []fieldDef{txt("name", "Training", true), lng("about", "What it covers", false), txt("appliesTo", "Applies to", false), txt("renewMonths", "Months until it expires (blank if never)", false), yn("active", "Active?")}}
+		Fields:   []fieldDef{txt("name", "Training", true), sel("category", "Category", trainCats, false), lng("about", "What it covers", false), txt("appliesTo", "Applies to", false), txt("renewMonths", "Months until it expires (blank if never)", false), yn("active", "Active?")}}
 	regDefs["training"] = &collDef{Name: "training", Title: "Training Records", NewLabel: "Record Training", Prefix: "TRN-", Digits: 5, Desc: true, Deletable: true, Report: "training-log",
 		Intro:    "Each time someone completes a training. The expiry date is worked out from the training type when you leave it blank.",
 		ListCols: []string{"id", "employeeName", "typeName", "completed", "expires", "trainer", "state"},

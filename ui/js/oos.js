@@ -52,8 +52,9 @@ const tagPrint = file => window.open("/api/oos-tags/" + encodeURIComponent(file)
 function tagDone(o) {
   showModal(`<h2>${icon("print")}Out-of-Service Tag Ready</h2><div class="body" id="tgbody" data-file="${esc(o.file)}"><p>The tag was saved as <b>${esc(o.file)}</b> in the folder:<br><span class="hint">${esc(o.folder)}</span></p>
     <p style="text-align:center"><img src="/api/oos-tags/${encodeURIComponent(o.file)}" style="max-width:100%;max-height:340px;border:1px solid var(--line)"></p>
-    <p class="hint">Print it now and attach it to the equipment. If you print later, use Print Tag on the equipment list.</p></div>
-    <div class="foot"><button class="btn green big" data-act="tag-print-now">${icon("print")}Print Now</button><button class="btn big" data-act="close">Print Later</button></div>`);
+    <p class="hint">Print it now and attach it to the equipment. If you print later, use Print Tag on the equipment list.</p>
+    <p class="hint">A line was also added to the LOTO Log${state.lotoTag ? " (" + esc(state.lotoTag) + ")" : ""}.</p></div>
+    <div class="foot"><button class="btn green big" data-act="tag-print-now">${icon("print")}Print Now</button>${state.lotoTag ? `<button class="btn big" data-act="rep-view" data-id="lototag:${esc(state.lotoTag)}">${icon("print")}Print LOTO Tag</button>` : ""}<button class="btn big" data-act="close">Print Later</button></div>`);
 }
 
 function tagFields(id, r, issue) {
@@ -102,7 +103,8 @@ Object.assign(ACT, {
   "oos-ask"(el) { oosAsk(el.dataset.id); },
   "oos-clear-ask"(el) { oosClearAsk(el.dataset.id); },
   async "oos-go"() { const v = collectTag(); rememberWho(v.by); if (!v.reason.trim() || !v.by.trim()) return toast("Enter the reason and your name.", true);
-    const id = $("#oosbody").dataset.id; state.maint = await api("/api/maint/equipment/" + id + "/out-of-service", {method: "POST", body: JSON.stringify(v)}); state.sum = null; render();
+    const id = $("#oosbody").dataset.id; state.maint = await api("/api/maint/equipment/" + id + "/out-of-service", {method: "POST", body: JSON.stringify(v)}); state.sum = null; delete state.reg.lotolog; render();
+    try { const lg = (await api("/api/reg/lotolog")).rows.find(x => x.equipment === (state.maint.equipment.find(q => q.id === id) || {}).name && !x.removed); state.lotoTag = lg ? lg.id : ""; } catch (e) { state.lotoTag = ""; }
     try { tagDone(await makeTag(id)); } catch (err) { closeModal(); toast("Out of service, but the tag could not be made: " + err.message + " Use Print Tag on the equipment list.", true); } },
   async "tag-make"() { const id = $("#oosbody").dataset.id, v = collectTag(); delete v.reason;
     state.maint = await api("/api/maint/equipment/" + id + "/tag-details", {method: "POST", body: JSON.stringify(v)});

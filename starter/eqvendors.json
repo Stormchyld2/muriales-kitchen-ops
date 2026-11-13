@@ -1,0 +1,122 @@
+[
+ {
+  "id": "EQV-001",
+  "equipment": "Walk-In Cooler",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-002",
+  "equipment": "Walk-In Freezer",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-003",
+  "equipment": "Reach-In Cooler",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-004",
+  "equipment": "Dish Machine",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-005",
+  "equipment": "Hood / Exhaust",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-006",
+  "equipment": "Fire Suppression System",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-007",
+  "equipment": "Fryer",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-008",
+  "equipment": "Oven / Range",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-009",
+  "equipment": "Hot Water",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "EQV-010",
+  "equipment": "Power Failure",
+  "vendor": "",
+  "phone": "",
+  "afterHours": "",
+  "account": "",
+  "backup": "",
+  "lastVerified": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ }
+]

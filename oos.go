@@ -87,8 +87,10 @@ func (s *store) holdStart(e *Equipment, reason, by, issueID string) {
 			return
 		}
 	}
-	all = append(all, &OOSRecord{ID: newID(), EquipmentID: e.ID, Reason: reason, IssueID: issueID, RemovedBy: by, RemovedAt: stamp()})
+	nr := &OOSRecord{ID: newID(), EquipmentID: e.ID, Reason: reason, IssueID: issueID, RemovedBy: by, RemovedAt: stamp()}
+	all = append(all, nr)
 	_ = s.writeMaint("oos.json", all)
+	s.lotoStart(e, nr)
 }
 
 func (s *store) canClear(name string, managers []string) bool {
@@ -129,6 +131,7 @@ func (s *store) oosRoutes(mux *http.ServeMux) {
 			for _, rec := range all {
 				if rec.EquipmentID == e.ID && rec.ClearedAt == "" {
 					in2.tagFields.apply(rec)
+					s.lotoRefine(rec)
 				}
 			}
 			_ = s.writeMaint("oos.json", all)
@@ -181,6 +184,7 @@ func (s *store) oosRoutes(mux *http.ServeMux) {
 			for _, rec := range all {
 				if rec.EquipmentID == e.ID && rec.ClearedAt == "" {
 					rec.ClearedBy, rec.ClearedAt, rec.ClearNote = by, now, strings.TrimSpace(in2.Note)
+					s.lotoEnd(rec)
 					closed = true
 				}
 			}

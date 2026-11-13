@@ -1,0 +1,177 @@
+[
+ {
+  "id": "WC-01",
+  "area": "Walk-In / Reach-Ins",
+  "check": "Refrigeration operating normally; no obvious temperature or door/gasket issue",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-02",
+  "area": "Freezers",
+  "check": "Freezers operating normally; product frozen and no thawing/frost problem affecting use",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-03",
+  "area": "Hot Line",
+  "check": "Ranges, ovens, fryers, griddle and other required hot-line equipment operational",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-04",
+  "area": "Prep Equipment",
+  "check": "Slicer, mixer, processor, smart oven and required prep equipment available and safe",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-05",
+  "area": "Dish / Stewarding",
+  "check": "Dish machine, chemical supply, racks, sinks and disposer ready for service",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-06",
+  "area": "Hand Sinks",
+  "check": "Accessible, supplied with soap/paper towels and functioning",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-07",
+  "area": "Sanitizer / Chemicals",
+  "check": "Sanitizer/chemical stations stocked, labeled and dispensing appropriately",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-08",
+  "area": "Food Contact Surfaces",
+  "check": "Worktables, cutting surfaces, utensils and key prep surfaces clean and ready",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-09",
+  "area": "Floors / Drains",
+  "check": "Floors reasonably clean/dry; drains clear; no immediate slip or drainage hazard",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-10",
+  "area": "Hoods / Ventilation",
+  "check": "Hoods/exhaust operating; filters in place; no obvious grease or airflow issue",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-11",
+  "area": "Fire / Emergency",
+  "check": "Exits and access clear; extinguishers/emergency access unobstructed",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-12",
+  "area": "Gas / Electrical Safety",
+  "check": "No obvious damaged cords, plugs, gas connector concerns, sparking, burning odor or unsafe condition",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-13",
+  "area": "Smallwares",
+  "check": "Critical pans, utensils, knives, containers and service smallwares available",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-14",
+  "area": "Product / Pars",
+  "check": "Critical food items and service products available in sufficient quantity",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-15",
+  "area": "Paper / Disposables",
+  "check": "Required paper, gloves, foil, wrap, containers and disposables available",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-16",
+  "area": "Chemical / Janitorial Stock",
+  "check": "Critical cleaning chemicals, trash liners and janitorial supplies available",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-17",
+  "area": "Prep / Mise en Place",
+  "check": "Required prep is on track and major service items are available or actively being completed",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-18",
+  "area": "Labeling / Dating",
+  "check": "Open/prepped product reasonably labeled, dated and stored correctly",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-19",
+  "area": "Allergen Readiness",
+  "check": "Allergen procedures, clean tools/surfaces and needed product information available",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-20",
+  "area": "Temperature Tools",
+  "check": "Thermometers available, clean and usable",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-21",
+  "area": "Receiving / Back Area",
+  "check": "Receiving path, storage access and back-of-house traffic areas clear",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-22",
+  "area": "Doors / Pest Exclusion",
+  "check": "Exterior/service doors functioning and no obvious pest-entry condition",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-23",
+  "area": "Trash / Grease Area",
+  "check": "Trash and grease handling areas not creating immediate operational or sanitation problem",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-24",
+  "area": "Staff Meal",
+  "check": "Current Breakfast/Lunch or Dinner staff meal plan is accounted for without interfering with service",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WC-25",
+  "area": "Service Readiness",
+  "check": "No unresolved condition remains that would materially affect safe or normal service",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ }
+]

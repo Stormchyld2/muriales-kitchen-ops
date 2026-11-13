@@ -96,7 +96,7 @@ var histLabelKeys = []string{"name", "title", "issue", "check", "task", "point",
 
 // Paths that change nothing worth recording.
 var histSkip = []string{"/api/ping", "/api/closing", "/api/lock", "/api/extract", "/api/temps/sheet-preview", "/api/temps/import/preview",
-	"/api/backups/inspect", "/api/maint/open-portal", "/api/open-folder", "/api/temp-reports", "/api/binder/pulled", "/api/binder/generated"}
+	"/api/backups/inspect", "/api/maint/open-portal", "/api/open-folder", "/api/temp-reports", "/api/binder/pulled", "/api/binder/generated", "/api/materials"}
 
 var histNouns = [][2]string{
 	{"/api/maint/equipment", "Equipment"}, {"/api/maint/issues", "Maintenance issue"}, {"/api/maint/pm", "Maintenance task"},

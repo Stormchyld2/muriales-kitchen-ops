@@ -128,7 +128,7 @@ func TestDashboard(t *testing.T) {
 	for _, x := range g {
 		keys = append(keys, x.(map[string]any)["key"].(string))
 	}
-	if strings.Join(keys, ",") != "ready,temps,clean,pm,train" {
+	if strings.Join(keys, ",") != "ready,temps,clean,pm,train,stchk" {
 		t.Errorf("gauges: %v", keys)
 	}
 	if len(out["tiles"].([]any)) != 5 {

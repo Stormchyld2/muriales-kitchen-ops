@@ -127,6 +127,9 @@ func (s *store) regSave(c *collDef, rows []rec) error { return s.writeMaint(s.re
 
 func (c *collDef) validate(r rec) string {
 	for _, f := range c.Fields {
+		if _, ok := r[f.Key]; !ok && f.Type == "hidden" {
+			continue
+		}
 		v := strings.TrimSpace(r[f.Key])
 		r[f.Key] = v
 		switch {
@@ -143,7 +146,7 @@ func (c *collDef) validate(r rec) string {
 		case f.Type == "select" && !oneOf(f.Opts, v):
 			return f.Label + ": choose one of the listed options."
 		}
-		if f.Type == "doc" {
+		if f.Type == "doc" || f.Type == "hidden" {
 			if len(v) > 300000 {
 				return f.Label + " is too long."
 			}
@@ -194,7 +197,7 @@ func (s *store) regSorted(c *collDef) []rec {
 func (s *store) regReport(c *collDef, title, note string, filter func(rec) bool) *report {
 	cols, keys := []string{}, []string{}
 	for _, f := range c.Fields {
-		if f.Type == "long" && len(c.Fields) > 9 && c.Name != "standards" {
+		if (f.Type == "long" && len(c.Fields) > 9 && c.Name != "standards") || f.Type == "doc" || f.Type == "hidden" {
 			continue
 		}
 		cols, keys = append(cols, f.Label), append(keys, f.Key)
@@ -263,7 +266,9 @@ func (s *store) registryRoutes(mux *http.ServeMux) {
 						n[k] = v
 					}
 					for _, f := range c.Fields {
-						n[f.Key] = in2[f.Key]
+						if v, ok := in2[f.Key]; ok || f.Type != "hidden" {
+							n[f.Key] = v
+						}
 					}
 					if c.After != nil {
 						defer c.After(s, x, n)

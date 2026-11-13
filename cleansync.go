@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -55,6 +56,25 @@ func (s *store) decorate(c *collDef, rows []rec) []rec {
 		switch c.Name {
 		case "cleantasks", "mgrchecks":
 			r["due"], r["state"] = dueState(r, today)
+		case "lotolog":
+			r["state"] = map[bool]string{true: "Locked Out", false: "Removed"}[r["removed"] == ""]
+		case "newhire":
+			done := 0
+			for _, l := range strings.Split(r["progress"], "\n") {
+				if strings.TrimSpace(l) != "" {
+					done++
+				}
+			}
+			tot := 0
+			for _, it := range s.regLoad(regDefs["newhireitems"]) {
+				if it["active"] != "No" {
+					tot++
+				}
+			}
+			r["state"] = r["status"]
+			if r["status"] != "Complete" {
+				r["state"] = fmt.Sprintf("%d of %d done", done, tot)
+			}
 		case "deepclean":
 			r["due"], r["state"] = deepState(r, tt)
 		}

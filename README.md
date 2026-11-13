@@ -26,6 +26,13 @@ Who may use it is decided by who can open the folder: only people with access to
 
 The Stations group holds the written guide for each station (search, open, Edit, Print), the Opening and Closing checklists (tick, sign with a first name, saved to the Checklist Log) and the list of stations. Renaming a station renames it everywhere. Eight guides arrived as title pages only and say so; use Edit to write them.
 
+## Training, safety and emergency
+
+- **Lockout / Tagout:** taking equipment out of service adds a line to the LOTO Log (equipment, asset ID, area, reason, who, and the energy types if there is a written procedure for it). The lock tag prints pre-filled. Clearing the equipment marks the lock removed. Equipment procedures and the yearly inspection are kept here too.
+- **Daily Readiness Walk:** 25 checks, everything starts Ready, change only what is not, release for service. History is kept; unfinished items can become a corrective action.
+- **Training & Safety:** matrix, new-hire checklist, safety meetings, incidents and near misses, and the Training Materials folder (copy slide decks and videos into the "Training Materials" folder next to the program).
+- **Emergency Binder:** index, emergency contacts, critical equipment plan, service contacts and a review log. Print the whole binder from Reports.
+
 ## Files
 
 ```

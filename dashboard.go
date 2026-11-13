@@ -113,6 +113,32 @@ func (s *store) dashboard() map[string]any {
 		g = append(g, gauge{"train", "Training Current", pctOf(tm.Count["Current"], cells), itoa(tm.Count["Expired"]+tm.Count["Missing"]) + " expired or missing, " + itoa(tm.Count["Due Soon"]) + " due soon", "trmatrix"})
 	}
 
+	// 6. station checklists finished today (Closing counts from 2 PM)
+	{
+		today, late := time.Now().Format(dayFmt), time.Now().Hour() >= 14
+		fin := map[string]bool{}
+		for _, l := range s.regLoad(regDefs["stchecklog"]) {
+			if l["date"] == today {
+				fin[l["station"]+"|"+l["kind"]] = true
+			}
+		}
+		due, ok := 0, 0
+		for _, c := range s.regLoad(regDefs["stchecklists"]) {
+			if c["active"] == "No" || (c["kind"] == "Closing" && !late) {
+				continue
+			}
+			due++
+			if fin[c["station"]+"|"+c["kind"]] {
+				ok++
+			}
+		}
+		if due == 0 {
+			g = append(g, gauge{"stchk", "Station Checklists", -1, "No checklists due yet", "stchk"})
+		} else {
+			g = append(g, gauge{"stchk", "Station Checklists", pctOf(ok, due), itoa(ok) + " of " + itoa(due) + " finished today", "stchk"})
+		}
+	}
+
 	// tiles
 	all := map[string]bool{}
 	for _, k := range todoSources {
