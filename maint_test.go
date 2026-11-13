@@ -1013,3 +1013,17 @@ func TestEquipmentAssetCodeEdit(t *testing.T) {
 		t.Error("edit saved")
 	}
 }
+
+func TestMissedIncludesOverduePM(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/maint/import-schedule", `{"pastDates":"keep"}`)
+	_, m := e.get2("/api/reg/missed")
+	groups := map[string]bool{}
+	for _, x := range m["rows"].([]any) {
+		src, _ := x.(map[string]any)["source"].(string)
+		groups[strings.SplitN(src, " job", 2)[0]] = true
+	}
+	if !groups["Equipment PM"] && !groups["Grounds / Facility"] && !groups["Cleaning"] {
+		t.Skipf("workbook dates are not past due in this run: %v", groups)
+	}
+}

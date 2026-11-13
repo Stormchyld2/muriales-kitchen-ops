@@ -81,8 +81,9 @@ func (s *store) overdueItems() []overdueItem {
 		}
 	}
 	for _, v := range s.pmList() {
-		if v.Group == "Cleaning" && v.State == "Overdue" {
-			out = append(out, overdueItem{"pm|" + v.ID + "|" + v.NextDue, "PM job " + v.Code, v.Code, v.Area, v.Name, "P3 - Routine", v.Performer, v.NextDue})
+		if v.State == "Overdue" {
+			area := firstNonEmpty(v.Area, v.Group)
+			out = append(out, overdueItem{"pm|" + v.ID + "|" + v.NextDue, v.Group + " job " + v.Code, v.Code, area, v.Name, "P3 - Routine", v.Performer, v.NextDue})
 		}
 	}
 	return out
