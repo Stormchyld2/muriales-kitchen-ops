@@ -1290,6 +1290,7 @@ function vTemps() {
 function tempEnter() {
   const d = state.temps;
   showModal(`<h2>${icon("list")}Enter Temperatures</h2><div class="body" id="tebody"><p class="hint" style="margin-top:0">Fill in only the ones you checked. If a reading is out of range, a box asks for the corrective action.</p>
+    ${!d.points.length ? `<div class="note warn"><b>No locations set up yet.</b> Add the coolers, freezers and hot wells you check, then Enter Temperatures will list each one.<div class="row" style="margin-top:8px"><button class="btn green" data-act="tpt-starter-enter">${icon("down")}Load Muriale's Units (29)</button><button class="btn" data-act="tpt-add-enter">${icon("plus")}Add a Location</button></div></div>` : ""}
     <table class="plain"><thead><tr><th class="nosort" style="width:auto">Point</th><th class="nosort" style="width:auto">Safe range</th><th class="nosort" style="width:auto">Temp °F</th><th class="nosort" style="width:auto">Notes / action</th></tr></thead><tbody>
     ${d.points.map(p => { const lim = tLimit(p); return `<tr data-pid="${p.id}"><td><b>${esc(p.name)}</b>${p.area ? `<div class="hint">${esc(p.area)}</div>` : ""}</td><td class="hint">${esc(lim.text)}</td><td><input type="number" step="0.1" class="field" data-tt="${p.id}" style="width:90px"></td><td><input class="field" data-tn="${p.id}" placeholder="Optional"></td></tr>`; }).join("")}</tbody></table>
     <div class="fields" style="margin-top:8px"><label>Your name or initials: <span class="req">*</span></label><input class="field" id="teby" value="${esc(who())}" style="width:220px"></div></div>
@@ -2185,9 +2186,11 @@ const ACT = {
     try { const o = await api("/api/replacements", {method: "POST", body: JSON.stringify(v)}); state.repl = o; closeModal(); if (state.view === "todo") await refreshTodo(); render();
       showModal(`<h2>${icon("save")}${esc(o.saved)} Saved</h2><div class="body"><p>The request is in Replacement Requests. Print it for the decision meeting?</p></div><div class="foot"><button class="btn green big" data-act="repl-print" data-id="${esc(o.saved)}">${icon("print")}Print Now</button><button class="btn big" data-act="close">Print Later</button></div>`); } catch (e) { toast(e.message, true); } },
   "tpt-edit"(el) { tptForm(el.dataset.id); },
+  async "tpt-starter-enter"() { state.temps = await api("/api/temps/points/starter", {method: "POST"}); render(); tempEnter(); },
+  "tpt-add-enter"() { state.tptReturn = true; tptForm(""); },
   async "tpt-starter"() { state.temps = await api("/api/temps/points/starter", {method: "POST"}); render(); toast("Units loaded. Existing ones were kept."); },
   async "tpt-save"() { const v = grab("[data-tp]", "tp"); const num = x => x === "" ? null : parseFloat(x); v.min = num(v.min); v.max = num(v.max); v.id = $("#tpbody").dataset.id;
-    state.temps = await api("/api/temps/points", {method: "POST", body: JSON.stringify(v)}); closeModal(); render(); toast("Saved."); },
+    state.temps = await api("/api/temps/points", {method: "POST", body: JSON.stringify(v)}); closeModal(); render(); toast("Saved."); if (state.tptReturn) { state.tptReturn = false; tempEnter(); } },
   async "tpt-del"(el) { if (!confirm("Delete this point? Its past readings are kept.")) return; state.temps = await api("/api/temps/points/" + el.dataset.id, {method: "DELETE"}); render(); },
   "insp-new"(el) { inspForm(el.dataset.task); },
   async "insp-save"() { const v = grab("[data-in]", "in"); rememberWho(v.by); v.results = {};
