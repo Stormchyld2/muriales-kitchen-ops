@@ -229,3 +229,12 @@ header p{color:#ece6d6}
 .rmc{text-align:center;cursor:pointer;min-width:88px}.rmc b{display:block;font-size:15px}.rmc .hint{display:block;font-size:10.5px}
 .rmc.ok{background:#27402e;color:#7bd48a}.rmc.mid{background:#473c1c;color:#e7b416}.rmc.bad{background:#472427;color:#ee7b85}.rmc.none{background:#2f3a4a;color:#8fc0f3}.rmc:hover{outline:1px solid var(--gold)}
 .mxr th{white-space:normal;font-size:11px;line-height:1.15;vertical-align:bottom;max-width:84px}.mxr td.rmc{min-width:62px;padding:4px}.mxr td:first-child{min-width:104px}
+/* dashboard extras */
+.dprog{display:flex;align-items:center;gap:10px;height:calc(100% - 30px)}.dring{width:116px;height:116px;flex:none}
+.dring .gnum{font-size:30px;font-weight:800}
+.kmn{flex:none;font-weight:800;font-size:16px;min-width:34px;text-align:right}.dup{color:#58b368;font-size:12px;flex:none;min-width:44px;text-align:right}.ddn{color:#e7b416;font-size:12px;flex:none;min-width:44px;text-align:right}
+/* illustrated shortcut icons: larger two-tone badges with a glow */
+.dblock.s .sic{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.22),rgba(255,255,255,.04) 60%),var(--ic,#2f4f7a);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 4px 12px rgba(0,0,0,.45),0 0 14px var(--icg,rgba(90,166,240,.28))}
+.dblock.s .sic svg{width:30px;height:30px;stroke-width:1.7;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+.dblock.s.cb{--ic:#27507f;--icg:rgba(90,166,240,.35)}.dblock.s.cg{--ic:#276340;--icg:rgba(88,179,104,.35)}.dblock.s.ca{--ic:#7a5a12;--icg:rgba(231,180,22,.35)}.dblock.s.cr{--ic:#7a2a30;--icg:rgba(224,82,94,.35)}
+.kmr b{flex:1;max-width:none}

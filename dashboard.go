@@ -68,6 +68,7 @@ func (s *store) dashboard() map[string]any {
 		seen[strings.ToLower(r.Point)] = true
 	}
 	done := 0
+	tempTotal := len(pts)
 	for _, p := range pts {
 		if seen[strings.ToLower(p.Name)] {
 			done++
@@ -114,7 +115,8 @@ func (s *store) dashboard() map[string]any {
 	}
 
 	// 6. station checklists finished today (Closing counts from 2 PM)
-	{
+	var stOk, stDue int
+	func() {
 		today, late := time.Now().Format(dayFmt), time.Now().Hour() >= 14
 		fin := map[string]bool{}
 		for _, l := range s.regLoad(regDefs["stchecklog"]) {
@@ -123,6 +125,7 @@ func (s *store) dashboard() map[string]any {
 			}
 		}
 		due, ok := 0, 0
+		defer func() { stOk, stDue = ok, due }()
 		for _, c := range s.regLoad(regDefs["stchecklists"]) {
 			if c["active"] == "No" || (c["kind"] == "Closing" && !late) {
 				continue
@@ -137,7 +140,7 @@ func (s *store) dashboard() map[string]any {
 		} else {
 			g = append(g, gauge{"stchk", "Station Checklists", pctOf(ok, due), itoa(ok) + " of " + itoa(due) + " finished today", "stchk"})
 		}
-	}
+	}()
 
 	// tiles
 	all := map[string]bool{}
@@ -243,7 +246,18 @@ func (s *store) dashboard() map[string]any {
 
 	recent, _ := s.historyRows("", 8)
 
+	// today's task progress: what is done and what is still to do
+	prog := []dashPart{{"Cleaning", cdone, cdone + cdue, "cltoday"}, {"Temperatures", done, tempTotal, "temps"}, {"Stations", stOk, stDue, "stchk"}}
+	pDone, pTotal := 0, 0
+	for _, x := range prog {
+		pDone += x.Done
+		pTotal += x.Total
+	}
+	alerts := s.dashAlerts(today, bwhen, bname != "")
+	metrics := s.dashMetrics(now)
+
 	return map[string]any{"gauges": g, "tiles": t, "attention": need, "notes": notes, "recent": recent,
+		"progress": map[string]any{"done": pDone, "total": pTotal, "parts": prog}, "alerts": alerts, "metrics": metrics,
 		"overdue": over, "dueToday": dueToday, "today": today, "version": appVersion}
 }
 

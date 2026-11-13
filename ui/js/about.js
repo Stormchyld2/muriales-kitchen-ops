@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.33.0", "Dashboard extras from the mockup: Today's Task Progress ring (cleaning, temperatures and station checklists), Operational Alerts (equipment down, urgent problems, temperatures out of range, late corrective actions, expired training), Key Metrics for the last 30 days against the 30 before, and larger illustrated icons on the shortcut tiles."],
   ["2.32.0", "Required training by position: a Role Matrix (positions against trainings, showing how many people in each position are current), and a Role Requirements list in the shape of your workbook (required, refresh months, trainer, sign-off, SOP, last reviewed). It starts filled from the training types, and the employee Training Matrix and expiry dates follow it. A position can be excused from a training that applies to everyone."],
   ["2.31.1", "Week 2 employee meal recipes added (14 meals), so all 56 meals in the four-week rotation now have a recipe. Appendix links are smarter, for example Brown Gravy for Schnitzel now shows on the Schnitzel dinner."],
   ["2.31.0", "Employee Meals rebuilt around the four-week rotation: a dashboard showing which week it is with the breakfast/lunch and dinner for every day, a 4-Week Rotation tab that checks each recipe against its slot, 42 recipes from your menu documents (Weeks 1, 3 and 4), a Meal Log, and an Appendix of the 12 sauces and sides, last in the list. Week 2 still needs its recipes."],

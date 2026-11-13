@@ -22,6 +22,28 @@ const DASH_VIEW = {"Cleaning": "cltoday", "Equipment PM": "pm", "Grounds / Facil
 
 function dBlock(cls, inner, view) { return `<div class="dblock ${cls}" ${view ? `data-act="nav" data-v="${esc(view)}" role="button" tabindex="0"` : ""}>${inner}</div>`; }
 
+
+// A ring that fills with the share of today's tasks that are done.
+function donutSvg(done, total) {
+  const p = total ? Math.round(done * 100 / total) : 100, col = gaugeColor(p), R = 54, C = 2 * Math.PI * R;
+  return `<svg viewBox="0 0 140 140" class="dring" aria-hidden="true"><circle cx="70" cy="70" r="${R}" fill="none" stroke="#24262b" stroke-width="16"/>`
+    + (p > 0 ? `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${col}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${(C * p / 100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 70 70)"/>` : "")
+    + `<text x="70" y="78" text-anchor="middle" class="gnum" fill="${col}">${p}%</text></svg>`;
+}
+
+function dashExtras(d) {
+  const pr = d.progress || {done: 0, total: 0, parts: []};
+  const parts = pr.parts.map(x => `<div class="drow" data-act="nav" data-v="${esc(x.view)}"><b>${esc(x.label)}</b><span class="hint" style="flex:none">${x.total ? x.done + " of " + x.total : "none due"}</span></div>`).join("");
+  const progress = dBlock("w2 r4", `<div class="dhead"><span>Today's Task Progress</span><span class="hint">${pr.done} of ${pr.total} done</span></div><div class="dprog">${donutSvg(pr.done, pr.total)}<div class="dlist" style="flex:1">${parts}</div></div>`);
+  const al = (d.alerts || []).length ? d.alerts.map(a => `<div class="drow ${a.level === "bad" ? "od" : "td"}" data-act="nav" data-v="${esc(a.view)}"><span class="status ${a.level === "bad" ? "Overdue" : "Soon"}">${a.level === "bad" ? "Alert" : "Watch"}</span><b title="${esc(a.text)}">${esc(a.text)}</b><span class="hint">${esc(a.sub)}</span></div>`).join("")
+    : `<div class="empty" style="margin:10px"><b>All clear</b>No equipment down, no urgent problems, no temperature out of range.</div>`;
+  const alerts = dBlock("w2 r4", `<div class="dhead"><span>Operational Alerts</span><span class="hint">${(d.alerts || []).length}</span></div><div class="dlist">${al}</div>`);
+  const arrow = m => m.now === m.prev ? `<span class="hint">same</span>` : m.now > m.prev ? `<span class="dup">&#9650; ${m.now - m.prev}</span>` : `<span class="ddn">&#9660; ${m.prev - m.now}</span>`;
+  const km = (d.metrics || []).map(m => `<div class="drow kmr" data-act="nav" data-v="${esc(m.view)}"><b>${esc(m.label)}</b><span class="kmn">${m.now}</span>${arrow(m)}</div>`).join("");
+  const metrics = dBlock("w2 r4", `<div class="dhead"><span>Key Metrics</span><span class="hint">last 30 days, vs the 30 before</span></div><div class="dlist">${km}</div>`);
+  return progress + alerts + metrics;
+}
+
 function vDash() {
   const d = state.dash;
   if (!d) { loadDash(); return `<div class="empty"><b>Loading the dashboard...</b></div>`; }
@@ -49,6 +71,7 @@ function vDash() {
       ${act("problem-new", "warn", "Report a Problem")}${act("temp-enter", "temp", "Enter Temperatures")}${act("nav", "drop", "Today's Cleaning", 'data-v="cltoday"')}${act("todo-new", "list", "Create To-Do List")}${act("rep-view", "print", "Weekly Review", 'data-id="weekly-review"')}${act("nav", "list", "Shift Handoff", 'data-v="notes"')}</div></div>
     <div class="dblock wall r4"><div class="dhead"><span>Needs Attention</span><span class="hint">${d.overdue} overdue · ${d.dueToday} due today</span></div><div class="dlist">${att}</div></div>
     ${short}
+    ${dashExtras(d)}
     <div class="dblock w2 r3"><div class="dhead"><span>Shift Handoff</span><span class="hint">${d.notes.length} open note${d.notes.length === 1 ? "" : "s"}</span></div><div class="dlist">${notes}</div></div>
     ${backupTile}
     <div class="dblock w3 r3"><div class="dhead"><span>Recent Changes</span><a href="#" class="hint" data-act="hist-open-tab">Full history</a></div><div class="dlist">${recent}</div></div>

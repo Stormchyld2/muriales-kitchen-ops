@@ -236,3 +236,26 @@ func TestRoleTrainingMatrix(t *testing.T) {
 		t.Fatal("role report")
 	}
 }
+
+func TestDashboardExtras(t *testing.T) {
+	e := newEnv(t)
+	now := time.Now().Format(dayFmt)
+	e.post("/api/reg/incidents", `{"date":"`+now+`","person":"Sam","type":"Near Miss","severity":"Minor","what":"Wet floor","status":"Open"}`)
+	e.post("/api/reg/mealplan", `{"date":"`+now+`","service":"Lunch","mealName":"Pasta","servings":"10"}`)
+	_, d := e.get2("/api/dashboard")
+	pr := d["progress"].(map[string]any)
+	if len(pr["parts"].([]any)) != 3 || pr["total"].(float64) < 1 {
+		t.Fatalf("progress %v", pr)
+	}
+	if _, ok := d["alerts"].([]any); !ok {
+		t.Fatal("alerts missing")
+	}
+	got := map[string]float64{}
+	for _, m := range d["metrics"].([]any) {
+		mm := m.(map[string]any)
+		got[mm["label"].(string)] = mm["now"].(float64)
+	}
+	if len(got) != 8 || got["Incidents & near misses"] != 1 || got["Employee meals logged"] != 1 {
+		t.Fatalf("metrics %v", got)
+	}
+}
