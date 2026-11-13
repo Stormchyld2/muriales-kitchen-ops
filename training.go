@@ -17,8 +17,8 @@ import (
 func init() {
 	regDefs["employees"] = &collDef{Name: "employees", Title: "Employees", NewLabel: "Add Employee", Prefix: "EMP-", Digits: 3, Report: "training-employees",
 		Intro:    "Everyone who needs training on record. Set someone to Inactive when they leave so they drop off the matrix; their records are kept.",
-		ListCols: []string{"id", "name", "position", "department", "hireDate", "status"},
-		Fields: []fieldDef{txt("name", "Name", true), txt("position", "Position", false), txt("department", "Department", false), dat("hireDate", "Hire date", false),
+		ListCols: []string{"id", "name", "position", "stations", "hireDate", "status"},
+		Fields: []fieldDef{txt("name", "Name", true), txt("position", "Position", false), txt("department", "Department", false), dat("hireDate", "Hire date", false), txt("stations", "Stations they work (separate with commas)", false),
 			sel("status", "Status", []string{"Active", "Inactive"}, true), lng("notes", "Notes", false)}}
 	regDefs["trainingtypes"] = &collDef{Name: "trainingtypes", Title: "Training Types", NewLabel: "Add Training", Prefix: "TT-", Digits: 3, Report: "training-types", Starter: "training_types.json",
 		Intro:    "The training the kitchen tracks. Who it applies to is All, or one or more department names or words from a position, separated by commas (for example Dish, Prep or Manager). Months until it expires is blank or 0 if it never does. Your health department and state decide what is actually required, so change these to match.",
@@ -93,20 +93,42 @@ func (s *store) decorateTraining(rows []rec) {
 	}
 }
 
+// trainNorm makes position and station names comparable: accents dropped,
+// "&" as "and", plurals trimmed, and Steward treated as Dish.
+func trainNorm(v string) string {
+	v = strings.ToLower(strings.TrimSpace(v))
+	v = strings.NewReplacer("é", "e", "è", "e", "&", "and", "  ", " ").Replace(v)
+	if v == "stewards" || v == "steward" || strings.HasPrefix(v, "dish") {
+		return "dish"
+	}
+	return strings.TrimSuffix(v, "s")
+}
+
+// trainApplies says whether a role or station name covers an employee, going
+// by their position, department and the stations they work.
 func trainApplies(appliesTo string, e rec) bool {
 	a := strings.ToLower(strings.TrimSpace(appliesTo))
 	if a == "" || a == "all" || a == "all staff" || a == "everyone" {
 		return true
 	}
-	dept, pos := strings.ToLower(e["department"]), strings.ToLower(e["position"])
+	fields := []string{e["department"], e["position"]}
+	fields = append(fields, strings.Split(e["stations"], ",")...)
 	for _, w := range strings.Split(a, ",") {
-		w = strings.TrimSpace(w)
-		w2 := strings.TrimSuffix(w, "s")
-		if w == "" {
+		wn := trainNorm(w)
+		if wn == "" {
 			continue
 		}
-		if w == "all" || w == dept || w2 == strings.TrimSuffix(dept, "s") || (pos != "" && (strings.Contains(pos, w) || strings.Contains(pos, w2))) {
+		if wn == "all" {
 			return true
+		}
+		for i, f := range fields {
+			fn := trainNorm(f)
+			if fn == "" {
+				continue
+			}
+			if fn == wn || (i != 0 && strings.Contains(fn, wn)) {
+				return true
+			}
 		}
 	}
 	return false

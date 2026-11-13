@@ -160,6 +160,7 @@ func (s *store) roleMatrix() map[string]any {
 func (s *store) trainRoleRoutes(mux *http.ServeMux) {
 	s.mu.Lock()
 	s.seedOnce("trainreq-231", "trainreq", "training_req.json")
+	s.seedOnce("trainreq-233", "trainreq", "training_req_stations.json")
 	s.mu.Unlock()
 	mux.HandleFunc("GET /api/training/rolematrix", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()

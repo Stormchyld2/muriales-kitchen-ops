@@ -23,6 +23,7 @@ func (s *store) dailyBackup() {
 	dir := s.backupDir()
 	name := "Daily Backup " + time.Now().Format(dayFmt) + ".zip"
 	if exists(filepath.Join(dir, name)) {
+		s.copyBackup(name) // a copy folder set after today's zip was made
 		return
 	}
 	if _, err := s.fullBackupAs(name); err != nil {
@@ -30,6 +31,7 @@ func (s *store) dailyBackup() {
 		return
 	}
 	prune(dir, "Daily Backup ", keepDailyZips)
+	s.copyBackup(name)
 }
 
 func (s *store) dailyBackupLoop() {

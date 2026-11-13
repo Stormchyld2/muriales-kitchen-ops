@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -257,5 +258,50 @@ func TestDashboardExtras(t *testing.T) {
 	}
 	if len(got) != 8 || got["Incidents & near misses"] != 1 || got["Employee meals logged"] != 1 {
 		t.Fatalf("metrics %v", got)
+	}
+}
+
+func TestPacketSummaryAndStations(t *testing.T) {
+	e := newEnv(t)
+	now := time.Now().Format(dayFmt)
+	rep, ok := e.s.buildReport("packet:"+time.Now().AddDate(0, 0, -29).Format(dayFmt)+":"+now+":", "")
+	if !ok {
+		t.Fatal("packet not built")
+	}
+	h := rep.html(true)
+	for _, w := range []string{"Part 1: Food Safety", "Part 4: Chemical Safety", "1.1  Temperature log", "Prepared by", "Emergency response binder"} {
+		if !strings.Contains(h, w) {
+			t.Fatalf("packet missing %q", w)
+		}
+	}
+	if _, ok := e.s.buildReport("packet:2026-02-01:2026-01-01:", ""); ok {
+		t.Fatal("reversed dates accepted")
+	}
+	if r, _ := e.s.buildReport("packet:"+now+":"+now+":temps,ca", ""); !strings.Contains(r.html(true), "Part 2: Corrective Actions &amp; Safety Events") || strings.Contains(r.html(true), "Equipment list") {
+		t.Fatal("part selection ignored")
+	}
+	// summary list is validated and the copy folder gets the daily zip
+	if c, _ := e.post("/api/summary/settings", `{"recipients":"nope"}`); c != 400 {
+		t.Fatal("bad address accepted")
+	}
+	dst := filepath.Join(t.TempDir(), "OneDrive copy")
+	if c, o := e.post("/api/summary/settings", `{"recipients":"a@b.com, c@d.org","copyFolder":`+strconv.Quote(dst)+`}`); c != 200 {
+		t.Fatalf("settings: %v", o)
+	}
+	e.s.dailyBackup()
+	ents, _ := os.ReadDir(dst)
+	if len(ents) != 1 || !strings.HasPrefix(ents[0].Name(), "Daily Backup ") {
+		t.Fatalf("copy folder: %v", ents)
+	}
+	if sum := e.s.dailySummaryReport().text(); !strings.Contains(sum, "Overdue:") {
+		t.Fatal("summary text")
+	}
+	// stations: a Saute cook is covered by "Sauté" and Stewards by Dish
+	cook := rec{"position": "Cook", "stations": "Sauce Jack, Sauté"}
+	if !trainApplies("Saute", cook) || !trainApplies("sauce jack", cook) || trainApplies("Fryer", cook) {
+		t.Fatal("station matching")
+	}
+	if !trainApplies("Dish", rec{"position": "Steward"}) || !trainApplies("Bread & Dessert", rec{"stations": "Bread and Desserts"}) {
+		t.Fatal("dish/bread alias")
 	}
 }

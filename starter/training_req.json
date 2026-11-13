@@ -320,19 +320,5 @@
   "reviewed": "",
   "notes": "",
   "created": "2026-11-13 00:00"
- },
- {
-  "id": "REQ-0024",
-  "role": "All Staff",
-  "typeId": "TT-103",
-  "required": "Yes",
-  "initial": "",
-  "refresh": "",
-  "trainer": "",
-  "signoff": "Yes",
-  "sop": "",
-  "reviewed": "",
-  "notes": "",
-  "created": "2026-11-13 00:00"
  }
 ]

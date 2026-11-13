@@ -27,6 +27,7 @@ type reportSection struct {
 	Rows    [][]string
 	Text    string // plain text for the email version when HTML is set
 	HTML    string // ready-made, already-escaped markup shown instead of a table
+	Group   bool   // a part banner in a packet: starts a new page
 }
 
 type report struct {
@@ -69,6 +70,7 @@ var reportCatalog = []reportDef{
 	{"training-employees", "Employee Training", "Employee List", "Everyone on record with position, department and status.", false},
 	{"training-types", "Employee Training", "Training Types", "The trainings tracked, who each applies to and how long it lasts.", false},
 	{"inspection-ready", "Food Safety", "Inspection-Ready Checklist", "A live check of the records (temperatures, cleaning, maintenance, corrective actions, SDS) plus the walk-through points and a sign-off line.", false},
+	{"daily-summary", "Summary", "Daily Summary", "A short text summary of today: what is overdue or due, the gauges, alerts and open problems. Made to be texted or emailed.", false},
 	{"weekly-summary", "Summary", "Weekly Summary", "The last 7 days at a glance: temperatures, cleaning, maintenance, corrective actions and what is still open.", false},
 	{"weekly-review", "Summary", "Weekly Review", "The one report for the weekly meeting: inspection-ready checks, the week at a glance, and the shift handoff notes. Email it to the managers.", false},
 	{"readiness-blank", "Food Safety", "Blank Inspection Readiness Checklist", "The 30-point self-inspection to print and carry on a walk-through.", false},
@@ -96,6 +98,12 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "handoff" {
 		return s.handoffReport(), true
+	}
+	if id == "daily-summary" {
+		return s.dailySummaryReport(), true
+	}
+	if strings.HasPrefix(id, "packet:") {
+		return s.packetReport(id)
 	}
 	if id == "meals-costs" {
 		return s.mealsReport(), true
@@ -398,14 +406,16 @@ func (r *report) html(plain bool) string {
 body{font:13px/1.4 Segoe UI,Arial,sans-serif;color:#111;margin:28px}h1{margin:0;font-size:22px}.sub{color:#555;margin-bottom:6px}.org{color:#7a1f2b;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
 h2{font-size:15px;margin:20px 0 4px;border-bottom:1px solid #999;padding-bottom:2px}table{border-collapse:collapse;width:100%;margin:6px 0}th{background:#eee;text-align:left}th,td{border:1px solid #bbb;padding:4px 7px;vertical-align:top}
 .md h3{font-size:14px;margin:14px 0 3px}.md h4{font-size:13px;margin:10px 0 2px}.md ul,.md ol{margin:3px 0 6px;padding-left:22px}.md p{margin:4px 0}.md code{background:#eee;padding:0 3px}.md blockquote{margin:6px 0;padding-left:10px;border-left:3px solid #bbb;color:#444}.box{font-size:15px}
-.note{color:#444;margin:4px 0}.empty{color:#666;font-style:italic;padding:8px 0}.btn{margin:10px 0;padding:6px 14px}@media print{.noprint{display:none}body{margin:12mm}tr{page-break-inside:avoid}thead{display:table-header-group}}
+h2.grp{font-size:19px;background:#7a1f2b;color:#fff;padding:8px 12px;border:0;margin:26px 0 8px;page-break-before:always}.toc td{border:0;padding:1px 8px}.sig td{height:30px}.note{color:#444;margin:4px 0}.empty{color:#666;font-style:italic;padding:8px 0}.btn{margin:10px 0;padding:6px 14px}@media print{.noprint{display:none}body{margin:12mm}tr{page-break-inside:avoid}thead{display:table-header-group}}
 </style></head><body>`)
 	if !plain {
 		b.WriteString(`<div class="noprint"><button class="btn" onclick="window.print()">Print</button></div>`)
 	}
 	b.WriteString(`<div class="org">Muriale's Italian Kitchen</div><h1>` + e(r.Title) + `</h1><div class="sub">` + e(r.Subtitle) + `</div>`)
 	for _, sec := range r.Sections {
-		if sec.Heading != "" {
+		if sec.Group {
+			b.WriteString(`<h2 class="grp">` + e(sec.Heading) + "</h2>")
+		} else if sec.Heading != "" {
 			b.WriteString("<h2>" + e(sec.Heading) + "</h2>")
 		}
 		if sec.Note != "" {

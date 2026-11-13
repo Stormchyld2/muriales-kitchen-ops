@@ -68,7 +68,7 @@ function vDash() {
   return `<div class="row noprint" style="justify-content:space-between"><span class="hint">${esc(new Date().toLocaleDateString([], {weekday: "long", month: "long", day: "numeric"}))} · updated ${esc((state.dashAt || new Date()).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}))}</span><button class="btn small" data-act="dash-refresh">${icon("swap")}Refresh</button></div>
   <div class="dgrid">${gauges2}${tilesOnly}
     <div class="dblock w2 r2"><div class="dhead"><span>Quick Actions</span></div><div class="dqa">
-      ${act("problem-new", "warn", "Report a Problem")}${act("temp-enter", "temp", "Enter Temperatures")}${act("nav", "drop", "Today's Cleaning", 'data-v="cltoday"')}${act("todo-new", "list", "Create To-Do List")}${act("rep-view", "print", "Weekly Review", 'data-id="weekly-review"')}${act("nav", "list", "Shift Handoff", 'data-v="notes"')}</div></div>
+      ${act("problem-new", "warn", "Report a Problem")}${act("temp-enter", "temp", "Enter Temperatures")}${act("nav", "drop", "Today's Cleaning", 'data-v="cltoday"')}${act("todo-new", "list", "Create To-Do List")}${act("dsum-email", "ext", "Email Daily Summary")}${act("nav", "list", "Shift Handoff", 'data-v="notes"')}</div></div>
     <div class="dblock wall r4"><div class="dhead"><span>Needs Attention</span><span class="hint">${d.overdue} overdue · ${d.dueToday} due today</span></div><div class="dlist">${att}</div></div>
     ${short}
     ${dashExtras(d)}

@@ -24,7 +24,7 @@
   "name": "Station Competency Sign-Off",
   "category": "Other",
   "about": "Shown to work a station on their own: setup, service, closing and the station checklists.",
-  "appliesTo": "All",
+  "appliesTo": "By station",
   "renewMonths": "",
   "active": "Yes",
   "created": "2026-11-13 00:00"
