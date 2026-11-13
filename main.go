@@ -1397,6 +1397,9 @@ func (s *store) routes(mux *http.ServeMux) {
 		if r.URL.Query().Get("which") == "backups" {
 			_ = os.MkdirAll(s.backupDir(), 0o755)
 			openFolder(s.backupDir())
+		} else if r.URL.Query().Get("which") == "reports" {
+			_ = os.MkdirAll(s.reportsDir(), 0o755)
+			openFolder(s.reportsDir())
 		} else {
 			openFolder(s.dir)
 		}
@@ -1538,7 +1541,11 @@ func main() {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	sub, _ := fs.Sub(uiFiles, "ui")
-	mux.Handle("GET /", http.FileServer(http.FS(sub)))
+	fs := http.FileServer(http.FS(sub))
+	mux.Handle("GET /", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		fs.ServeHTTP(w, r)
+	}))
 
 	go func() {
 		if err := http.Serve(ln, guard(port, s.gate(mux))); err != nil {

@@ -499,7 +499,7 @@ func (s *store) reportRoutes(mux *http.ServeMux) {
 			fail(w, 500, "The reports folder could not be made: "+err.Error())
 			return
 		}
-		base := strings.TrimSpace(safeName.ReplaceAllString(rep.Title+" "+time.Now().Format("2006-01-02 1504"), ""))
+		base := strings.TrimSpace(safeName.ReplaceAllString(rep.Title+" "+time.Now().Format("2006-01-02"), ""))
 		file := filepath.Join(dir, base+".html")
 		if err := os.WriteFile(file, []byte(rep.html(true)), 0o644); err != nil {
 			fail(w, 500, "The report could not be saved: "+err.Error())
@@ -510,6 +510,7 @@ func (s *store) reportRoutes(mux *http.ServeMux) {
 		if pdf := file[:len(file)-5] + ".pdf"; true {
 			if perr := htmlToPDF(file, pdf); perr == nil {
 				attach = pdf
+				_ = os.Remove(file)
 			} else {
 				pdfNote = perr.Error()
 				s.logf("PDF could not be made: %v", perr)
