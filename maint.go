@@ -314,6 +314,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.trainingRoutes(mux)
 	s.guideRoutes(mux)
 	s.safetyRoutes(mux)
+	s.mealRoutes(mux)
 	s.historyRoutes(mux)
 	s.dashboardRoutes(mux)
 	s.replRoutes(mux)

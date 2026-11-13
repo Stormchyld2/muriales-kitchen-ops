@@ -35,7 +35,9 @@ The Stations group holds the written guide for each station (search, open, Edit,
 
 ## Employee meals
 
-Meal recipes (one ingredient per line: amount | item | cost) give a cost per serving. The meal plan records what was served each day and its cost; Print gives a 30-day cost report. Prices are typed in by hand. Inventory, purchasing and menu costing stay in R365.
+Five tabs: Dashboard (current rotation week, today's meals, the week's breakfast/lunch and dinner, next week, cost per person against target), 4-Week Rotation (any week, a recipe-vs-slot coverage check, settings), Recipes, Meal Log and Appendix.
+
+The rotation week comes from a start date (a Monday that begins Week 1) and repeats every four weeks. Head counts, minutes per meal and cost targets are set on the 4-Week Rotation tab. Each recipe is filed under a week, day and meal. Ingredients go one per line as: amount | item | cost (cost optional). Costs are typed by hand, so cost gauges stay blank until prices are entered. Appendix recipes (gravies, sauces, sides) link from any recipe that mentions them. Inventory, purchasing and menu costing stay in R365.
 
 ## Files
 

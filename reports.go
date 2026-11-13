@@ -100,6 +100,11 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "meals-costs" {
 		return s.mealsReport(), true
 	}
+	if strings.HasPrefix(id, "meal") {
+		if rep, ok := s.mealReports(id); ok {
+			return rep, true
+		}
+	}
 	if strings.HasPrefix(id, "reg:") || strings.HasPrefix(id, "rec:") || strings.HasPrefix(id, "lototag:") || id == "binder-all" {
 		return s.safetyReport(id)
 	}

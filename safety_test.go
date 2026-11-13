@@ -110,11 +110,20 @@ func TestEmployeeMealsAndAttention(t *testing.T) {
 	if c, _ := e.post("/api/reg/mealrecipes", `{"name":"Pasta & Sausage","serves":"10","ingredients":"2 lb | sausage | 9.50\n3 lb | rigatoni | 5.50","active":"Yes"}`); c != 200 {
 		t.Fatal("recipe refused")
 	}
+	var id string
 	_, o := e.get2("/api/reg/mealrecipes")
-	if r := o["rows"].([]any)[0].(map[string]any); r["cost"] != "$15.00" || r["perServing"] != "$1.50" {
-		t.Fatalf("costing wrong: %v", r)
+	for _, x := range o["rows"].([]any) {
+		if r := x.(map[string]any); r["name"] == "Pasta & Sausage" {
+			id = r["id"].(string)
+			if r["cost"] != "$15.00" || r["perServing"] != "$1.50" {
+				t.Fatalf("costing wrong: %v", r)
+			}
+		}
 	}
-	e.post("/api/reg/mealplan", `{"date":"`+time.Now().Format(dayFmt)+`","service":"Lunch","recipeId":"EMR-001","mealName":"Pasta & Sausage","servings":"8"}`)
+	if id == "" {
+		t.Fatal("new recipe missing")
+	}
+	e.post("/api/reg/mealplan", `{"date":"`+time.Now().Format(dayFmt)+`","service":"Lunch","recipeId":"`+id+`","mealName":"Pasta & Sausage","servings":"8"}`)
 	_, o = e.get2("/api/reg/mealplan")
 	if r := o["rows"].([]any)[0].(map[string]any); r["cost"] != "$12.00" {
 		t.Fatalf("plan cost wrong: %v", r)
@@ -130,5 +139,45 @@ func TestEmployeeMealsAndAttention(t *testing.T) {
 	}
 	if !strings.Contains(titles, "Lockout still on: Slicer") || !strings.Contains(titles, "binder review") {
 		t.Fatalf("attention items: %s", titles)
+	}
+}
+
+func TestMealRotation(t *testing.T) {
+	e := newEnv(t)
+	// anchor week 1, so the rotation repeats every four weeks
+	mon, _ := time.Parse(dayFmt, "2026-08-31")
+	for i, want := range []int{1, 2, 3, 4, 1, 2} {
+		if got := rotationWeek("2026-08-31", mon.AddDate(0, 0, 7*i)); got != want {
+			t.Fatalf("week %d: got %d want %d", i, got, want)
+		}
+	}
+	if got := rotationWeek("2026-08-31", mon.AddDate(0, 0, -7)); got != 4 {
+		t.Fatalf("before anchor: %d", got)
+	}
+	_, cov := e.get2("/api/meals/coverage")
+	ws := cov["weeks"].([]any)
+	have := []int{}
+	for _, w := range ws {
+		have = append(have, 14-len(w.(map[string]any)["missing"].([]any)))
+	}
+	if have[0] != 14 || have[1] != 0 || have[2] != 14 || have[3] != 14 {
+		t.Fatalf("coverage %v", have)
+	}
+	_, d := e.get2("/api/meals/dash")
+	if d["have"].(float64) != 42 || len(d["days"].([]any)) != 7 {
+		t.Fatalf("dash %v", d["have"])
+	}
+	_, app := e.get2("/api/reg/mealappendix")
+	if len(app["rows"].([]any)) != 12 {
+		t.Fatalf("appendix rows %d", len(app["rows"].([]any)))
+	}
+	if c, o := e.post("/api/meals/settings", `{"anchor":"nope","weekdayPeople":30,"weekendPeople":40,"minutes":30}`); c != 400 {
+		t.Fatalf("bad anchor accepted %v", o)
+	}
+	if rep, ok := e.s.buildReport("mealweek:3", ""); !ok || !strings.Contains(rep.html(true), "Week 3") {
+		t.Fatal("week report")
+	}
+	if rep, ok := e.s.buildReport("meal:EMR-001", ""); !ok || !strings.Contains(rep.html(true), "Ingredients") {
+		t.Fatal("recipe report")
 	}
 }
