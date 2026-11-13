@@ -26,7 +26,6 @@ import (
 const (
 	keepDailyCopies = 30
 	keepBigChange   = 10
-	keepWeeklyZips  = 6
 )
 
 func (s *store) autoDir() string { return filepath.Join(s.backupDir(), "Automatic") }
@@ -76,26 +75,4 @@ func (s *store) safetyCopy(next []byte) {
 			prune(dir, "library-before-big-change-", keepBigChange)
 		}
 	}
-}
-
-// weeklyZip makes a full automatic backup if there has not been one for a week.
-func (s *store) weeklyZip() {
-	dir := s.backupDir()
-	entries, _ := os.ReadDir(dir)
-	for _, e := range entries {
-		if strings.HasPrefix(e.Name(), "Automatic Backup ") {
-			if info, err := e.Info(); err == nil && time.Since(info.ModTime()) < 7*24*time.Hour {
-				return
-			}
-		}
-	}
-	if !exists(s.file()) || os.MkdirAll(dir, 0o755) != nil {
-		return
-	}
-	name := filepath.Join(dir, "Automatic Backup "+time.Now().Format("2006-01-02")+".zip")
-	if zipDir(s.dir, name) != nil {
-		_ = os.Remove(name)
-		return
-	}
-	prune(dir, "Automatic Backup ", keepWeeklyZips)
 }

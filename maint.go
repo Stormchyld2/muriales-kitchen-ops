@@ -312,6 +312,8 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.cleanRoutes(mux)
 	s.cleanSyncRoutes(mux)
 	s.trainingRoutes(mux)
+	s.historyRoutes(mux)
+	s.dashboardRoutes(mux)
 	s.replRoutes(mux)
 	mux.HandleFunc("GET /api/maint", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()

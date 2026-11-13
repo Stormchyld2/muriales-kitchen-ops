@@ -52,7 +52,25 @@ func (r *Readiness) open() int {
 
 var readyStatuses = []string{"Ready", "Needs Attention", "Corrected", "N/A"}
 var readyTypes = []string{"Internal Self-Inspection", "Pre-Health Inspection", "Follow-Up Recheck", "Other"}
-var readyOwners = []string{"Kitchen Operations Manager", "Sous Chef", "Cook", "Prep", "Dish / Stewarding", "Brian", "Management", "Other"}
+var readyRoles = []string{"Kitchen Operations Manager", "Sous Chef", "Cook", "Prep", "Dish / Stewarding", "Management"}
+
+// readyOwners are the roles plus the first name of everyone on the employee
+// list, so a new hire can be named as the owner without touching the program.
+func (s *store) readyOwners() []string {
+	out := append([]string{}, readyRoles...)
+	seen := map[string]bool{}
+	for _, e := range s.regSorted(regDefs["employees"]) {
+		if e["status"] == "Inactive" {
+			continue
+		}
+		n := strings.Fields(e["name"])
+		if len(n) > 0 && !seen[strings.ToLower(n[0])] {
+			seen[strings.ToLower(n[0])] = true
+			out = append(out, n[0])
+		}
+	}
+	return append(out, "Other")
+}
 
 var readyPoints = [][2]string{
 	{"Employee Hygiene", "Hair/beard restraints, clean uniforms, proper handwashing, no bare-hand contact where prohibited"},
@@ -148,7 +166,7 @@ func (s *store) readinessRoutes(mux *http.ServeMux) {
 		for _, r := range list {
 			rows = append(rows, row{r, r.open()})
 		}
-		return map[string]any{"reviews": rows, "points": pts, "statuses": readyStatuses, "types": readyTypes, "owners": readyOwners, "priorities": caPriorities}
+		return map[string]any{"reviews": rows, "points": pts, "statuses": readyStatuses, "types": readyTypes, "owners": s.readyOwners(), "priorities": caPriorities}
 	}
 	mux.HandleFunc("GET /api/readiness", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()

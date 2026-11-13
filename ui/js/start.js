@@ -51,7 +51,7 @@ document.addEventListener("change", e => {
   else if (t.id === "pprange") { const some = $('input[name="pp"][value="some"]'); if (some) some.checked = true; }
   else if (t.dataset.o) { printOpt[t.dataset.o] = t.checked; drawPrintDialog(); }
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#modal").className) closeModal(); if (e.key === "Enter" && e.target.id === "newcat") ACT["cat-add"](); if (e.key === "Enter" && e.target.id === "rename") ACT["cat-rename-go"](); if (e.key === "Enter" && e.target.id === "newarea") ACT["area-add"](); if (e.key === "Enter" && e.target.id === "renamearea") ACT["area-rename-go"](); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#modal").className) closeModal(); if (e.key === "Enter" && e.target.id === "hq") ACT["hist-search"](); if (e.key === "Enter" && e.target.id === "newcat") ACT["cat-add"](); if (e.key === "Enter" && e.target.id === "rename") ACT["cat-rename-go"](); if (e.key === "Enter" && e.target.id === "newarea") ACT["area-add"](); if (e.key === "Enter" && e.target.id === "renamearea") ACT["area-rename-go"](); });
 for (const ev of ["dragover", "dragleave", "drop"]) document.addEventListener(ev, e => {
   if (state.view !== "add") { if (ev !== "dragleave") e.preventDefault(); return; }
   e.preventDefault(); const d = $("#drop"); if (d) d.classList.toggle("over", ev === "dragover");
@@ -64,3 +64,5 @@ setInterval(() => fetch("/api/ping").then(r => { if (!r.ok) throw 0; misses = 0;
 fetch("/api/ping");
 addEventListener("pagehide", () => { try { fetch("/api/closing", { keepalive: true }); } catch (e) {} });
 reload().then(() => { loadMaint().then(render).catch(() => {}); render(); refreshLock().catch(() => {}); backfillPages(); }).catch(e => toast(e.message, true));
+loadNames();
+setInterval(() => { if (state.view === "dash" && !$("#modal").className && !$("#preview").className) loadDash(); }, 60000);

@@ -66,6 +66,7 @@ var reportCatalog = []reportDef{
 	{"training-types", "Employee Training", "Training Types", "The trainings tracked, who each applies to and how long it lasts.", false},
 	{"inspection-ready", "Food Safety", "Inspection-Ready Checklist", "A live check of the records (temperatures, cleaning, maintenance, corrective actions, SDS) plus the walk-through points and a sign-off line.", false},
 	{"weekly-summary", "Summary", "Weekly Summary", "The last 7 days at a glance: temperatures, cleaning, maintenance, corrective actions and what is still open.", false},
+	{"weekly-review", "Summary", "Weekly Review", "The one report for the weekly meeting: inspection-ready checks, the week at a glance, and the shift handoff notes. Email it to the managers.", false},
 	{"readiness-blank", "Food Safety", "Blank Inspection Readiness Checklist", "The 30-point self-inspection to print and carry on a walk-through.", false},
 	{"readiness-log", "Food Safety", "Inspection Readiness History", "Every readiness review with the result and open actions.", false},
 	{"replace-log", "Maintenance", "Equipment Replacement History", "Every replacement request with the decision and cost.", false},
@@ -100,6 +101,9 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 	}
 	if id == "weekly-summary" {
 		return s.weeklySummaryReport(), true
+	}
+	if id == "weekly-review" {
+		return s.weeklyReviewReport(), true
 	}
 	if strings.HasPrefix(id, "inspection:") {
 		return s.inspectionReport(strings.TrimPrefix(id, "inspection:"))

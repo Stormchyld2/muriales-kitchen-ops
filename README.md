@@ -2,6 +2,12 @@
 
 A Windows program for Muriale's Italian Kitchen. Like the SDS Manager it was built from, it is a single program with no installer and no outside server: it keeps plain files next to the program: an **SDS Data** folder (exactly the folder the SDS Manager uses, so PDFs can be dropped into it) and a separate **Maintenance Data** folder. The SDS Data location can be changed in Settings, for example to a shared 365 or network drive; Maintenance Data always sits beside it.
 
+## Opening screen and layout
+
+The program opens on the **Dashboard**: half-circle gauges (Inspection Ready, Temperatures Today, Cleaning Today, Maintenance On Time, Training Current), number tiles (Overdue, Open Issues, Corrective Actions, Out of Service, Last Backup), what needs attention today, quick actions, open shift-handoff notes and the latest changes. Every block opens the screen where it is fixed. **Report a Problem** (side bar and dashboard) asks what kind of problem it is and sends it to the right record: a Maintenance Issue for equipment, a Corrective Action for food safety, sanitation, people or process (including training gaps), the Chemical Incident Log, or the To-Do List. **Inspections** groups Readiness Reviews, Manager Inspections and the Manager Inspection Log. **Shift Handoff** is its own screen. **Chemical Safety** lives under **SDS & Chemical Safety**; **Training & Emergency** is the home of training and, later, the emergency binder. The **Weekly Review** report combines the inspection-ready checks, the weekly summary and the open handoff notes.
+
+Names are typed as a first name or initials. They are tidied as they are saved (brian, BRIAN and Brian all become Brian) and the name box suggests the people on the Employees list without limiting what can be typed.
+
 ## Modules
 
 - **Equipment** – the list of walk-ins, fryers, mixers and so on, with area, make, model, serial number and status (Operational, Needs Attention, Out of Service).
@@ -24,10 +30,11 @@ SDS Data/                      the SDS library, same as the SDS Manager
 Maintenance Data/
   equipment.json  issues.json  pm.json (all recurring jobs)  service.json  todos.json  settings.json   (each with a .bak copy)
   Maintenance Log.md           readable copy, rewritten by the program
-Kitchen Backups/               SDS zips, plus a Maintenance zip with each backup
+  Edit History.jsonl           who changed, added, deleted or marked done what and when (see Settings, Edit History)
+Kitchen Backups/               one "Daily Backup <date>.zip" of both folders every day (the last 14 are kept), plus the ones made by hand
 ```
 
-Settings, Backup & Restore has **Backup Both Folders**: one zip holding the SDS library and all the kitchen operations files. Restore it, or a Maintenance zip, from the same list (what is replaced is saved to Kitchen Backups first). The "someone is editing" lock covers both modules.
+Settings, Backup & Restore has **Backup Both Folders**: one zip holding the SDS library and all the kitchen operations files. Restore it, or a Maintenance zip, from the same list (what is replaced is saved to Kitchen Backups first). A backup of both folders is also made automatically once a day while the program is open. The "someone is editing" lock covers both modules. **Edit History** (Settings) lists every change with the name typed on the form; edits to lists show what changed, and a deleted record keeps a copy of everything it held.
 
 ## Building
 

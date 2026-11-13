@@ -17,7 +17,7 @@ import (
 
 func backupKind(name string) string {
 	switch {
-	case strings.HasPrefix(name, "Full Backup"):
+	case strings.HasPrefix(name, "Full Backup"), strings.HasPrefix(name, "Daily Backup"):
 		return "full"
 	case strings.HasPrefix(name, "Maintenance Backup"):
 		return "maint"
@@ -49,11 +49,15 @@ func zipTree(zw *zip.Writer, src, prefix string) error {
 }
 
 func (s *store) fullBackup() (string, error) {
+	return s.fullBackupAs("Full Backup " + time.Now().Format("2006-01-02 150405") + ".zip")
+}
+
+func (s *store) fullBackupAs(file string) (string, error) {
 	dir := s.backupDir()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", errors.New("the backup folder could not be created")
 	}
-	name := filepath.Join(dir, "Full Backup "+time.Now().Format("2006-01-02 150405")+".zip")
+	name := filepath.Join(dir, file)
 	out, err := os.Create(name)
 	if err != nil {
 		return "", err

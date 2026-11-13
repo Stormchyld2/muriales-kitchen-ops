@@ -134,9 +134,7 @@ func main() {
 	s.mu.Lock()
 	s.purgeOld()
 	s.mu.Unlock()
-	if !s.isReadOnly() {
-		go s.weeklyZip()
-	}
+	go s.dailyBackupLoop()
 	go func() {
 		for range time.Tick(6 * time.Hour) {
 			s.mu.Lock()
@@ -174,7 +172,7 @@ func main() {
 	}))
 
 	go func() {
-		if err := http.Serve(ln, guard(port, s.gate(mux))); err != nil {
+		if err := http.Serve(ln, guard(port, s.gate(s.history(mux)))); err != nil {
 			log.Printf("server stopped: %v", err)
 		}
 	}()

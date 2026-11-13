@@ -2,6 +2,15 @@
 
 /* About */
 
+// Newest first. Plain words: this is what a manager sees under "What's new".
+const WHATS_NEW = [
+  ["2.27.0", "Dashboard home screen with gauges; Report a Problem button; Inspections grouped in one place; Shift Handoff on its own; Chemical Safety back under SDS; Training and Emergency grouped; a backup every day; Edit History in Settings; a Weekly Review report; names tidied up as they are saved."],
+  ["2.26.0", "Employee Training: employees, training types, records, and a matrix showing who is current, due soon, expired or missing."],
+  ["2.25.0", "Six departments (Front Line, Back Line, Prep, Salads, Dish, General) with their own keywords; report emails put the text right in the message."],
+  ["2.24.0", "Inspection-Ready Checklist and Weekly Summary; Edit buttons on service records, PM inspections and issues; Backup Both Folders and restore."],
+  ["2.23.0 and earlier", "Maintenance, cleaning and sanitation, temperature log, chemical safety, corrective actions, calendar and to-do list, SDS Manager."],
+];
+
 function vAbout() {
   return `
   <div class="panel" style="max-width:760px">
@@ -11,5 +20,8 @@ function vAbout() {
     <p class="hint">Several people can use the same library folder. Only one can make changes at a time; everyone else can search, view and print.</p>
     <p><b>Emergency:</b> 911 &nbsp;·&nbsp; <b>Poison Control:</b> 1-800-222-1222</p>
     <p class="hint">The emergency summaries are typed in by a manager as a quick reference. The manufacturer's sheet is always the authority.</p>
+  </div>
+  <div class="panel" style="max-width:760px;margin-top:12px"><h3 style="margin-top:0">What's new</h3>
+    ${WHATS_NEW.map(([v, t]) => `<p style="margin:0 0 8px"><b>${esc(v)}</b><br><span class="hint" style="font-size:13.5px">${esc(t)}</span></p>`).join("")}
   </div>`;
 }

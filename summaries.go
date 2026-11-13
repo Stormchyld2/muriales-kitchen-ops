@@ -358,3 +358,25 @@ func when12ish(at string) string {
 	}
 	return at
 }
+
+// weeklyReviewReport is the Monday report: where the kitchen stands against
+// the inspection checks, the week just finished, and the notes still open.
+func (s *store) weeklyReviewReport() *report {
+	now := time.Now()
+	rep := &report{Title: "Weekly Review", Subtitle: now.Format("Monday, January 2, 2006")}
+	ready := s.inspectionReadyReport()
+	if len(ready.Sections) > 0 {
+		sec := ready.Sections[0]
+		sec.Heading = "Inspection readiness: what the records show right now"
+		rep.Sections = append(rep.Sections, sec)
+	}
+	for _, sec := range s.weeklySummaryReport().Sections {
+		rep.Sections = append(rep.Sections, sec)
+	}
+	for _, sec := range s.handoffReport().Sections {
+		rep.Sections = append(rep.Sections, sec)
+	}
+	rep.Sections = append(rep.Sections, reportSection{Heading: "Reviewed by",
+		Note: "Manager: ______________________    Date: ______________"})
+	return rep
+}

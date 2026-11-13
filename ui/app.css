@@ -152,3 +152,21 @@ td:has(>.acts){white-space:nowrap;width:1%;padding-left:6px}td>.acts{flex-wrap:n
 @media (max-width:1100px){td>.acts{gap:4px}td>.acts .btn.small{padding:4px 8px;font-size:12.5px;min-height:30px}}
 /* no visible scroll bars: scroll with the wheel or a finger */
 *{scrollbar-width:none;-ms-overflow-style:none}*::-webkit-scrollbar{width:0;height:0;display:none}
+
+/* dashboard: fixed-size blocks, five across; wheel scrolling only */
+.dgrid{display:grid;grid-template-columns:repeat(5,196px);grid-auto-rows:176px;gap:12px;grid-auto-flow:dense;align-content:start;width:max-content;max-width:100%}
+.dblock{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.dblock[data-act]{cursor:pointer}.dblock[data-act]:hover{border-color:var(--gold)}
+.dblock.g{align-items:center;text-align:center}.dlabel{font-weight:700;font-size:12.5px;color:var(--mute);letter-spacing:.4px;text-transform:uppercase}
+.gsvg{width:172px;height:96px;margin-top:6px;flex:none}.gnum{font:700 28px "Segoe UI",Tahoma,sans-serif}
+.dsub{color:var(--mute);font-size:12.5px;margin-top:auto;line-height:1.25}
+.dblock.t{border-left:6px solid #7d828b}.dblock.t.good{border-left-color:#58b368}.dblock.t.warn{border-left-color:#e7b416}.dblock.t.bad{border-left-color:#e0525e}
+.dval{font:700 40px "Segoe UI",Tahoma,sans-serif;margin:auto 0}
+.dblock.w3{grid-column:span 3;grid-row:span 2}.dblock.w2{grid-column:span 2;grid-row:span 2}
+.dhead{font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex:none}
+.dlist{flex:1;min-height:0;overflow:auto}
+.drow{display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid #444850;cursor:pointer;font-size:13.5px}.drow:hover{background:#3d4047}
+.drow b{flex:none;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.drow .hint{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dqa{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dqa .btn{justify-content:flex-start;white-space:normal;text-align:left}
+.catrow.prob{background:var(--panel2);border:1px solid var(--line);color:var(--text);margin:8px 0;padding:10px 14px;border-radius:6px}.catrow.prob:hover{border-color:var(--gold)}
+.dialog .catrow.prob{background:#fff;color:#1b1b1b;border-color:#c9c2b0}.dialog .catrow.prob .hint{color:#555}
