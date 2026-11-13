@@ -1264,7 +1264,7 @@ function vTemps() {
   const isBad = r => r.status === "Too Warm" || r.status === "Too Cold";
   return `<div class="row"><button class="btn green big" data-act="temp-enter">${icon("plus")}Enter Temperatures</button>${d.url ? `<button class="btn" data-act="temp-sync">${icon("down")}Sync Google Form</button>` : ""}
     <button class="btn" data-act="tr-save">${icon("print")}Save Daily Report</button><input type="date" class="field" id="trdate" value="${esc(state.trdate || ymd(new Date()))}" style="width:150px" title="Day for the daily report">
-    <select class="field" id="tdays" style="width:170px">${[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"]].map(([n, l]) => `<option value="${n}" ${n === state.tdays ? "selected" : ""}>${l}</option>`).join("")}</select>
+    <select class="field" id="tdays" style="width:170px">${[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"], [90, "Last 90 days"], [365, "Last year"], [36500, "All readings"]].map(([n, l]) => `<option value="${n}" ${n === state.tdays ? "selected" : ""}>${l}</option>`).join("")}</select>
     <label style="font-weight:400"><input type="checkbox" data-act="temp-bad" ${bad ? "checked" : ""}> Out of range only</label>
     ${d.needAction ? `<span class="hint"><b>${d.needAction} reading${d.needAction === 1 ? "" : "s"} need a corrective action</b></span>` : ""}${d.syncedAt ? `<span class="hint">Form synced ${esc(d.syncedAt)}</span>` : ""}</div>
   ${!d.points.length ? `<p class="note warn">Add the places you check (coolers, freezers, hot wells) under Temperature Points, or import your Google Form responses in Settings, Temperature Form.</p>` : ""}
@@ -2097,12 +2097,12 @@ const ACT = {
     if (!readings.length) return toast("Enter at least one temperature.", true); if (!by) return toast("Enter your name or initials.", true); rememberWho(by);
     state.temps = await api("/api/temps", {method: "POST", body: JSON.stringify({by, readings})}); closeModal(); render(); toast(`${readings.length} reading${readings.length === 1 ? "" : "s"} saved.`); },
   "temp-file"() { $("#tempcsv").click(); },
-  async "temp-sync"() { try { const o = await api("/api/temps/sync", {method: "POST"}); state.temps = o.data; render(); toast(syncMsg(o)); } catch (e) { toast(e.message, true); } },
+  async "temp-sync"() { try { const o = await api("/api/temps/sync", {method: "POST"}); state.temps = o.data; await loadTemps(Math.max(state.tdays || 7, 365)); render(); toast(syncMsg(o) + " Showing the last year in the Temperature Log."); } catch (e) { toast(e.message, true); } },
   async "temp-cols"() { try { tempMapDialog(await api("/api/temps/sheet-preview", {method: "POST"}), {sheet: true}); } catch (e) { toast(e.message, true); } },
   async "tsurl-save"() { state.temps = await api("/api/temps/settings", {method: "POST", body: JSON.stringify({url: $("#tsurl").value})}); render(); toast("Saved."); },
   async "tm-go"() { const m = readTMap(), src = state.tmpSrc;
-    try { if (src.sheet) { state.temps = await api("/api/temps/settings", {method: "POST", body: JSON.stringify({map: m})}); const o = await api("/api/temps/sync", {method: "POST"}); state.temps = o.data; closeModal(); render(); toast(syncMsg(o)); }
-      else { const o = await api("/api/temps/import", {method: "POST", body: JSON.stringify({csv: src.csv, map: m, save: true})}); state.temps = o.data; closeModal(); render(); toast(syncMsg(o)); } } catch (e) { toast(e.message, true); } },
+    try { if (src.sheet) { state.temps = await api("/api/temps/settings", {method: "POST", body: JSON.stringify({map: m})}); const o = await api("/api/temps/sync", {method: "POST"}); state.temps = o.data; closeModal(); await loadTemps(Math.max(state.tdays || 7, 365)); render(); toast(syncMsg(o) + " Showing the last year in the Temperature Log."); }
+      else { const o = await api("/api/temps/import", {method: "POST", body: JSON.stringify({csv: src.csv, map: m, save: true})}); state.temps = o.data; closeModal(); await loadTemps(Math.max(state.tdays || 7, 365)); render(); toast(syncMsg(o) + " Showing the last year in the Temperature Log."); } } catch (e) { toast(e.message, true); } },
   async "tr-save"() { const date = $("#trdate").value; if (!date) return toast("Choose a day for the report.", true); state.trdate = date;
     try { const o = await api("/api/temp-reports", {method: "POST", body: JSON.stringify({date})}); await loadTemps();
       showModal(`<h2>${icon("print")}Daily Temperature Report Saved</h2><div class="body"><p>The report for <b>${esc(dayLong(date))}</b> is saved. Save it again later in the day to include newer readings.</p><p class="hint">Saved in the Temperature Reports folder beside the program.</p></div>
