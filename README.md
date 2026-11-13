@@ -61,6 +61,9 @@ Push to `main`; GitHub Actions builds `MurialesKitchenOps.exe` for Windows and r
 
 - **Employee Training** – a module with a Training Matrix (every active employee against every training that applies to them: current, due soon, expired or missing), Employees, Training Records and Training Types. Expiry dates are worked out from each training's renewal months. Click any box in the matrix to record that training. Role Matrix and Role Requirements say which position needs which training (required, refresh months, sign-off, SOP); the employee matrix and expiry dates follow them, and a position can be excused from a training that applies to everyone. Printable matrix, what's-due list and sign-in sheet; the Inspection-Ready Checklist and Weekly Summary include training. The starter training types are a general kitchen list: change them to match what your health department requires.
 
+## Daily workflow and 90-day goals
+**Daily Workflow** holds the manager's day as timed blocks of checks (edit them under Workflow Items). Tick each one with your first name; weekly and monthly checks count once per week or month. The **Handoff Log** keeps open issues with an owner, next action and due date. **90-Day Goals** (under Maintenance) tracks the nine signed goals, the leadership scorecard and weekly reviews; set the first day to see the day and week.
+
 ## Food costing
 
 **Food Costing** has Cost a Special, Specials and a Price List. Prices are entered once as what was paid and how much it bought (60.00 for 15 lb) or pasted in bulk. A recipe line is written `amount | ingredient` (a cost can be typed on the line to override the list). Weights convert to weights and volumes to volumes; a count needs a price per each. The result shows cost, cost per portion, food cost % against the target set on the Price List screen, and the menu price that would hit the target. Employee meal recipes are costed from the same list. Inventory, ordering and the menu stay in R365.

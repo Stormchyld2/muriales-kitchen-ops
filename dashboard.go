@@ -149,6 +149,8 @@ func (s *store) dashboard() map[string]any {
 	}
 	items := s.todoItems(now, now, all)
 	items = append(s.safetyAttention(now.Format(dayFmt)), items...)
+	items = append(s.dwAttention(now.Format(dayFmt)), items...)
+	items = append(s.g90Attention(now.Format(dayFmt)), items...)
 	over, dueToday := 0, 0
 	for _, it := range items {
 		switch it.State {
@@ -247,7 +249,8 @@ func (s *store) dashboard() map[string]any {
 	recent, _ := s.historyRows("", 8)
 
 	// today's task progress: what is done and what is still to do
-	prog := []dashPart{{"Cleaning", cdone, cdone + cdue, "cltoday"}, {"Temperatures", done, tempTotal, "temps"}, {"Stations", stOk, stDue, "stchk"}}
+	dwDone, dwTotal := s.dwProgress()
+	prog := []dashPart{{"Cleaning", cdone, cdone + cdue, "cltoday"}, {"Temperatures", done, tempTotal, "temps"}, {"Stations", stOk, stDue, "stchk"}, {"Daily workflow", dwDone, dwTotal, "dwtoday"}}
 	pDone, pTotal := 0, 0
 	for _, x := range prog {
 		pDone += x.Done

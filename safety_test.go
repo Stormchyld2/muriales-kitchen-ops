@@ -246,7 +246,7 @@ func TestDashboardExtras(t *testing.T) {
 	e.post("/api/reg/mealplan", `{"date":"`+now+`","service":"Lunch","mealName":"Pasta","servings":"10"}`)
 	_, d := e.get2("/api/dashboard")
 	pr := d["progress"].(map[string]any)
-	if len(pr["parts"].([]any)) != 3 || pr["total"].(float64) < 1 {
+	if len(pr["parts"].([]any)) != 4 || pr["total"].(float64) < 1 {
 		t.Fatalf("progress %v", pr)
 	}
 	if _, ok := d["alerts"].([]any); !ok {
@@ -400,5 +400,62 @@ func TestAutoSendSummary(t *testing.T) {
 	}
 	if st := e.s.summarySettings(); st.LastError != "" || st.LastSent == "" {
 		t.Fatalf("success not recorded: %+v", st)
+	}
+}
+
+func TestDailyWorkflowAnd90Day(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/dw/today")
+	blocks := o["blocks"].([]any)
+	if len(blocks) != 9 || o["total"].(float64) != 44 || o["done"].(float64) != 0 {
+		t.Fatalf("workflow: %v blocks, %v items", len(blocks), o["total"])
+	}
+	first := blocks[0].(map[string]any)["items"].([]any)[0].(map[string]any)["id"].(string)
+	if c, _ := e.post("/api/dw/tick", `{"itemId":"`+first+`","by":"  sam ","on":true}`); c != 200 {
+		t.Fatal("tick refused")
+	}
+	e.post("/api/dw/tick", `{"itemId":"`+first+`","by":"sam","on":true}`) // ticking twice stays one record
+	_, o = e.get2("/api/dw/today")
+	if o["done"].(float64) != 1 {
+		t.Fatalf("done after tick: %v", o["done"])
+	}
+	_, l := e.get2("/api/reg/dwlog")
+	if len(l["rows"].([]any)) != 1 {
+		t.Fatal("duplicate log rows")
+	}
+	e.post("/api/dw/tick", `{"itemId":"`+first+`","on":false}`)
+	_, o = e.get2("/api/dw/today")
+	if o["done"].(float64) != 0 {
+		t.Fatal("untick failed")
+	}
+	if c, _ := e.post("/api/dw/tick", `{"itemId":"DW-999","on":true}`); c != 404 {
+		t.Fatal("unknown item ticked")
+	}
+	// handoff item due yesterday shows as attention
+	y := time.Now().AddDate(0, 0, -1).Format(dayFmt)
+	e.post("/api/reg/dwhandoff", `{"id":"","issue":"Walk-in door seal","priority":"High","owner":"Sam","due":"`+y+`","status":"Open"}`)
+	if a := e.s.dwAttention(time.Now().Format(dayFmt)); len(a) != 1 || a[0].State != "Overdue" {
+		t.Fatalf("handoff attention: %v", a)
+	}
+	// 90-day goals
+	_, g := e.get2("/api/g90")
+	if g["total"].(float64) != 9 || len(g["objectives"].([]any)) != 6 || g["day"].(float64) != 0 {
+		t.Fatalf("g90: %v", g)
+	}
+	if c, _ := e.post("/api/g90/start", `{"start":"nope"}`); c != 400 {
+		t.Fatal("bad start accepted")
+	}
+	st := time.Now().AddDate(0, 0, -9).Format(dayFmt)
+	e.post("/api/g90/start", `{"start":"`+st+`"}`)
+	_, g = e.get2("/api/g90")
+	if g["day"].(float64) != 10 || g["week"].(float64) != 2 || g["phase"].(float64) != 1 {
+		t.Fatalf("g90 day/week/phase: %v %v %v", g["day"], g["week"], g["phase"])
+	}
+	e.post("/api/reg/goals90", `{"id":"G90-001","title":"Three suitable mop stations","status":"Blocked","target":"`+y+`"}`)
+	if a := e.s.g90Attention(time.Now().Format(dayFmt)); len(a) != 1 {
+		t.Fatalf("g90 attention: %v", a)
+	}
+	if rep, ok := e.s.g90Report(), true; !ok || len(rep.Sections) != 3 {
+		t.Fatal("g90 report")
 	}
 }

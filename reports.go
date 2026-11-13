@@ -70,6 +70,10 @@ var reportCatalog = []reportDef{
 	{"training-employees", "Employee Training", "Employee List", "Everyone on record with position, department and status.", false},
 	{"training-types", "Employee Training", "Training Types", "The trainings tracked, who each applies to and how long it lasts.", false},
 	{"inspection-ready", "Food Safety", "Inspection-Ready Checklist", "A live check of the records (temperatures, cleaning, maintenance, corrective actions, SDS) plus the walk-through points and a sign-off line.", false},
+	{"g90", "Maintenance", "90-Day Goals Tracker", "The nine goals, leadership scorecard and weekly reviews.", false},
+	{"dw-today", "Daily Workflow", "Daily Workflow: Today", "Today's workflow with what is ticked off, who did it and when.", false},
+	{"dw-blank", "Daily Workflow", "Daily Workflow (blank, to print)", "The whole workflow with empty boxes.", false},
+	{"dw-handoff", "Daily Workflow", "Quick Handoff Log", "Open handoff items with owner, next action and due date.", false},
 	{"daily-summary", "Summary", "Daily Summary", "A short text summary of today: what is overdue or due, the gauges, alerts and open problems. Made to be texted or emailed.", false},
 	{"weekly-summary", "Summary", "Weekly Summary", "The last 7 days at a glance: temperatures, cleaning, maintenance, corrective actions and what is still open.", false},
 	{"weekly-review", "Summary", "Weekly Review", "The one report for the weekly meeting: inspection-ready checks, the week at a glance, and the shift handoff notes. Email it to the managers.", false},
@@ -98,6 +102,12 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "handoff" {
 		return s.handoffReport(), true
+	}
+	if id == "g90" {
+		return s.g90Report(), true
+	}
+	if strings.HasPrefix(id, "dw-") {
+		return s.workflowReport(id)
 	}
 	if strings.HasPrefix(id, "special:") {
 		return s.specialReport(strings.TrimPrefix(id, "special:"))

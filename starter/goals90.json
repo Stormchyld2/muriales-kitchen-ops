@@ -1,0 +1,110 @@
+[
+ {
+  "id": "G90-001",
+  "order": "1",
+  "title": "Three suitable mop stations",
+  "scope": "Confirm locations, sanitation needs, equipment, installation, labeling, supply pars, and routine inspections.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-002",
+  "order": "2",
+  "title": "Sanitary ice retrieval, storage, and production",
+  "scope": "Establish dedicated ice tools, protected storage, cleaning/sanitizing practice, training, and inspection.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-003",
+  "order": "3",
+  "title": "Lower beverage stations",
+  "scope": "Plan beverage service and table-breakdown handling with proper separation, ergonomics, traffic flow, and cleaning ownership.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-004",
+  "order": "4",
+  "title": "Daily and specials menu forecasting",
+  "scope": "Standardize forecast inputs (reservations/events, history, weather where useful), prep pars, production communication, and variance checks.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-005",
+  "order": "5",
+  "title": "Daily side-work and deep-cleaning lists",
+  "scope": "Confirm culinary and stewarding checklists, assignments, sign-offs, shift verification, and exception follow-up.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-006",
+  "order": "6",
+  "title": "Equipment deep-clean calendar",
+  "scope": "Cover equipment and walk-in coolers; identify frequency, safe shutdown needs, trained owner, completion evidence, and oversight.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-007",
+  "order": "7",
+  "title": "Winter preparedness",
+  "scope": "Prepare for snow/ice and severe weather, receiving access, grounds treatment, staffing disruptions, supplies, and escalation.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-008",
+  "order": "8",
+  "title": "Clean and organize shed",
+  "scope": "Empty, sort, dispose/rehome, inventory and label; identify equipment needing repair, replacement, or evaluation.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "G90-009",
+  "order": "9",
+  "title": "Standardize cleaning contracts and kitchen maintenance ordering",
+  "scope": "Consolidate vendor contacts, recurring services, order profiles, reorder standards, responsibilities, and documentation.",
+  "owner": "",
+  "target": "",
+  "status": "Not Started",
+  "nextAction": "",
+  "evidence": "",
+  "created": "2026-11-13 00:00"
+ }
+]

@@ -319,6 +319,8 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.dailySummaryRoutes(mux)
 	s.packetRoutes(mux)
 	s.costingRoutes(mux)
+	s.workflowRoutes(mux)
+	s.g90Routes(mux)
 	s.historyRoutes(mux)
 	s.dashboardRoutes(mux)
 	s.replRoutes(mux)

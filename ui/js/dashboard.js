@@ -18,7 +18,7 @@ function gaugeSvg(p) {
     + `<text x="100" y="92" text-anchor="middle" class="gnum" fill="${c}">${p < 0 ? "Set up" : p + "%"}</text></svg>`;
 }
 
-const DASH_VIEW = {"Cleaning": "cltoday", "Equipment PM": "pm", "Grounds / Facility": "fac", "Issue": "issues", "Inspection": "insp", "Temperature": "temps", "Corrective Action": "calog", "Manager Check": "mgrchk", "SDS": "library", "Equipment": "equip", "LOTO": "llog", "Binder": "blog", "Incident": "inc", "Other": "todo"};
+const DASH_VIEW = {"Cleaning": "cltoday", "Equipment PM": "pm", "Grounds / Facility": "fac", "Issue": "issues", "Inspection": "insp", "Temperature": "temps", "Corrective Action": "calog", "Manager Check": "mgrchk", "SDS": "library", "Equipment": "equip", "LOTO": "llog", "Binder": "blog", "Incident": "inc", "Handoff": "dwhandoff", "90-Day Goals": "g90", "Other": "todo"};
 
 function dBlock(cls, inner, view) { return `<div class="dblock ${cls}" ${view ? `data-act="nav" data-v="${esc(view)}" role="button" tabindex="0"` : ""}>${inner}</div>`; }
 
@@ -68,7 +68,7 @@ function vDash() {
   return `<div class="row noprint" style="justify-content:space-between"><span class="hint">${esc(new Date().toLocaleDateString([], {weekday: "long", month: "long", day: "numeric"}))} · updated ${esc((state.dashAt || new Date()).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}))}</span><button class="btn small" data-act="dash-refresh">${icon("swap")}Refresh</button></div>
   <div class="dgrid">${gauges2}${tilesOnly}
     <div class="dblock w2 r2"><div class="dhead"><span>Quick Actions</span></div><div class="dqa">
-      ${act("problem-new", "warn", "Report a Problem")}${act("temp-enter", "temp", "Enter Temperatures")}${act("nav", "drop", "Today's Cleaning", 'data-v="cltoday"')}${act("todo-new", "list", "Create To-Do List")}${act("dsum-email", "ext", "Email Daily Summary")}${act("nav", "list", "Shift Handoff", 'data-v="notes"')}</div></div>
+      ${act("problem-new", "warn", "Report a Problem")}${act("temp-enter", "temp", "Enter Temperatures")}${act("nav", "drop", "Today's Cleaning", 'data-v="cltoday"')}${act("todo-new", "list", "Create To-Do List")}${act("dsum-email", "ext", "Email Daily Summary")}${act("nav", "check", "Daily Workflow", 'data-v="dwtoday"')}</div></div>
     <div class="dblock wall r4"><div class="dhead"><span>Needs Attention</span><span class="hint">${d.overdue} overdue · ${d.dueToday} due today</span></div><div class="dlist">${att}</div></div>
     ${short}
     ${dashExtras(d)}

@@ -1,0 +1,442 @@
+[
+ {
+  "id": "DW-001",
+  "block": "7:00–7:20 AM | Start-of-day control review",
+  "start": "07:00",
+  "end": "07:20",
+  "text": "Open Maintenance Quick Look and MaintainX; identify overdue, due-today, and active issues.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-002",
+  "block": "7:00–7:20 AM | Start-of-day control review",
+  "start": "07:00",
+  "end": "07:20",
+  "text": "Read previous shift handoff, service concerns, staffing changes, and unresolved incidents.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-003",
+  "block": "7:00–7:20 AM | Start-of-day control review",
+  "start": "07:00",
+  "end": "07:20",
+  "text": "Review refrigerator/freezer temperature logs and any exceptions; take corrective action immediately.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-004",
+  "block": "7:00–7:20 AM | Start-of-day control review",
+  "start": "07:00",
+  "end": "07:20",
+  "text": "Confirm vendor delivery windows, planned orders, staff meal, event volume, and priority prep.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-005",
+  "block": "7:00–7:20 AM | Start-of-day control review",
+  "start": "07:00",
+  "end": "07:20",
+  "text": "Set the top three operational priorities and assign follow-up owners.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-006",
+  "block": "7:20–8:00 AM | Kitchen, storage, and facilities walk-through",
+  "start": "07:20",
+  "end": "08:00",
+  "text": "Inspect walk-ins, freezers, dry storage, labeling/date marks, FIFO, product quality, and readiness.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-007",
+  "block": "7:20–8:00 AM | Kitchen, storage, and facilities walk-through",
+  "start": "07:20",
+  "end": "08:00",
+  "text": "Verify sanitation, chemical segregation, safe ice handling, handwash access, and mop stations.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-008",
+  "block": "7:20–8:00 AM | Kitchen, storage, and facilities walk-through",
+  "start": "07:20",
+  "end": "08:00",
+  "text": "Check equipment functionality, safety hazards, leaks, drains, and out-of-service conditions.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-009",
+  "block": "7:20–8:00 AM | Kitchen, storage, and facilities walk-through",
+  "start": "07:20",
+  "end": "08:00",
+  "text": "Inspect receiving area, dish/stewarding operation, china/glass/silver levels, and storage organization.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-010",
+  "block": "7:20–8:00 AM | Kitchen, storage, and facilities walk-through",
+  "start": "07:20",
+  "end": "08:00",
+  "text": "Review grounds, entrances, waste areas, and weather-related concerns; coordinate needed work.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-011",
+  "block": "7:20–8:00 AM | Kitchen, storage, and facilities walk-through",
+  "start": "07:20",
+  "end": "08:00",
+  "text": "Document exceptions, assign corrective actions, and enter maintenance work orders as needed.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-012",
+  "block": "8:00–9:00 AM | Team coordination and production readiness",
+  "start": "08:00",
+  "end": "09:00",
+  "text": "Connect with culinary leadership and shift leads; confirm daily all-calls, prep list, specials, and functions.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-013",
+  "block": "8:00–9:00 AM | Team coordination and production readiness",
+  "start": "08:00",
+  "end": "09:00",
+  "text": "Check projected business against staffing coverage; escalate shortages, callouts, overtime, or timekeeping concerns.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-014",
+  "block": "8:00–9:00 AM | Team coordination and production readiness",
+  "start": "08:00",
+  "end": "09:00",
+  "text": "Assign prep and side-work priorities; verify critical product is thawed, staged, and sufficient for service.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-015",
+  "block": "8:00–9:00 AM | Team coordination and production readiness",
+  "start": "08:00",
+  "end": "09:00",
+  "text": "Reinforce food handling, uniform/grooming, clean-as-you-go, and SOP expectations.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-016",
+  "block": "8:00–9:00 AM | Team coordination and production readiness",
+  "start": "08:00",
+  "end": "09:00",
+  "text": "Confirm stewarding responsibilities, cleaning coverage, and service ware availability.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-017",
+  "block": "As deliveries arrive | Receiving and immediate storage",
+  "start": "",
+  "end": "",
+  "text": "Verify item, quantity, condition, required temperatures, and invoice against purchase/order details.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-018",
+  "block": "As deliveries arrive | Receiving and immediate storage",
+  "start": "",
+  "end": "",
+  "text": "Record substitutions, shortages, damages, credits, returns, and pricing concerns; notify correct purchaser.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-019",
+  "block": "As deliveries arrive | Receiving and immediate storage",
+  "start": "",
+  "end": "",
+  "text": "Move goods promptly to approved storage; rotate FIFO and verify proper labeling.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-020",
+  "block": "As deliveries arrive | Receiving and immediate storage",
+  "start": "",
+  "end": "",
+  "text": "Keep receiving area orderly; report vendor or quality issues and reconcile paperwork.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-021",
+  "block": "9:00–11:30 AM | Purchasing, inventory, and operational execution",
+  "start": "09:00",
+  "end": "11:30",
+  "text": "Review pars and counts for high-use food, paper/disposables, chemicals, janitorial supplies, and smallwares.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-022",
+  "block": "9:00–11:30 AM | Purchasing, inventory, and operational execution",
+  "start": "09:00",
+  "end": "11:30",
+  "text": "Place assigned orders; coordinate items ordered by Brennon or Drew rather than duplicating purchases.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-023",
+  "block": "9:00–11:30 AM | Purchasing, inventory, and operational execution",
+  "start": "09:00",
+  "end": "11:30",
+  "text": "Check upcoming events and specials against product, service ware, and equipment requirements.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-024",
+  "block": "9:00–11:30 AM | Purchasing, inventory, and operational execution",
+  "start": "09:00",
+  "end": "11:30",
+  "text": "Follow up on preventive maintenance, Brian’s assigned tasks, outside vendors, and unresolved work orders.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-025",
+  "block": "9:00–11:30 AM | Purchasing, inventory, and operational execution",
+  "start": "09:00",
+  "end": "11:30",
+  "text": "Check ongoing prep, service readiness, production efficiency, food waste, and use-up opportunities.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-026",
+  "block": "9:00–11:30 AM | Purchasing, inventory, and operational execution",
+  "start": "09:00",
+  "end": "11:30",
+  "text": "Confirm staff meal recipe, ingredients, execution owner, timing, and tomorrow’s pull/thaw needs.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-027",
+  "block": "11:30 AM–2:00 PM | Service support and verification",
+  "start": "11:30",
+  "end": "14:00",
+  "text": "Support culinary service when needed; troubleshoot product, staffing, equipment, and communication issues.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-028",
+  "block": "11:30 AM–2:00 PM | Service support and verification",
+  "start": "11:30",
+  "end": "14:00",
+  "text": "Monitor food quality, production pace, safe holding, sanitation, and stewarding throughput.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-029",
+  "block": "11:30 AM–2:00 PM | Service support and verification",
+  "start": "11:30",
+  "end": "14:00",
+  "text": "Recheck critical shortages and daily-all-call completion; communicate changes to relevant leads.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-030",
+  "block": "11:30 AM–2:00 PM | Service support and verification",
+  "start": "11:30",
+  "end": "14:00",
+  "text": "Address urgent breakdowns and safety issues immediately; document impact and resolution.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-031",
+  "block": "2:00–3:30 PM | Systems, training, and scheduled management work",
+  "start": "14:00",
+  "end": "15:30",
+  "text": "Verify cleaning/side-work/deep-cleaning assignments and corrective actions; review sanitation dashboard.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-032",
+  "block": "2:00–3:30 PM | Systems, training, and scheduled management work",
+  "start": "14:00",
+  "end": "15:30",
+  "text": "Complete or verify scheduled PMs, MaintainX updates, and the maintenance spreadsheet backup.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-033",
+  "block": "2:00–3:30 PM | Systems, training, and scheduled management work",
+  "start": "14:00",
+  "end": "15:30",
+  "text": "Review purchasing variances, breakage, ware replacement, inventory adjustments, and storage issues.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-034",
+  "block": "2:00–3:30 PM | Systems, training, and scheduled management work",
+  "start": "14:00",
+  "end": "15:30",
+  "text": "Coach or train culinary/stewarding employees where gaps were observed; reinforce SOPs.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-035",
+  "block": "2:00–3:30 PM | Systems, training, and scheduled management work",
+  "start": "14:00",
+  "end": "15:30",
+  "text": "Use the designated project block for 90-day goals and weekly management projects, without displacing service or safety priorities.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-036",
+  "block": "3:30–before 5:00 PM | Reset, tomorrow planning, and handoff",
+  "start": "15:30",
+  "end": "17:00",
+  "text": "Check tomorrow’s deliveries, ordering deadlines, staffing needs, specials, events, and staff meal.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-037",
+  "block": "3:30–before 5:00 PM | Reset, tomorrow planning, and handoff",
+  "start": "15:30",
+  "end": "17:00",
+  "text": "Verify current temperature records, assigned cleaning, unresolved sanitation issues, and work order status.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-038",
+  "block": "3:30–before 5:00 PM | Reset, tomorrow planning, and handoff",
+  "start": "15:30",
+  "end": "17:00",
+  "text": "Update Maintenance Quick Look, MaintainX, and backup records; close only verified completed tasks.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-039",
+  "block": "3:30–before 5:00 PM | Reset, tomorrow planning, and handoff",
+  "start": "15:30",
+  "end": "17:00",
+  "text": "Record open issues with owner, due date, impact, and next action; flag urgent items to evening management.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-040",
+  "block": "3:30–before 5:00 PM | Reset, tomorrow planning, and handoff",
+  "start": "15:30",
+  "end": "17:00",
+  "text": "Give chef-to-chef/manager handoff covering product, prep, staffing, equipment, service, and safety.",
+  "frequency": "Daily",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-041",
+  "block": "Weekly / scheduled overlays | Do on the assigned day, not every day",
+  "start": "",
+  "end": "",
+  "text": "Weekend inventory evening: physically count designated food, paper, and storage categories; validate high-value items; investigate differences.",
+  "frequency": "Weekly",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-042",
+  "block": "Weekly / scheduled overlays | Do on the assigned day, not every day",
+  "start": "",
+  "end": "",
+  "text": "Weekly: assess schedule/labor forecast, vendor concerns, breakage, guest feedback, staff training, and food-cost/waste trends.",
+  "frequency": "Weekly",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-043",
+  "block": "Weekly / scheduled overlays | Do on the assigned day, not every day",
+  "start": "",
+  "end": "",
+  "text": "Weekly: inspect mop stations, ice system, beverage breakdown stations, deep-clean calendar, and grounds/shed progress.",
+  "frequency": "Weekly",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "DW-044",
+  "block": "Weekly / scheduled overlays | Do on the assigned day, not every day",
+  "start": "",
+  "end": "",
+  "text": "Monthly: review sanitation/health-inspection readiness, inventory trends, ware budgets, PM completion, and open corrective actions.",
+  "frequency": "Monthly",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ }
+]
