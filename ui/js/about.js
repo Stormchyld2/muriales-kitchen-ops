@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.31.1", "Week 2 employee meal recipes added (14 meals), so all 56 meals in the four-week rotation now have a recipe. Appendix links are smarter, for example Brown Gravy for Schnitzel now shows on the Schnitzel dinner."],
   ["2.31.0", "Employee Meals rebuilt around the four-week rotation: a dashboard showing which week it is with the breakfast/lunch and dinner for every day, a 4-Week Rotation tab that checks each recipe against its slot, 42 recipes from your menu documents (Weeks 1, 3 and 4), a Meal Log, and an Appendix of the 12 sauces and sides, last in the list. Week 2 still needs its recipes."],
   ["2.30.0", "Employee Meals: meal recipes with cost per serving, a meal plan, and a 30-day cost report. Dashboard now flags a lockout left on, an overdue LOTO inspection, an overdue binder review and incident follow-ups. Safety meetings can start a corrective action."],
   ["2.29.1", "Dashboard re-laid out: Needs Attention full width, icon shortcut tiles to every area, Last Backup beside Recent Changes."],

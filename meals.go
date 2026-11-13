@@ -273,13 +273,37 @@ func mealMarkdown(r rec, withCost bool) string {
 	return b.String()
 }
 
-// mealAppendixLinks finds the appendix recipes a recipe's ingredient lines refer to.
+// mealKey makes a recipe name comparable: "&" and "mac" spelled out, case folded.
+func mealKey(v string) string {
+	v = strings.ToLower(strings.ReplaceAll(v, "&", "and"))
+	v = strings.ReplaceAll(v, "mac and cheese", "macaroni and cheese")
+	return strings.ReplaceAll(v, "mac & cheese", "macaroni and cheese")
+}
+
+// mealAppendixLinks finds the appendix recipes a recipe's ingredient lines or
+// method refer to, matching the full name or its core ("Brown Gravy for
+// Schnitzel" -> "brown gravy", "Chicken Pot Pie Filling" -> "chicken pot pie").
 func (s *store) mealAppendixLinks(r rec) []map[string]string {
 	out := []map[string]string{}
-	text := strings.ToLower(r["ingredients"] + " " + r["method"])
+	text := mealKey(r["name"] + " " + r["ingredients"] + " " + r["method"])
 	for _, a := range s.regSorted(regDefs["mealappendix"]) {
-		n := strings.ToLower(strings.TrimSpace(a["name"]))
-		if n != "" && strings.Contains(text, n) && !strings.EqualFold(a["name"], r["name"]) {
+		full := mealKey(strings.TrimSpace(a["name"]))
+		if full == "" || strings.EqualFold(a["name"], r["name"]) {
+			continue
+		}
+		core := full
+		if i := strings.Index(core, " for "); i > 0 {
+			core = core[:i]
+		}
+		if i := strings.Index(core, " over "); i > 0 {
+			core = core[:i]
+		}
+		for _, suf := range []string{" filling", " sauce"} {
+			if t := strings.TrimSuffix(core, suf); t != core && strings.Count(t, " ") >= 1 {
+				core = t
+			}
+		}
+		if strings.Contains(text, full) || strings.Contains(text, core) {
 			out = append(out, map[string]string{"id": a["id"], "name": a["name"]})
 		}
 	}
@@ -355,6 +379,7 @@ func (s *store) mealRoutes(mux *http.ServeMux) {
 	s.mu.Lock()
 	s.seedOnce("meals-231a", "mealrecipes", "meal_recipes.json")
 	s.seedOnce("meals-231b", "mealappendix", "meal_appendix.json")
+	s.seedOnce("meals-231c", "mealrecipes", "meal_recipes_w2.json")
 	s.mu.Unlock()
 	mux.HandleFunc("GET /api/meals/dash", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()

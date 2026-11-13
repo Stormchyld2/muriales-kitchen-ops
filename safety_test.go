@@ -160,11 +160,11 @@ func TestMealRotation(t *testing.T) {
 	for _, w := range ws {
 		have = append(have, 14-len(w.(map[string]any)["missing"].([]any)))
 	}
-	if have[0] != 14 || have[1] != 0 || have[2] != 14 || have[3] != 14 {
+	if have[0] != 14 || have[1] != 14 || have[2] != 14 || have[3] != 14 {
 		t.Fatalf("coverage %v", have)
 	}
 	_, d := e.get2("/api/meals/dash")
-	if d["have"].(float64) != 42 || len(d["days"].([]any)) != 7 {
+	if d["have"].(float64) != 56 || len(d["days"].([]any)) != 7 {
 		t.Fatalf("dash %v", d["have"])
 	}
 	_, app := e.get2("/api/reg/mealappendix")
