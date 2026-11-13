@@ -1,0 +1,164 @@
+[
+ {
+  "id": "CHK-001",
+  "station": "Takeout",
+  "kind": "Opening",
+  "title": "Takeout Opening Checklist",
+  "items": "> Position: Takeout Station\n> Shift: Weekend / High Volume\n# HEAT & EQUIPMENT (DO FIRST)\nBurners on\nBains on and heating:  Alfredo  Marinara\nChaffer set with sauces\n2 water pots filled and heating\nSmall pot + strainer set for GF\n# MEATBALLS & PASTA\n2 meatball pots started (meatballs + water)\nRigatoni (full pan) hung\nVermicelli (full pan) hung\n4–6 strainer baskets set\nDrip pot set under strainers\n# PRODUCT PULL\n> Freezer\nMeat tortellini  Cheese tortellini  Meat ravioli  Cheese ravioli  Gnocchi\n> Cooler (ON ICE)\nBolognese mix  Demi glaze  Chicken  Sausage  Shrimp\n# PREP TABLE\nRomano\nParsley\nOil (squeeze)\nWhite wine (squeeze)\nButter (pats)\nSalt/pepper\n# STATION SETUP\nCutting board\nChef knife\nTongs (pasta)\nTongs (proteins)\nStation organized for flow\n# HOT CHECK\nAlfredo hot\nMarinara hot\nMeatballs heating\nWater near boil\n# READY CHECK\nRig + verm stocked\n2 meatball pots going\nAll proteins on ice\nSauces ready\nStation clean\nTools set",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-002",
+  "station": "Takeout",
+  "kind": "Closing",
+  "title": "Takeout Closing Checklist",
+  "items": "> Position: Takeout Station\n> Shift: Dinner Close (Weekend / High Volume)\n# PRECLOSE (WITH APPROVAL)\nCheck with chef/lead before starting\nConfirm remaining volume\nConfirm shutdown timing\n# CONSOLIDATE\nCombine Alfredo\nCombine marinara\nConsolidate proteins (keep on ice):  Chicken  Sausage  Shrimp  Bolognese  Demi\n# REDUCE STATION\nReduce to minimum strainer baskets\nConsolidate tools\nClear unused pans\n# LIGHT CLEAN\nWipe surfaces\nClean/rotate cutting board\nRemove trash buildup\nKeep floor clean\n# FINAL PUSH READY\nRig stocked\nVerm stocked\nSauces sufficient\nProteins stocked\n# CLOSE DOWN (AFTER LAST TICKET)\n# SHUT OFF\nBurners off\nRemove water pots\nRemove meatball pots\nRemove strainers\n# PRODUCT\nStore or discard:  Sauces  Proteins  Pasta\nLabel and date\nAll TCS items to cooler immediately\n# CLEAN EQUIPMENT\nClean burners\nClean bains\nClean chaffer\nWash:  Pots  Strainers  Utensils\n# STATION\nEmpty ice pans\nClean cutting board\nClean knife\nSanitize all surfaces\n# TRASH & FLOORS\nTrash out\nSweep\nMop\n# FINAL CHECK\nStation is empty and clean\nNo food left out\nEquipment off\nProduct stored properly\nCheck out with chef",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-003",
+  "station": "Salad",
+  "kind": "Opening",
+  "title": "Salad Opening Checklist",
+  "items": "# Start-Up\n-\nWash hands and clock in\nCheck specials, 86’d items, and banquets\nReview expected volume\n-\nTurn on cold rail / reach-in\nCheck temps\nSet up sanitizer bucket and towels\n# Equipment\n-\nCutting boards set\nKnives sharp and ready\nMixing bowls ready\nTongs and utensils stocked\nSoufflé cups and lids stocked\n# Product Pull\n-\nRomaine\nMixed lettuce\nSpinach\n-\nTomatoes (halved)\nRoasted red peppers\nPepperdew peppers\nPepperoncini\nOnions\nPickled eggs\nRomano cheese\nSalami\nPepperoni\nCroutons\n# Dressings (To Par)\n-\nItalian (FULL PAR)\nRanch (FULL PAR)\nBlue cheese\nFrench\nRaspberry vinaigrette\nSweet & sour\nCaesar (LINE + BACKUP)\n# Station Pars\n-\nIce – 2 buckets\n-\nTomatoes – line + backup\nRoasted red peppers – stocked\nPepperdew peppers – stocked\nPepperoncini – stocked\nOnions – stocked\n-\nCroutons – line + backup\nPickled eggs – stocked\nRomano – stocked\nSalami – stocked\nPepperoni – stocked\n# Setup\n-\nCold rail organized (high-use in front)\nBackups stocked below/behind\nPans not overfilled\n-\nAll items labeled and dated\nStation clean and organized\n# Prep & Quality\n-\nGreens inspected (no wilted product)\nGreens fully prepped BEFORE service\nTomatoes prepped and backed up\n-\nDressings filled, clean, and sealed\n# Final Check\n-\nAll pars met\nBackups in place\nIce filled\nStation clean\n-\nTowels and sanitizer ready\n-\nCall: “Salads ready”\n# Non-Negotiables\n-\nDo NOT start below par\nDo NOT run out of Italian or Ranch\nCaesar must have backup\nNo prep during rush",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-004",
+  "station": "Salad",
+  "kind": "Closing",
+  "title": "Salad Closing Checklist",
+  "items": "# Pre-Close (Start When Volume Slows)\nCheck remaining tickets and expected volume\nBegin consolidating product using FIFO\nCombine like items into single containers\nRestock anything needed to finish service cleanly\nEnsure dressings (Italian, Ranch, Caesar) can carry through close\nSet up backup containers for storage\nDo NOT break down:\n> Greens\n> Tomatoes\n> Core dressings\n> Communicate with expo before removing any items\n# Closing Checklist (After Last Ticket)\n# Product Breakdown\nRemove all items from cold rail\nInspect greens (discard any wilted product)\nDiscard unusable or expired items\nConsolidate all usable product using FIFO\nTransfer to proper storage containers\nWrap, label, and date all items\n# Dressings\nConsolidate soufflés where applicable\nStore all dressings properly\nEnsure minimal usable product remains for next shift\nWipe down all dressing containers\n# Dry & Backup Items\nConsolidate croutons (line + backup)\nSeal all dry goods properly\nStore in designated area\n# Equipment & Station Breakdown\nRemove and break down all cold rail pans\nSend all utensils, pans, and containers to dish\nRemove cutting boards\nClear entire work surface\n# Cleaning\nClean inside cold rail (remove debris/liquid)\nWipe down all stainless surfaces\nSanitize cutting boards and station\nWipe down all containers and lids\n# Floors & Trash\nSweep entire station (including under unit)\nMop floor\nEmpty trash\nReplace liners\n# Reset & Organization\nStore all product in proper walk-in locations\nGroup items logically for next shift\nDo NOT leave loose or unwrapped product\nDo NOT leave unlabeled containers\n# Final Check\nCold rail empty and clean\nAll product stored and labeled\nNo spoiled product left\nStation fully wiped and sanitized\nFloor clean and dry\nStation set for next service\n# Non-Negotiables\nDo NOT leave bad greens for next shift\nDo NOT leave station dirty “for morning”\nDo NOT skip labeling\nIf it’s not clean, it’s not closed",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-005",
+  "station": "Sauté",
+  "kind": "Opening",
+  "title": "Sauté Opening Checklist",
+  "items": "# Start-Up\nTurn on sauté burners and set to low heat.\nTurn on range hoods (MUA, fans, lights).\nCheck that all burners are functioning properly.\n# Station Setup\nStock all sauces from prep:\nAlfredo\nMarinara\nSeafood sauce\nStock dairy and liquids:\n3 qt heavy cream\n1 squeeze bottle oil\n1 squeeze bottle white wine\n1 squeeze bottle vodka\nStock fats:\n1/9 pan Lamacha butter\n1/6 pan butter\n# Vegetables & Garnish\nStock:\n1/6 pan broccoli\n1/3 pan mixed vegetables\n1/3 pan mushrooms\n1/9 pan lemons\n1 qt parsley\n1/6 pan Romano cheese\n1 qt microgreens\n# Proteins & Seafood\nStock and rotate (FIFO):\n1/3 pan chicken (chopped)\n1/3 pan shrimp\n1/6 pan clam meat\n1/6 pan clams (shell)\n1/6 pan mussels\n2” half pan scallops (layered with towels)\n# Pasta\nStock:\n1/2 pan linguine\n1/2 pan fettuccine\nConfirm that backup pasta is available.\n# Prep\nClarify butter and have it ready before service.\nCheck all seafood for quality and freshness.\nDiscard any unusable product.\n# Mise en Place\nEnsure all items are:\nStocked to PAR\nWithin arm’s reach\nProperly organized\n# Tools & Equipment\nSet up:\nSauté pans\nTongs\nSpoons\nTowels\n# Station Organization\nSet clear work areas:\nCooking area\nIngredient area\nPlating area\nEnsure:\nNo clutter\nClean surfaces\nSanitizer and towels ready\n# Communication\nConfirm with:\nSpoon station\nSauce jack\nVerify:\nPasta availability\nSauce availability\nSpecial items or tickets\n# Quality Check\nTest burner heat.\nTaste sauces and adjust if needed.\nConfirm that all proteins are ready.\n# Final Check\nBefore first ticket:\nBurners hot and ready\nStation fully stocked\nSeafood rotated and fresh\nButter clarified\nPasta stocked\nStation clean and organized\n# Standard\nThe station must be fully ready before the first ticket is printed.\nNo critical setup should happen during service.",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-006",
+  "station": "Sauté",
+  "kind": "Closing",
+  "title": "Sauté Closing Checklist",
+  "items": "# Pre-Closing\nBegin during slow periods while maintaining full-service capability.\nDo not break down critical equipment before final push.\n# Product Consolidation\nConsolidate all seafood using FIFO:\nShrimp\nClams\nMussels\nScallops\nConsolidate sauces and dairy into proper containers.\nDiscard any unusable or low-quality product.\n# Pasta & Station Management\nReduce excess pasta on the line.\nEnsure enough pasta remains for final tickets.\nCover and store pasta properly.\n# Station Organization\nRemove unused containers and tools.\nOrganize the station for closing.\nMaintain clear working areas.\n# Cleaning (Ongoing)\nWipe the surfaces between tickets.\nKeep burners and pans clean.\nReplace towels and sanitizer as needed.\n# Communication\nNotify chef of:\nLow sauces\nLow seafood\nLow pasta\nAny station issues\nCommunicate with spoon and sauce jack on remaining product.\n# Closing\nConfirm all tickets are complete before breakdown.\nCommunicate with expo and kitchen before shutting down.\n# Equipment Shutdown\nTurn off all burners.\nAllow equipment to cool before cleaning.\n# Product Breakdown & Storage\nStore all sauces in clean containers (label and date).\nStore seafood properly following food safety standards.\nStore vegetables and garnishes properly.\nDiscard any unusable or contaminated product.\n# Cleaning\nSend to dish:\nSauté pans\nUtensils\nContainers\nClean:\nBurners and stove top\nStainless surfaces\nBacksplash and walls\nSurrounding areas\n# Floors & Trash\nRemove all trash and replace liners.\nSweep floors thoroughly.\nMop floors.\n# Restocking\nEnsure basic station items are restocked for next shift.\nConfirm sauces and key ingredients are ready.\n# Final Check\nReport to chef or manager:\nLow inventory\nEquipment issues\nProduct concerns\nConfirm station is fully reset and ready.\n# Notes\nMaintain FIFO at all times.\nDo not break down early and compromise service.\nClosing is preparation for the next shift, not just cleanup.",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-007",
+  "station": "Sauce Jack",
+  "kind": "Opening",
+  "title": "Sauce Jack Opening Checklist",
+  "items": "# Start-Up\nTurn on sauce jack\nTurn on holding wells\nTurn on stove burners\nTurn on meatball pots\nTurn on range hoods (MUA, Fans, Lights)\n# Sauce Setup\nPlace sauce base into pot\nAdd water to proper consistency\nHeat sauce fully\nStir thoroughly until smooth\nTransfer sauce into sauce jack\nEnsure sauce is hot and service-ready\n# Meatball Setup\nPull meatballs using FIFO\nSet up:\n3 pots (weekday)\n4 pots (weekend)\nBegin heating meatballs\nEnsure proper holding temperature\n# Station Setup\nGather containers (quarts, pints, lids)\nGather utensils:\nLadles\nSpoons\nTongs\nMixing tools\nSet tools in consistent positions\nEnsure station is clean and organized\n# Pasta & Support Readiness\nVerify awareness of pasta levels with spoon\nBe ready to:\nDrop rigatoni when needed\nRetrieve specialty pastas (WW, GF, pappardelle, etc.)\n# Lasagna & Manicotti (If Applicable)\nConfirm if pans are needed based on day/volume\nCoordinate with hoagie bench\nSet up chaffer pans if required\n# Communication\nConfirm readiness with:\nSpoon station\nSauté station\nHoagie bench\nConfirm expected volume and special items\n# Final Check\nSauce hot and at proper consistency\nSauce jack filled appropriately for volume\nMeatballs hot and stocked\nStation clean and fully set\n# Standard\nStation ready BEFORE first ticket",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-008",
+  "station": "Sauce Jack",
+  "kind": "Closing",
+  "title": "Sauce Jack Closing Checklist",
+  "items": "# Pre-Close\nBegin reducing sauce based on volume\n> 1 hour to close → 1/2 jack\n> 30 minutes to close → 1/3 jack\nStir sauce regularly to maintain consistency\nConsolidate meatballs using FIFO\nReduce number of pots as volume slows\nEnsure enough meatballs remain for service\nMonitor lasagna and manicotti pans (if active)\nCount tickets before pulling replacement pans\nSend unused utensils and excess pots to dish\nOrganize station and remove clutter\nWipe down sauce jack exterior and surrounding areas\nStock containers (quarts, pints, lids) for remaining service\nContinue supporting sauté and spoon as needed\n# Closing\n# Service Completion\nConfirm all tickets are complete with expo\n# Equipment Shutdown\nTurn off sauce jack\nTurn off burners\nAllow equipment to cool\n# Product Breakdown\nRemove remaining sauce from sauce jack\nTransfer to clean containers\nLabel and date all sauce\nStore properly\nDiscard unusable product\nConsolidate meatballs\nStore, cover, label, and date\nDiscard unusable product\nRemove lasagna and manicotti pans\nCover and store or return to proper area\n# Dish & Equipment\nSauce pots to dish\nMeatball pots to dish\nUtensils to dish\nBreak down and clean sauce jack\n# Station Cleaning\nWipe and sanitize all surfaces\nClean burners and surrounding areas\nClean walls and backsplash\n# Floors & Trash\nRemove trash and replace liners\nSweep station area (including under equipment)\nMop floors with hot water and degreaser\n# Final Steps\nRestock containers and basic supplies\nReport to chef:\nLow sauce\nLow meatballs\nEquipment issues\nProduct concerns\nConfirm station is clean and fully reset\n# Standard\nStation is fully ready for next service before leaving",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-009",
+  "station": "Spoon",
+  "kind": "Opening",
+  "title": "Spoon Opening Checklist",
+  "items": "# Spoon Station\nTurn on meatball pots and begin heating first as this is long cook for prep.\nTurn on pasta burners.\nFill pasta pots and bring them to a full rolling boil.\nTurn on the sauce jack and begin heating the meat sauce.\nTurn on holding wells and bring to temperature.\nLoad meat sauce into sauce jack and stir regularly while heating.\nEnsure sauce is hot, smooth, and at proper consistency before service.\nSet up meatballs. 3 pots weekday, 4 pots weekend. Ensure proper hot holding temperature.\nConfirm refill plans for meatballs. (plan head)\nPull all pasta and stock to PAR levels:\nRigatoni, spaghetti (vermicelli), whole wheat, gluten free, linguini, fettuccine, penne, pappardelle. (check levels)\nEnsure all pasta bins are full, organized, and within arm’s reach.\nSet backup pasta in reach for service.\nSet up plating area with bowls/plates.\nSet up ladles, spoons, and utensils for service\nOrganize station into working zones: pasta drop, sauce area, plating area.\nRemove any clutter from the station.\nSet towels and sanitizer bucket in proper place.\nCommunicate with expo, middle, sauté, and hoagie bench to confirm readiness.\nConfirm sausage availability and any special item of coordination.\nTest pasta drops to confirm the cook time.\nTaste sauce and verify quality.\nVerify that all hot items are at proper temperature.\nFinal check before service:\nPasta water at rolling boil.\nSauce hot and ready.\nMeatballs are hot and stocked.\nPasta is fully stocked with PAR.\nStation clean, organized, and ready.\nNo service begins until the station is fully set up.\nIf time permits, assist other stations or prep as needed.",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-010",
+  "station": "Spoon",
+  "kind": "Closing",
+  "title": "Spoon Closing Checklist",
+  "items": "# Prepared for: Kitchen Staff Training\n> Service Readiness\nBegin pre-closing during slow periods\nAlways maintain full-service capability\nDo not break down critical equipment before final push\n> Product Consolidation (FIFO Required)\nCombine all sauces using FIFO into 6-inch full hotel pans\nDiscard any broken, burnt, or unusable sauces\nPrepare 1 pot of cooled meatball water for closing\nConsolidate meatballs into fewer pots (maintain temp)\nConfirm enough meatballs remain to finish service\n> Pasta & Station Management\nReduce excess pasta online (leave enough for final tickets)\nCover all pasta bins (rigatoni, spaghetti, whole wheat)\nEnsure pasta is clean, dry, and properly stored\n> Station Organization\nRemove unused containers and clutter\nReset station layout for closing flow\nMaintain clean lanes (pasta / sauce / plating)\n> Cleaning (Ongoing)\nWipe surfaces between tickets\nKeep sauce wells clean and stirred\nReplace towels and sanitizer as needed\n> Communication\n> Notify closing chef of:\nLow sauces\nLow pasta\nLow meatballs\nCommunicate issues with:\nMiddle\nSauté\nHoagie Bench\n# Closing Checklist\n> Service Completion\nConfirm all tickets are completed\nConfirm with expo before shutdown\n> Equipment Shutdown\nTurn off burners\nTurn off pasta water\nTurn off sauce jack\nAllow equipment to cool before cleaning\n> Product Breakdown & Storage\nRemove all sauces from sauce jack\nTransfer to clean containers\nLabel and date all sauces\nStore sauces in proper location\nConsolidate and store meatballs properly\nCover meatballs with saved meatball water\nWrap meatballs securely\nDiscard unusable or contaminated product\n> Dish & Equipment Cleaning\nPasta pots to dish\nMeatball pots to dish\nStrainers to dish\nLadles to dish\nUtensils to dish\nSteam table inserts to dish\nBreak down and clean sauce jack\n> Station Cleaning\nWipe and sanitize all surfaces\nClean walls and backsplash\nClean surrounding areas\n> Floors & Trash\nRemove all trash\nReplace trash liners\nSweep line\nMop floors\n> Restocking for Next Service\nStock takeout containers\nEnsure all pasta pans are covered in cooler\nVerify meatballs are properly stored with liquid and wrap\n> Final Check & Reporting\nReport to manager/chef:\nLow inventory\nEquipment issues\nProduct concerns\nConfirm station is fully reset\nConfirm readiness for next service\n> Notes\nAlways maintain FIFO\nDo not break down early and compromise service\nKeep station clean and always organized\nClosing prepares the next shift for success\n> A strong close ensures:\nFaster openings\nBetter service flow\nConsistent product quality",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-011",
+  "station": "Hoagie Bench",
+  "kind": "Opening",
+  "title": "Hoagie Bench Opening Checklist",
+  "items": "# Hoagie Bench\nTurn on any lights that have not been turned on.\nTurn on back ovens in prep area and takeout.\nTurn on the top and bottom temps to 400 and turn on the top oven.\nTurn on the hoagie bench cold rail.\nTurn on flattop\nClose drains on steam table and fill wells on both sides. Turn on low.\nTurn on rangehoods flipping MUA and Fans on and the light as well.\nCollect pans for cold rail and steam table. Also get tongs, spoons, and any other utensils needed for service.\nPlace pans into the wells of the steam table. 6-inch-deep half pans.\nPull out the product from the low boy in the hoagie station and place in cold rail. Fill in the empty spots with the pans you collected from dish.\nStart bread. 22 minutes at 400 degrees for house loaves. Fill rack with 12 pans.\nCheck sheets for upcoming takeout and banquets, plan any needed items into the product you are panning.\nPull thawed lasagna and cut for pans and boats, referencing the par sheet.\nPull frozen lasagna to replace the ones you pulled to cut.\nMake your Manicotti pans and boats referencing the par sheet\nAt approximately 10 am you should be putting the hoagie meat on the flattop. Cooking with butter and seasoning with salt/pepper and Montreal steak seasoning.\nLast item, right before opening, cook to-go bread for 12 minutes at 400 degrees.\nDouble check to make sure you have panned enough product for the takeouts and banquets.\nIf time permits, assist the prep team with anything they may need help with.",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-012",
+  "station": "Hoagie Bench",
+  "kind": "Closing",
+  "title": "Hoagie Bench Closing Checklist",
+  "items": "# Pre-Closing\nObtain Pans from the dish room to transfer cold rail product to new pans.\nTake to dish any utensils and pans that are no longer needed for service.\nWipe down the front, sides, and top of the oven.\nArrange the oven screens by size (i.e. Small, Medium, and Large)\nStock the hoagie bench with pizza boxes, buns, pizza crusts, takeout boxes, etc.\nPut water on to boil in the prep area for mop bucket\n# Closing\nPull all pans from the cold rail and store in the low boy underneath the station.\nTurn off the cold rail.\nTurn off the steam table and drain it.\nTurn the temperature of the top oven to 400 degrees and turn it off.\nTurn down the bottom oven to 0 degrees but do not turn it off.\nTurn off the back oven in prep area and the oven by takeout.\nClean the hoagie bench inside and out. Make sure to get all the debris out of the cold rail well.\nClean cutting boards\nWipe down the rest of the hoagie bench with stainless steel on the hoagie bench. Replace the cutting boards\nSpray off the butter brushes and bring them back to the station. Do not give it to the dish crew.\nPull hoagie meat and meatballs and dispose of the product.\nWrap the butter and place it in the cooler.\nClean the flattop.\nRemove and clean the flattop surround. Replace it back on the flattop.\nClean the steam table. This includes the shelf and the front of the table.\nFinish wiping down the rest of the stainless steel.\nBegin to sweep the line.\nPut hot water in a mop bucket and fill the rest of the mop bucket with a degreaser cleaner from the mop sink room.\nMop the floor on the line and down both sides with the oven and sauce jack.\nNotify the chef in charge of any low stock items.\nEmpty trash bins, put a bag back in it, and place it upside down on the line counters.",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-013",
+  "station": "Apps",
+  "kind": "Opening",
+  "title": "Apps Opening Checklist",
+  "items": "# Station: App Station\n# Equipment\nTurn on broiler oven\nTurn on fryer and verify temperature\nLight sterno and place meat sauce bain over heat\nVerify all equipment functioning properly\n# Cold Well Setup\nIce down hotel pans\nPlace ½ pan bruschetta mix in well\nPlace 1/6 pan mozzarella balls in well\nPlace 1/6 pan Kalamata olives in well\nConfirm 1 backup pan bruschetta mix available\n# Dry & Garnish Setup\nSet parsley (pint)\nSet oregano (pint)\nSet pesto (qt)\nSet sugar (qt)\nSet salt/pepper mix (qt)\nFill balsamic glaze bottle\nFill oil squeeze bottle\n# Hot Line Setup\nStage wings for service\nStage cheese sticks for service\nStage Zeppole dough\nPrepare melted butter\nStock shredded cheese\nStock sliced brick cheese\nStock cut bread\n# Service Readiness\nPlates and baskets stocked\nSoufflé cups stocked\nFryer area clean and organized\nBroiler area clear\nStation wiped and sanitized\nReady for service\nBerries for Zeppole",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-014",
+  "station": "Apps",
+  "kind": "Closing",
+  "title": "Apps Closing Checklist",
+  "items": "# Station: App Station\n# Pre-Closing\nConsolidate wings into one container if possible\nConsolidate cheese sticks\nTransfer excess bruschetta mix to backup pan and cover\nCheck mozzarella balls and olives; consolidate if low\nWipe oil and balsamic glaze bottles\nRestock soufflé cups if needed\nOrganize bread and cheese containers\nCheck meat sauce level and consolidate if low\nRemove excess Zeppole dough not needed for remaining service\nBegin wiping broiler and fryer splash areas\n# Closing\nComplete all remaining appetizer tickets\nTurn off broiler oven\nTurn off fryer\nExtinguish sterno\nRemove meat sauce bain\nTransfer meat sauce to storage container\nLabel and date sauce if required\nWrap and store bruschetta mix\nWrap and store mozzarella balls\nWrap and store Kalamata olives\nBreak down cold well and remove ice\nWrap and store shredded cheese\nWrap and store brick cheese\nStore cut bread properly\nReturn wings to freezer if required\nReturn cheese sticks to freezer if required\nReturn Zeppole dough to proper storage\nClean fryer baskets\nClean broiler rack and interior\nWash all smallwares and soufflé cups\nRemove trash\nWipe and sanitize all surfaces\nSweep floor\nMop floor\nConfirm refrigeration doors closed\nConfirm all equipment is off\nLeave station organized for next service",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-015",
+  "station": "Bread & Dessert",
+  "kind": "Opening",
+  "title": "Bread & Dessert Opening Checklist",
+  "items": "# Station: Bread & Dessert\nWash hands and clock in\nTurn on station lights\nEnsure station is clean and organized\nReview Bread & Dessert Par Sheet\n# Product Check\nChocolate Cake in stock\nLemon Berry Cake in stock\nCheesecake in stock\nCarrot Cake in stock\nItalian Almond Cake in stock\nPeanut Butter Pie in stock\nTiramisu (2 pans ready)\nGluten-Free Cake (1 backup minimum)\n# Bread Verification\nSpeed rack stocked from Hoagie Bench\nPrecut bread (Weekday: 1 pan / Weekend: 2 pans)\n# Daily Prep\nCut tiramisu (3 x 4 pattern)\nCut Italian almond (2 pans)\n# Cannoli Cream\nCheck cannoli cream level\nPrepare if needed\nFill piping bag\nLabel/date backup\n# Dairy & Ice Cream\nWhipped cream stocked\nFill whipped cream piping bag\nVanilla ice cream stocked\nIce cream scoop clean\n# Sauces & Garnish\nRaspberry syrup filled\nChocolate syrup filled\nCaramel syrup filled\nPowdered sugar stocked\n# Dishware & Utensils\nDessert forks stocked\nDessert spoons stocked\nSoup bowls stocked\nIce cream bowl stocked\nRocks glass stocked\n# Final Station Check\nPlates clean and stacked\nZeppole tray ready\nStation wiped down\nReady for service",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-016",
+  "station": "Bread & Dessert",
+  "kind": "Closing",
+  "title": "Bread & Dessert Closing Checklist",
+  "items": "# Station: Bread & Dessert\n# Pre-Closing\nConsolidate cakes and pies as volume slows\nWrap any product not needed for remaining service\nCheck cannoli cream level\nTransfer excess cream from piping bag to container\nWipe syrup bottles (raspberry, chocolate, caramel)\nRestock dessert forks and spoons if low\nCheck vanilla ice cream level for remaining service\nBegin cleaning unused plates and organizing plating area\nEmpty trash\n# Closing\nComplete all remaining dessert tickets\nUpdate Par Sheet with final counts\nWrap all cakes tightly and store properly\nCover tiramisu pans securely\nCover Italian almond pans securely\nSecure gluten-free cake separately\nTransfer remaining cannoli cream to sealed container\nLabel and date cannoli cream\nRemove and wash piping bags and tips\nReturn vanilla ice cream to freezer\nClean and dry ice cream scoop\nDispose of unsellable Zeppole\nTake dirty ramekins and smallware to dish\nClean syrup bottle tips\nStore powdered sugar properly\nSend all utensils through dish\nRemove trash\nWipe and sanitize countertops and shelving\nSweep floor\nMop floor\nConfirm refrigeration and freezer doors are fully closed\nLeave station organized for morning open",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-017",
+  "station": "Dish",
+  "kind": "Opening",
+  "title": "Dish Opening Checklist",
+  "items": "> Position: Dishwasher\n> Shift: Opening (8:00 AM)\n# MACHINE & SINK\nDish machine on\nMachine up to temp\nWater + chemicals checked\nRun test rack if needed\n3-bowl sink filled:  Wash  Rinse  Sanitize\n# DISH AREA SETUP\nDish area clean and organized\nNo leftover dishes from night before\nDirty landing area set\nClean side set for sorting\nRacks organized and ready\n# STATION TOOLS\nSpray hose ready\nScrapers set\nBrushes set\nFlow set:  Dirty → Spray → Machine → Clean\n# STORAGE & SILVERWARE\nSilverware bins set\nStorage areas ready for:  Dishes  Glasses  Utensils\n# MATS (NON-NEGOTIABLE)\nAll mats placed:  Kitchen line  Dish area  Prep area\nMats flat and safe\n# SUMMER TASK (WHEN APPLICABLE)\nBlow off parking lot\n# FINAL CHECK\nMachine ready\nSink ready\nMats down\nStation clean\nReady to receive dishes",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "CHK-018",
+  "station": "Dish",
+  "kind": "Closing",
+  "title": "Dish Closing Checklist",
+  "items": "> Position: Dishwasher\n> Shift: Closing\n# PRECLOSE (WITH APPROVAL)\nCheck with kitchen lead\nConfirm remaining volume\nConfirm shutdown timing\n# DISH FLOW\nStay caught up, no rack buildup\nPick up dishes:  Side station  Middle station\nTiming:  Slow → every 30 min  Busy → every 10–15 min\n# SILVERWARE\nSeparate:  Forks  Knives  Spoons\nOrganize for rolling\n# CONSOLIDATE\nClear excess racks\nOrganize dish area\nKeep only needed items active\n# LIGHT CLEAN\nWipe surfaces\nRemove trash buildup\nKeep floors manageable\n# MATS (STAGE)\nCollect mats as they come back\nSeparate:  Prep mats (spray outside first)  Kitchen mats\nStage for washing\n# CLOSE DOWN (AFTER LAST DISH)\n# FINAL DISHES\nAll dishes, pots, pans, trays cleaned\nNothing left in:  Dish room  Side station  Middle station\n# MATS (NON-NEGOTIABLE)\nSpray prep mats outside\nRun ALL mats through dish machine\nStand mats up to dry properly\n# MACHINE\nRun final racks\nTurn machine off\nDrain if required\nClean inside of machine\n# 3-BOWL SINK\nDrain wash, rinse, sanitize\nClean and sanitize all compartments\n# STATION\nClean dish tables\nClean racks\nClean shelving\nClean spray area\n# TRASH\nTrash out\nNew liners\n# FLOORS (FULL RESPONSIBILITY)\nSweep:  Dish room  Kitchen  Prep area\nMop entire kitchen and prep area\n# PUT AWAY\nAll dishes stored\nAll glassware stored\nAll pots/pans stored\nAll utensils put away\nSilverware ready for rolling\n# FINAL CHECK\nNo dirty dishes anywhere\nMats cleaned and drying\nMachine off and clean\nFloors clean\nStation reset\nCheck out with kitchen closing manager/chef",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ }
+]

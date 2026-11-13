@@ -22,6 +22,10 @@ Names are typed as a first name or initials. They are tidied as they are saved (
 
 Who may use it is decided by who can open the folder: only people with access to the drive can edit.
 
+## Station guides and checklists
+
+The Stations group holds the written guide for each station (search, open, Edit, Print), the Opening and Closing checklists (tick, sign with a first name, saved to the Checklist Log) and the list of stations. Renaming a station renames it everywhere. Eight guides arrived as title pages only and say so; use Edit to write them.
+
 ## Files
 
 ```

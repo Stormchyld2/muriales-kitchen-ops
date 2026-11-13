@@ -36,6 +36,8 @@ type collDef struct {
 	Report    string     `json:"report"`
 	Starter   string     `json:"-"`
 	Intro     string     `json:"intro,omitempty"`
+	// After runs when a record is changed (old and new copies), with s.mu held.
+	After func(s *store, old, nw rec) `json:"-"`
 }
 
 type rec map[string]string
@@ -140,6 +142,12 @@ func (c *collDef) validate(r rec) string {
 		case f.Type == "ref":
 		case f.Type == "select" && !oneOf(f.Opts, v):
 			return f.Label + ": choose one of the listed options."
+		}
+		if f.Type == "doc" {
+			if len(v) > 300000 {
+				return f.Label + " is too long."
+			}
+			continue
 		}
 		if len(v) > 4000 {
 			return f.Label + " is too long."
@@ -256,6 +264,9 @@ func (s *store) registryRoutes(mux *http.ServeMux) {
 					}
 					for _, f := range c.Fields {
 						n[f.Key] = in2[f.Key]
+					}
+					if c.After != nil {
+						defer c.After(s, x, n)
 					}
 					rows[i], found = n, true
 				}

@@ -50,3 +50,6 @@ Object.assign(ACT, {
   async "dash-refresh"() { await loadDash(); },
   "hist-open-tab"(el, e) { if (e) e.preventDefault(); state.tab = "history"; state.view = "settings"; render(); loadTab(); },
 });
+
+function tickClock() { const d = new Date(), el = document.getElementById("clock"); if (el) el.innerHTML = `<b>${d.toLocaleDateString([], {weekday: "short", month: "short", day: "numeric", year: "numeric"})}</b><span>${d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})}</span>`; }
+tickClock(); setInterval(tickClock, 15000);

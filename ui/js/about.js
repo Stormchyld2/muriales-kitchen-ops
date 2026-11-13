@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.28.0", "Stations group: 74 station guides (overviews, SOPs, par sheets, recipes, training programs) you can search, read, edit and print; tick-off Opening and Closing checklists for each station with a log; charcoal theme with meter colors; date and time at the top; Enter Temperatures button on the dashboard fixed."],
   ["2.27.0", "Dashboard home screen with gauges; Report a Problem button; Inspections grouped in one place; Shift Handoff on its own; Chemical Safety back under SDS; Training and Emergency grouped; a backup every day; Edit History in Settings; a Weekly Review report; names tidied up as they are saved."],
   ["2.26.0", "Employee Training: employees, training types, records, and a matrix showing who is current, due soon, expired or missing."],
   ["2.25.0", "Six departments (Front Line, Back Line, Prep, Salads, Dish, General) with their own keywords; report emails put the text right in the message."],

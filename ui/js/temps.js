@@ -141,7 +141,7 @@ Object.assign(ACT, {
   async "temp-edit-go"() { const v = grab("[data-te]", "te"); if (!v.editedBy.trim()) return toast("Enter your name.", true); rememberWho(v.editedBy); v.temp = parseFloat(v.temp);
     if (isNaN(v.temp)) return toast("Enter the temperature.", true);
     try { state.temps = await api("/api/temps/" + $("#tebody2").dataset.id, {method: "PUT", body: JSON.stringify(v)}); closeModal(); render(); toast("Reading corrected."); } catch (e) { toast(e.message, true); } },
-  "temp-enter"() { tempEnter(); },
+  async "temp-enter"() { if (!state.temps) await loadTemps(); tempEnter(); },
   "temp-bad"(el) { state.tbad = el.checked; render(); },
   "temp-action"(el) { tempAction(el.dataset.id); },
   async "temp-action-go"() { const by = $("#taby").value.trim(), a = $("#taact").value.trim(); if (!a || !by) return toast("Write what was done and your name.", true); rememberWho(by);

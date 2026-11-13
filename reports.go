@@ -25,6 +25,8 @@ type reportSection struct {
 	Note    string
 	Cols    []string
 	Rows    [][]string
+	Text    string // plain text for the email version when HTML is set
+	HTML    string // ready-made, already-escaped markup shown instead of a table
 }
 
 type report struct {
@@ -92,6 +94,9 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "handoff" {
 		return s.handoffReport(), true
+	}
+	if strings.HasPrefix(id, "guide:") || strings.HasPrefix(id, "checklist:") || id == "stchecklog" {
+		return s.guideReport(id)
 	}
 	if strings.HasPrefix(id, "training") {
 		return s.trainingReport(id)
@@ -379,6 +384,7 @@ func (r *report) html(plain bool) string {
 	b.WriteString(`<!doctype html><html><head><meta charset="utf-8"><title>` + e(r.Title) + `</title><style>
 body{font:13px/1.4 Segoe UI,Arial,sans-serif;color:#111;margin:28px}h1{margin:0;font-size:22px}.sub{color:#555;margin-bottom:6px}.org{color:#7a1f2b;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
 h2{font-size:15px;margin:20px 0 4px;border-bottom:1px solid #999;padding-bottom:2px}table{border-collapse:collapse;width:100%;margin:6px 0}th{background:#eee;text-align:left}th,td{border:1px solid #bbb;padding:4px 7px;vertical-align:top}
+.md h3{font-size:14px;margin:14px 0 3px}.md h4{font-size:13px;margin:10px 0 2px}.md ul,.md ol{margin:3px 0 6px;padding-left:22px}.md p{margin:4px 0}.md code{background:#eee;padding:0 3px}.md blockquote{margin:6px 0;padding-left:10px;border-left:3px solid #bbb;color:#444}.box{font-size:15px}
 .note{color:#444;margin:4px 0}.empty{color:#666;font-style:italic;padding:8px 0}.btn{margin:10px 0;padding:6px 14px}@media print{.noprint{display:none}body{margin:12mm}tr{page-break-inside:avoid}thead{display:table-header-group}}
 </style></head><body>`)
 	if !plain {
@@ -391,6 +397,9 @@ h2{font-size:15px;margin:20px 0 4px;border-bottom:1px solid #999;padding-bottom:
 		}
 		if sec.Note != "" {
 			b.WriteString(`<div class="note">` + strings.ReplaceAll(e(sec.Note), "\n", "<br>") + `</div>`)
+		}
+		if sec.HTML != "" {
+			b.WriteString(`<div class="md">` + sec.HTML + `</div>`)
 		}
 		if len(sec.Cols) == 0 {
 			continue
@@ -427,6 +436,9 @@ func (r *report) text() string {
 		}
 		if sec.Note != "" {
 			b.WriteString(sec.Note + "\r\n")
+		}
+		if sec.Text != "" {
+			b.WriteString(strings.ReplaceAll(sec.Text, "\n", "\r\n") + "\r\n")
 		}
 		n := 0
 		for _, row := range sec.Rows {

@@ -1,0 +1,80 @@
+[
+ {
+  "id": "STA-001",
+  "name": "Takeout",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-002",
+  "name": "Middle",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-003",
+  "name": "Salad",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-004",
+  "name": "Sauté",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-005",
+  "name": "Sauce Jack",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-006",
+  "name": "Spoon",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-007",
+  "name": "Hoagie Bench",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-008",
+  "name": "Apps",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-009",
+  "name": "Fryer",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-010",
+  "name": "Bread & Dessert",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-011",
+  "name": "Dish",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-012",
+  "name": "Prep",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "STA-013",
+  "name": "Kitchen-Wide",
+  "active": "Yes",
+  "created": "2026-11-13 00:00"
+ }
+]
