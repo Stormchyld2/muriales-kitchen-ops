@@ -1000,3 +1000,16 @@ func TestCalendarEventsAndSchedules(t *testing.T) {
 		t.Fatalf("delete: %d", rec.Code)
 	}
 }
+
+func TestEquipmentAssetCodeEdit(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.post("/api/maint/equipment", `{"name":"Prep Oven","assetCode":"K-003"}`)
+	eq := o["equipment"].([]any)[0].(map[string]any)
+	if eq["assetCode"] != "K-003" {
+		t.Fatalf("asset code saved: %v", eq)
+	}
+	_, o = e.post("/api/maint/equipment", `{"id":"`+eq["id"].(string)+`","name":"Prep Oven","assetCode":"K-003","make":"Vulcan"}`)
+	if o["equipment"].([]any)[0].(map[string]any)["make"] != "Vulcan" {
+		t.Error("edit saved")
+	}
+}

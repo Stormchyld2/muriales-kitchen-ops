@@ -1665,7 +1665,7 @@ function eqForm(id) {
     ${f("name", "Name: <span class='req'>*</span>", "e.g. Walk-in Cooler 1")}
     <label>Area:</label><div><select class="field" data-eq="area" style="width:auto">${["", ...(state.maint.areas || []), ...(e.area && !(state.maint.areas || []).includes(e.area) ? [e.area] : [])].map(a => `<option ${a === (e.area || "") ? "selected" : ""}>${esc(a)}</option>`).join("")}</select> <span class="hint">Add more areas in Settings, Equipment Areas.</span></div>
     <label>Type:</label><div><select class="field" data-eq="type" style="width:auto">${["", ...(state.maint.types || EQ_TYPES), ...(e.type && !(state.maint.types || EQ_TYPES).includes(e.type) ? [e.type] : [])].map(t => `<option ${t === (e.type || "") ? "selected" : ""}>${esc(t)}</option>`).join("")}</select> <span class="hint">Add more types in Settings, Equipment Areas &amp; Types.</span></div>
-    ${f("make", "Make:")}${f("model", "Model:")}${f("serial", "Serial Number:")}
+    ${f("assetCode", "Asset ID:", "e.g. K-001")}${f("make", "Make:")}${f("model", "Model:")}${f("serial", "Serial Number:")}
     <label>Installed:</label><input type="date" class="field" data-eq="installed" value="${esc(e.installed || "")}" style="width:190px">
     ${f("vendor", "Bought From:")}<label>Purchase Date:</label><input type="date" class="field" data-eq="purchaseDate" value="${esc(e.purchaseDate || "")}" style="width:190px">
     <label>Purchase Cost ($):</label><input type="number" min="0" step="0.01" class="field" data-eq="purchaseCost" value="${e.purchaseCost || ""}" style="width:150px">
@@ -1761,10 +1761,10 @@ function vAssets() {
   return `<p class="hint" style="margin-top:0">Add model, serial number and purchase details on each unit, then record every repair and its cost. When upkeep reaches ${m.replacePercent}% of the cost of a new unit, the program suggests considering a replacement. You can change that limit in Settings, MaintainX.</p>
   <div class="row"><button class="btn green big" data-act="eq-edit" data-id="">${icon("plus")}Add Equipment</button>${flag ? `<span class="hint"><b>${flag} unit${flag === 1 ? "" : "s"} to consider replacing</b></span>` : ""}</div>
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>No equipment yet</b>Click “Add Equipment” to start the asset list.</div>`
-    : `<table class="plain"><thead><tr>${["Equipment", "Make / Model", "Serial Number", "Age", "Warranty", "Spent on Upkeep", "Last 12 Months", "Suggestion"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:120px"></th></tr></thead><tbody>
-      ${list.map(e => { const a = A[e.id] || {}; return `<tr><td><b>${esc(e.name)}</b><div class="hint">${esc(e.type)}</div></td><td>${esc([e.make, e.model].filter(Boolean).join(" "))}</td><td>${esc(e.serial)}</td><td>${a.ageYears ? a.ageYears + " yr" : ""}</td><td>${esc(a.warranty || "")}${e.warrantyEnd ? `<div class="hint">${fmtDate(e.warrantyEnd)}</div>` : ""}</td>
+    : `<table class="plain"><thead><tr>${["Equipment", "Make / Model", "Serial Number", "Age", "Warranty", "Spent on Upkeep", "Last 12 Months", "Suggestion"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort" style="width:190px"></th></tr></thead><tbody>
+      ${list.map(e => { const a = A[e.id] || {}; return `<tr><td><b>${esc(e.name)}</b><div class="hint">${esc([e.assetCode, e.type].filter(Boolean).join(" · "))}</div></td><td>${esc([e.make, e.model].filter(Boolean).join(" "))}</td><td>${esc(e.serial)}</td><td>${a.ageYears ? a.ageYears + " yr" : ""}</td><td>${esc(a.warranty || "")}${e.warrantyEnd ? `<div class="hint">${fmtDate(e.warrantyEnd)}</div>` : ""}</td>
         <td>${money(a.total)}${a.percent >= 0 ? `<div class="hint">${a.percent}% of a new unit</div>` : ""}</td><td>${money(a.last12)}</td><td>${a.advice ? tag(a.advice) : '<span class="hint">Add purchase cost</span>'}</td>
-        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="asset-open" data-id="${e.id}">Details</button></div></td></tr>`; }).join("")}
+        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="asset-open" data-id="${e.id}">Details</button> <button class="btn small" data-act="eq-edit" data-id="${e.id}">${icon("edit")}Edit</button></div></td></tr>`; }).join("")}
     </tbody></table>`}</div>`;
 }
 function assetDetail(id) {
