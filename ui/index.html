@@ -2001,7 +2001,7 @@ async function refreshTodo() {
 function vTodo() {
   const t = state.todo;
   if (!t) return `<div class="empty"><b>No to-do list yet</b>Choose a period and the program gathers everything that is due into one list.<br><br><button class="btn green big" data-act="todo-new">${icon("list")}Create To-Do List</button></div>`;
-  const items = t.items.filter(i => !t.overdueOnly || i.state === "Overdue");
+  const items = t.items.filter(i => (!t.overdueOnly || i.state === "Overdue") && !(i.group === "Other" && ((t.kindLabel === "clean" && i.type !== "Cleaning") || (t.kindLabel === "maint" && i.type !== "Maintenance"))));
   const depts = (state.maint && state.maint.departments) || [], byDept = t.dept === "each";
   const groups = byDept ? [...depts, "General"].filter((d, i, a) => a.indexOf(d) === i).map(d => [d, d, items.filter(i => (i.dept || "General") === d)]).filter(x => x[2].length) : t.freqs ? [...TODO_FREQS, ""].map(f => [f, f || "Open items", items.filter(i => (i.bucket || "") === f)]).filter(x => x[2].length) : TODO_SOURCES.map(([g, l]) => [g, l, items.filter(i => i.group === g)]).filter(x => x[2].length);
   const late = items.filter(i => i.state === "Overdue").length;
@@ -2034,6 +2034,8 @@ const ACT = {
   "todo-print"() { window.print(); },
   "todo-add"() { showModal(`<h2>${icon("plus")}Add My Own Item</h2><div class="body"><div class="fields">
     <label>To do: <span class="req">*</span></label><input class="field" data-td="title" placeholder="e.g. Call the hood cleaner">
+    <label>Type:</label><select class="field" data-td="type" style="width:auto"><option>Cleaning</option><option>Maintenance</option><option>General</option></select>
+    <label>Department:</label><select class="field" data-td="dept" style="width:auto">${["", ...((state.maint && state.maint.departments) || [])].map(d => `<option>${esc(d)}</option>`).join("")}</select>
     <label>Due date:</label><input type="date" class="field" data-td="due" style="width:190px"><label>Notes:</label><input class="field" data-td="notes" placeholder="Optional">
     <label>Your name: <span class="req">*</span></label><input class="field" data-td="createdBy" value="${esc(who())}"></div></div>
     <div class="foot"><button class="btn green big" data-act="todo-add-go">${icon("save")}Add</button><button class="btn big" data-act="close">Cancel</button></div>`); },
@@ -2043,7 +2045,7 @@ const ACT = {
     <div class="foot"><button class="btn green big" data-act="todo-done-go" data-id="${el.dataset.id}">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`); },
   async "todo-done-go"(el) { const by = $("#todoby").value; rememberWho(by); await api("/api/maint/todos/" + el.dataset.id + "/done", {method: "POST", body: JSON.stringify({by})}); closeModal(); await refreshTodo(); toast("Done."); },
   async "todo-act"(el) { const k = el.dataset.kind, id = el.dataset.id; if (!state.maint) state.maint = await api("/api/maint");
-    if (k === "deep") { state.today = null; await loadToday(); return deepDone(id); } if (k === "clean") return cleanDone(id); if (k === "cleanday") return ACT.nav({dataset: {v: "cltoday"}}); if (k === "mgr") return mgrDone(id); if (k === "repl") return replForm(id); if (k === "ca") return caForm(id); if (k === "temp") return tempAction(id); if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
+    if (k === "missed") { state.reg.missed = await api("/api/reg/missed"); return regForm("missed", id); } if (k === "deep") { state.today = null; await loadToday(); return deepDone(id); } if (k === "clean") return cleanDone(id); if (k === "cleanday") return ACT.nav({dataset: {v: "cltoday"}}); if (k === "mgr") return mgrDone(id); if (k === "repl") return replForm(id); if (k === "ca") return caForm(id); if (k === "temp") return tempAction(id); if (k === "finding") return findDetail(id); if (k === "task") return pmDone(id); if (k === "issue") return issueDetail(id); if (k === "equipment") return assetDetail(id);
     if (k === "product") { state.id = id; state.view = "detail"; render(); } },
   "temp-edit"(el) { tempEdit(el.dataset.id); },
   async "temp-edit-go"() { const v = grab("[data-te]", "te"); if (!v.editedBy.trim()) return toast("Enter your name.", true); rememberWho(v.editedBy); v.temp = parseFloat(v.temp);

@@ -119,6 +119,17 @@ func (s *store) cleanTodo(from, to time.Time, want map[string]bool) []todoItem {
 			}
 			out = append(out, todoItem{Group: "Cleaning", Title: r["area"] + ": " + r["task"], Detail: strings.Join(nonEmpty(r["frequency"], r["role"], r["timing"]), " · "), Due: due, State: state, Kind: "clean", ID: r["id"]})
 		}
+		s.syncMissed()
+		for _, r := range s.regSorted(regDefs["missed"]) {
+			if (r["status"] != "Open" && r["status"] != "In Progress") || r["key"] != "" {
+				continue // overdue items already show as themselves
+			}
+			st := "Open"
+			if strings.HasPrefix(r["priority"], "P1") || strings.HasPrefix(r["priority"], "P2") || strings.Contains(r["reason"], "Overdue") {
+				st = "Overdue"
+			}
+			out = append(out, todoItem{Group: "Cleaning", Title: "Fix: " + r["area"] + ": " + r["task"], Detail: strings.Join(nonEmpty(r["reason"], r["assignedTo"], r["priority"]), " · "), Due: r["date"], State: st, Kind: "missed", ID: r["id"]})
+		}
 		if left > 0 {
 			out = append(out, todoItem{Group: "Cleaning", Title: "Daily cleaning checklist: " + strconv.Itoa(left) + " task" + map[bool]string{true: "", false: "s"}[left == 1] + " to do", Detail: "Open Cleaning & Sanitation, Today's Checklist", Due: today, State: "Due Today", Kind: "cleanday", ID: "today"})
 		}

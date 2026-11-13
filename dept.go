@@ -38,7 +38,9 @@ func (s *store) byDept(items []todoItem, only string) []todoItem {
 	depts := st.departments()
 	out := make([]todoItem, 0, len(items))
 	for _, it := range items {
-		it.Dept = deptOf(depts, it.Title+" "+it.Detail)
+		if it.Dept == "" {
+			it.Dept = deptOf(depts, it.Title+" "+it.Detail)
+		}
 		if only == "" || strings.EqualFold(only, it.Dept) {
 			out = append(out, it)
 		}

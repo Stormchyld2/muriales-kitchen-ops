@@ -79,7 +79,7 @@ var regDefs = map[string]*collDef{
 		ListCols: []string{"id", "date", "shift", "area", "task", "completedBy", "source", "verifyStatus", "issue"},
 		Fields: []fieldDef{dat("date", "Date", true), txt("shift", "Shift", false), txt("taskId", "Task ID", false), txt("area", "Area / equipment", true), lng("task", "Cleaning task", true), txt("completedBy", "Completed by", true), txt("time", "Completion time", false),
 			txt("verifiedBy", "Verified by", false), txt("verifyTime", "Verification time", false), yn("issue", "Issue found?"), sel("verifyStatus", "Verification status", []string{"Pending", "Verified", "Failed", "Not required"}, false), txt("caRef", "Corrective action ref", false), txt("source", "Where it came from", false), lng("notes", "Notes", false)}},
-	"missed": {Name: "missed", Title: "Missed & Overdue Log", NewLabel: "Report Missed Cleaning", Prefix: "MISS-", Digits: 4, Desc: true, Report: "clean-missed",
+	"missed": {Name: "missed", Title: "Missed & Overdue Log", NewLabel: "Report Cleaning Issue", Prefix: "MISS-", Digits: 4, Desc: true, Report: "clean-missed",
 		Intro:    "Anything missed, overdue, rejected or not done to standard, and how it was put right.",
 		ListCols: []string{"id", "date", "area", "task", "reason", "source", "priority", "assignedTo", "target", "status"},
 		Fields: []fieldDef{dat("date", "Date identified", true), txt("taskId", "Task ID", false), txt("area", "Area / equipment", true), lng("task", "Cleaning task", true), lng("reason", "Reason missed / failed", true), sel("priority", "Priority", prioOpts, true), txt("assignedTo", "Assigned to", false),

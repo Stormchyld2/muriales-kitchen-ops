@@ -19,6 +19,8 @@ type Todo struct {
 	Due       string `json:"due"`
 	Notes     string `json:"notes"`
 	CreatedBy string `json:"createdBy"`
+	Type      string `json:"type"` // Cleaning, Maintenance or General
+	Dept      string `json:"dept"`
 	Done      bool   `json:"done"`
 	DoneBy    string `json:"doneBy"`
 	DoneAt    string `json:"doneAt"`
@@ -31,6 +33,7 @@ type todoItem struct {
 	Due    string `json:"due"`
 	State  string `json:"state"` // Overdue, Due Today, Upcoming, Open
 	Bucket string `json:"bucket,omitempty"`
+	Type   string `json:"type,omitempty"`
 	Dept   string `json:"dept,omitempty"` // department it belongs to, for the handouts
 	Kind   string `json:"kind"`           // task, issue, product, equipment, todo
 	ID     string `json:"id"`
@@ -170,7 +173,7 @@ func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
 					}
 				}
 			}
-			out = append(out, todoItem{Group: "Other", Title: t.Title, Detail: t.Notes, Due: t.Due, State: state, Kind: "todo", ID: t.ID})
+			out = append(out, todoItem{Group: "Other", Title: t.Title, Detail: t.Notes, Due: t.Due, State: state, Kind: "todo", ID: t.ID, Type: t.Type, Dept: t.Dept})
 		}
 	}
 	rank := map[string]int{"Overdue": 0, "Due Today": 1, "Open": 2, "Upcoming": 3}

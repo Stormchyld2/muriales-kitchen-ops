@@ -1107,3 +1107,29 @@ func TestTodoByDepartment(t *testing.T) {
 		t.Errorf("departments saved: %v", got)
 	}
 }
+
+func TestCleaningIssueAndOwnItemOnTodo(t *testing.T) {
+	e := newEnv(t)
+	if c, o := e.post("/api/reg/missed", `{"date":"2026-11-12","area":"Dish","task":"Drain smells","reason":"Grease buildup","priority":"P2 - Urgent","status":"Open"}`); c != 200 {
+		t.Fatalf("report cleaning issue: %v %v", c, o)
+	}
+	if c, _ := e.post("/api/maint/todos", `{"title":"Re-grout dish pit floor","type":"Maintenance","dept":"Dish","createdBy":"AB"}`); c != 200 {
+		t.Fatal("own item")
+	}
+	from := time.Now().Format(dayFmt)
+	to := time.Now().AddDate(0, 0, 7).Format(dayFmt)
+	_, o := e.get2("/api/todo?from=" + from + "&to=" + to + "&dept=Dish")
+	var issue, own bool
+	for _, x := range o["items"].([]any) {
+		m := x.(map[string]any)
+		if m["kind"] == "missed" {
+			issue = true
+		}
+		if m["kind"] == "todo" && m["type"] == "Maintenance" && m["dept"] == "Dish" {
+			own = true
+		}
+	}
+	if !issue || !own {
+		t.Errorf("dish list should hold the cleaning issue and the own item: issue=%v own=%v", issue, own)
+	}
+}
