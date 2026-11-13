@@ -1259,3 +1259,19 @@ func TestEditServiceAndInspection(t *testing.T) {
 		t.Fatalf("%v", q)
 	}
 }
+
+func TestDepartmentKeywordsAndPlurals(t *testing.T) {
+	lines := defaultDepartments
+	for text, want := range map[string]string{
+		"Fryers - Safety": "Front Line", "Back Line Oven": "Back Line", "Food Processor / Mixer / Slicer": "Prep",
+		"Salad station cooler": "Salads", "Ecolab Dish Machine": "Dish", "Kitchen Walls": "General",
+	} {
+		if got := deptOf(lines, text); got != want {
+			t.Errorf("%q -> %q, want %q", text, got, want)
+		}
+	}
+	custom := []string{"Front Line", "Bar | draft, keg", "General"}
+	if got := deptOf(custom, "Clean keg lines"); got != "Bar" {
+		t.Errorf("custom words: %q", got)
+	}
+}

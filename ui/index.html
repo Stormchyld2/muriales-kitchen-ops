@@ -1715,8 +1715,8 @@ function tEqAreas() {
     <textarea class="field" id="eqtypeslist" rows="12" placeholder="One type per line">${esc((m.types || []).join("\n"))}</textarea>
     <div class="row" style="margin-top:10px"><button class="btn green" data-act="eqtypes-save">${icon("save")}Save</button></div></div>
   <div class="panel" style="max-width:760px"><h3 style="margin-top:0">Departments</h3>
-    <p>Used to split the To-Do list into a sheet for each department, such as Dish or Prep. An item goes to the department whose name appears in its area or wording; anything else goes under General. One department per line, then Save.</p>
-    <textarea class="field" id="deptlist" rows="9" placeholder="One department per line">${esc((m.departments || []).join("\n"))}</textarea>
+    <p>Used to split the To-Do list into a sheet for each department, such as Dish or Prep. An item goes to the department whose name appears in its area or wording; anything else goes under General. One department per line. To send more things to a department, add a bar and words after its name, for example <b>Salads | salad, garde manger</b>. Then Save.</p>
+    <textarea class="field" id="deptlist" rows="9" placeholder="One department per line">${esc((m.departmentLines || m.departments || []).join("\n"))}</textarea>
     <div class="row" style="margin-top:10px"><button class="btn green" data-act="dept-save">${icon("save")}Save</button></div></div>`;
 }
 function tMaintainx() {

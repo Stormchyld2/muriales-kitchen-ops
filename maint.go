@@ -99,13 +99,25 @@ var defaultEquipmentAreas = []string{"Front Line", "Back Line", "Prep", "Salad",
 
 var defaultEquipmentTypes = []string{"Lowboy", "Cook Tops", "Ovens", "Mixer", "Misc Equip", "Walk-in Cooler", "Walk-in Freezer", "Reach-in Refrigerator", "Freezer", "Fryer", "Grill / Flat Top", "Dish Machine", "Ice Machine", "Hood / Exhaust Fan", "Fire Suppression System", "HVAC / Rooftop Unit", "Make-up Air Unit", "Water Heater", "Grease Trap", "Water Filter", "Other"}
 
-var defaultDepartments = []string{"Front Line", "Back Line", "Prep", "Salad", "Dish", "Coolers & Freezers", "Receiving & Storage", "General"}
+var defaultDepartments = []string{"Front Line", "Back Line", "Prep", "Salads", "Dish", "General"}
 
-func (st maintSettings) departments() []string {
+// deptLines are the Departments setting as written: a name, optionally
+// followed by "|" and extra words that send items there.
+func (st maintSettings) deptLines() []string {
 	if st.Departments == nil {
 		return defaultDepartments
 	}
 	return st.Departments
+}
+
+func (st maintSettings) departments() []string {
+	out := []string{}
+	for _, l := range st.deptLines() {
+		if n, _ := splitDeptLine(l); n != "" {
+			out = append(out, n)
+		}
+	}
+	return out
 }
 
 func (st maintSettings) types() []string {
@@ -261,7 +273,7 @@ func (s *store) maintPayload() map[string]any {
 	sort.Slice(eq, func(i, j int) bool { return strings.ToLower(eq[i].Name) < strings.ToLower(eq[j].Name) })
 	return map[string]any{"equipment": eq, "issues": is, "portalUrl": st.PortalURL,
 		"priorityUse": priorityUse, "pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses,
-		"managers": st.Managers, "areas": st.areas(), "types": st.types(), "departments": st.departments(), "oosLog": s.oosList()}
+		"managers": st.Managers, "areas": st.areas(), "types": st.types(), "departments": st.departments(), "departmentLines": st.deptLines(), "oosLog": s.oosList()}
 }
 
 func (s *store) maintRoutes(mux *http.ServeMux) {
@@ -581,8 +593,10 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 			st.Departments = []string{}
 			seen := map[string]bool{}
 			for _, n := range *in2.Departments {
-				if n = strings.TrimSpace(n); n != "" && !seen[strings.ToLower(n)] {
-					seen[strings.ToLower(n)] = true
+				n = strings.TrimSpace(n)
+				name, _ := splitDeptLine(n)
+				if name != "" && !seen[strings.ToLower(name)] {
+					seen[strings.ToLower(name)] = true
 					st.Departments = append(st.Departments, n)
 				}
 			}
