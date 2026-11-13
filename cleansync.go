@@ -45,6 +45,10 @@ func deepState(r rec, today time.Time) (due, state string) {
 
 // decorate adds the computed due date and status to the schedule lists.
 func (s *store) decorate(c *collDef, rows []rec) []rec {
+	if c.Name == "training" {
+		s.decorateTraining(rows)
+		return rows
+	}
 	today := time.Now().Format(dayFmt)
 	tt, _ := time.Parse(dayFmt, today)
 	for _, r := range rows {

@@ -1,0 +1,128 @@
+[
+ {
+  "id": "TT-001",
+  "name": "Food Handler Card / Certificate",
+  "about": "Basic food safety certificate your local health department requires or expects for food workers.",
+  "appliesTo": "All",
+  "renewMonths": "36",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-002",
+  "name": "Certified Food Protection Manager",
+  "about": "Nationally accredited food protection manager certification (for example ServSafe Manager).",
+  "appliesTo": "Manager",
+  "renewMonths": "60",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-003",
+  "name": "Allergen Awareness",
+  "about": "The major food allergens, cross-contact, reading labels and what to do when a guest reports an allergy.",
+  "appliesTo": "All",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-004",
+  "name": "Handwashing & Personal Hygiene",
+  "about": "When and how to wash hands, glove use, illness reporting, clean uniforms and hair restraints.",
+  "appliesTo": "All",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-005",
+  "name": "Cross-Contamination & Date Marking",
+  "about": "Storage order, separating raw and ready-to-eat food, labeling and use-by dates.",
+  "appliesTo": "All",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-006",
+  "name": "Time & Temperature Control",
+  "about": "Safe temperatures, cooling, reheating, hot and cold holding, and logging temperatures.",
+  "appliesTo": "All",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-007",
+  "name": "Chemical Safety & SDS (HazCom)",
+  "about": "Chemical labels, safety data sheets, PPE, never mixing chemicals, and spill and exposure response.",
+  "appliesTo": "All",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-008",
+  "name": "Dish Machine & Sanitizer Testing",
+  "about": "Running the dish machine, checking temperature or sanitizer strength, and sanitizing sinks and surfaces.",
+  "appliesTo": "Dish",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-009",
+  "name": "Knife & Cutting Safety",
+  "about": "Safe knife handling, cut-resistant gloves and cutting board use.",
+  "appliesTo": "Prep, Salads, Front Line, Back Line",
+  "renewMonths": "",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-010",
+  "name": "Slicer / Mixer / Equipment Safety",
+  "about": "Guards, lockout, cleaning and safe operation of slicers, mixers and other powered equipment.",
+  "appliesTo": "Prep, Dish",
+  "renewMonths": "",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-011",
+  "name": "Burns, Hot Oil & Fryer Safety",
+  "about": "Handling hot oil, fryer filtering, hot pans and steam, and first aid for burns.",
+  "appliesTo": "Front Line, Back Line",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-012",
+  "name": "Slips, Trips & Falls / General Safety",
+  "about": "Wet floors, mats, lifting, ladders and keeping walkways clear.",
+  "appliesTo": "All",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-013",
+  "name": "Fire Extinguisher & Emergency Procedures",
+  "about": "Where extinguishers and exits are, how to use an extinguisher, and the emergency plan.",
+  "appliesTo": "All",
+  "renewMonths": "12",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ },
+ {
+  "id": "TT-014",
+  "name": "New Hire Orientation",
+  "about": "Kitchen rules, schedules, uniforms, safety walk-through and who to ask.",
+  "appliesTo": "All",
+  "renewMonths": "",
+  "active": "Yes",
+  "created": "2026-11-12 00:00"
+ }
+]

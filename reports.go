@@ -58,6 +58,12 @@ var reportCatalog = []reportDef{
 	{"chem-response", "Chemical Safety", "Spill / Exposure Response Sheet", "The immediate-response steps and exposure quick reference to post or keep at hand.", false},
 	{"chem-blank", "Chemical Safety", "Blank Chemical Incident Form", "Fill in by hand during an incident, then enter it in the log.", false},
 	{"chem-log", "Chemical Safety", "Chemical Incident Log", "Every chemical spill or exposure on record.", false},
+	{"training-matrix", "Employee Training", "Employee Training Matrix", "Every active employee against every training that applies to them: current, due soon, expired or missing.", false},
+	{"training-due", "Employee Training", "Training Due, Expired or Missing", "Only what needs attention: expired, never done, or due within 30 days.", false},
+	{"training-log", "Employee Training", "Training Records", "Every training completed, with who, when, who trained them and when it expires.", false},
+	{"training-signin", "Employee Training", "Training Sign-In Sheet (blank)", "A sheet to print and pass around during a training, with a trainer sign-off.", false},
+	{"training-employees", "Employee Training", "Employee List", "Everyone on record with position, department and status.", false},
+	{"training-types", "Employee Training", "Training Types", "The trainings tracked, who each applies to and how long it lasts.", false},
 	{"inspection-ready", "Food Safety", "Inspection-Ready Checklist", "A live check of the records (temperatures, cleaning, maintenance, corrective actions, SDS) plus the walk-through points and a sign-off line.", false},
 	{"weekly-summary", "Summary", "Weekly Summary", "The last 7 days at a glance: temperatures, cleaning, maintenance, corrective actions and what is still open.", false},
 	{"readiness-blank", "Food Safety", "Blank Inspection Readiness Checklist", "The 30-point self-inspection to print and carry on a walk-through.", false},
@@ -85,6 +91,9 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "handoff" {
 		return s.handoffReport(), true
+	}
+	if strings.HasPrefix(id, "training") {
+		return s.trainingReport(id)
 	}
 	if id == "inspection-ready" {
 		return s.inspectionReadyReport(), true

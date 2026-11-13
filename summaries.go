@@ -16,6 +16,13 @@ import (
 
 func within(v, from string) bool { return len(v) >= 10 && v[:10] >= from }
 
+func okOr(c bool, a, b string) string {
+	if c {
+		return a
+	}
+	return b
+}
+
 func okText(ok bool, good, bad string) string {
 	if ok {
 		return good
@@ -137,6 +144,16 @@ func (s *store) inspectionReadyReport() *report {
 		}
 	}
 	add("Safety data sheets complete and checked", okText(needs == 0, "READY", "FIX"), fmt.Sprintf("%d products on file, %d need attention.", len(s.lib.Products), needs))
+
+	// staff training
+	tm := s.trainingMatrix()
+	if len(tm.Rows) == 0 {
+		add("Staff training current", "SET UP", "No employees are on the training list yet.")
+	} else {
+		bad := tm.Count["Expired"] + tm.Count["Missing"]
+		add("Staff training current", okText(bad == 0 && tm.Count["Due Soon"] == 0, "READY", okOr(bad > 0, "FIX", "CHECK")),
+			fmt.Sprintf("%d expired, %d never done, %d due within 30 days.", tm.Count["Expired"], tm.Count["Missing"], tm.Count["Due Soon"]))
+	}
 
 	// last readiness walk
 	last := ""
@@ -279,6 +296,13 @@ func (s *store) weeklySummaryReport() *report {
 			walks++
 		}
 	}
+	tm := s.trainingMatrix()
+	trainDone := 0
+	for _, r := range s.regLoad(regDefs["training"]) {
+		if within(r["completed"], from) {
+			trainDone++
+		}
+	}
 	n := func(i int) string { return strconv.Itoa(i) }
 	rep.Sections = append(rep.Sections, reportSection{Heading: "The week at a glance", Cols: []string{"Area", "Measure", "Count"}, Rows: [][]string{
 		{"Food safety", "Temperature readings taken", n(len(readings))},
@@ -299,6 +323,9 @@ func (s *store) weeklySummaryReport() *report {
 		{"Maintenance", "Issues repaired or verified", n(closed)},
 		{"Maintenance", "Issues still open now", n(stillOpen)},
 		{"Maintenance", "Equipment out of service now", n(oos)},
+		{"Training", "Trainings completed this week", n(trainDone)},
+		{"Training", "Expired or never done (required)", n(tm.Count["Expired"] + tm.Count["Missing"])},
+		{"Training", "Due within 30 days", n(tm.Count["Due Soon"])},
 	}})
 	if len(badRows) > 0 {
 		rep.Sections = append(rep.Sections, reportSection{Heading: "Out-of-range temperatures this week", Cols: []string{"When", "Point", "Temp", "Safe Range", "Status", "By", "Notes / Action"}, Rows: badRows})

@@ -20,6 +20,7 @@ type fieldDef struct {
 	Type  string   `json:"type"` // text, long, select, date, yn
 	Opts  []string `json:"opts,omitempty"`
 	Req   bool     `json:"req,omitempty"`
+	Src   string   `json:"src,omitempty"` // for a "ref" field: the list its choices come from
 }
 
 type collDef struct {
@@ -136,6 +137,7 @@ func (c *collDef) validate(r rec) string {
 			}
 		case f.Type == "yn" && v != "Yes" && v != "No":
 			return f.Label + ": choose Yes or No."
+		case f.Type == "ref":
 		case f.Type == "select" && !oneOf(f.Opts, v):
 			return f.Label + ": choose one of the listed options."
 		}
@@ -240,6 +242,9 @@ func (s *store) registryRoutes(mux *http.ServeMux) {
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		if c.Name == "training" {
+			s.trainingExpiry(in2)
+		}
 		rows := s.regLoad(c)
 		if id := in2["id"]; id != "" {
 			found := false

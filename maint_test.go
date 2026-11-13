@@ -1275,3 +1275,75 @@ func TestDepartmentKeywordsAndPlurals(t *testing.T) {
 		t.Errorf("custom words: %q", got)
 	}
 }
+
+func TestEmployeeTraining(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/reg/trainingtypes")
+	types := o["rows"].([]any)
+	if len(types) < 10 {
+		t.Fatalf("starter training types: %d", len(types))
+	}
+	var allID, mgrID string
+	for _, r := range types {
+		m := r.(map[string]any)
+		if m["name"] == "Allergen Awareness" {
+			allID = m["id"].(string)
+		}
+		if m["name"] == "Certified Food Protection Manager" {
+			mgrID = m["id"].(string)
+		}
+	}
+	e.post("/api/reg/employees", `{"name":"Ana Cook","position":"Line Cook","department":"Front Line","status":"Active"}`)
+	e.post("/api/reg/employees", `{"name":"Sam Boss","position":"Kitchen Manager","department":"General","status":"Active"}`)
+	e.post("/api/reg/employees", `{"name":"Old Hand","position":"Dish","department":"Dish","status":"Inactive"}`)
+	_, o = e.get2("/api/reg/employees")
+	ana := ""
+	for _, r := range o["rows"].([]any) {
+		if r.(map[string]any)["name"] == "Ana Cook" {
+			ana = r.(map[string]any)["id"].(string)
+		}
+	}
+	if c, _ := e.post("/api/reg/training", `{"employeeId":"`+ana+`","typeId":"`+allID+`"}`); c != 400 {
+		t.Fatal("a date is needed")
+	}
+	old := time.Now().AddDate(0, -14, 0).Format("2006-01-02")
+	if c, out := e.post("/api/reg/training", `{"employeeId":"`+ana+`","typeId":"`+allID+`","completed":"`+old+`"}`); c != 200 {
+		t.Fatal(c, out)
+	}
+	_, o = e.get2("/api/reg/training")
+	row := o["rows"].([]any)[0].(map[string]any)
+	if row["expires"] == "" || row["state"] != "Expired" || row["employeeName"] != "Ana Cook" {
+		t.Fatalf("expiry not worked out: %v", row)
+	}
+	_, o = e.get2("/api/training/matrix")
+	rows := o["rows"].([]any)
+	if len(rows) != 2 {
+		t.Fatalf("inactive staff must be left off: %d", len(rows))
+	}
+	for _, r := range rows {
+		m := r.(map[string]any)
+		cells := m["cells"].(map[string]any)
+		if m["name"] == "Ana Cook" {
+			if cells[allID].(map[string]any)["state"] != "Expired" {
+				t.Fatalf("ana: %v", cells[allID])
+			}
+			if _, ok := cells[mgrID]; ok {
+				t.Fatal("manager training does not apply to a line cook")
+			}
+		}
+		if m["name"] == "Sam Boss" {
+			if cells[mgrID].(map[string]any)["state"] != "Missing" {
+				t.Fatalf("sam: %v", cells[mgrID])
+			}
+		}
+	}
+	for _, id := range []string{"training-matrix", "training-due", "training-log", "training-signin", "training-employees", "training-types"} {
+		if rec, _ := e.get("/api/reports/" + id); rec.Code != 200 {
+			t.Fatalf("%s: %d", id, rec.Code)
+		}
+	}
+	rec, _ := e.get("/api/reports/inspection-ready")
+	if !strings.Contains(rec.Body.String(), "Staff training current") {
+		t.Fatal("readiness check missing training")
+	}
+}
