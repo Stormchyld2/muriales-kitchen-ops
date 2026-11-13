@@ -1339,7 +1339,7 @@ function tTempSheet() {
     <div class="row" style="margin-top:10px"><button class="btn green" data-act="tsurl-save">${icon("save")}Save Link</button><button class="btn" data-act="temp-sync">${icon("down")}Sync Now</button><button class="btn" data-act="temp-cols" ${d.url ? "" : "disabled"}>Check Columns</button>${d.syncedAt ? `<span class="hint">Last synced ${esc(d.syncedAt)}</span>` : ""}</div></div>
   <div class="panel" style="max-width:820px"><h3 style="margin-top:0">Import a file (Microsoft Forms or Google)</h3>
     <p>From Microsoft Forms choose Open in Excel and save or download the workbook, or in Google Sheets download as .csv. Then pick the .xlsx or .csv file here. Responses already imported are skipped, so you can import the same sheet again.</p>
-    <label class="btn" style="display:inline-block">${icon("down")}Choose CSV or Excel File<input type="file" id="tempcsv" accept=".csv,.xlsx,text/csv" hidden></label></div>`;
+    <div class="row"><button class="btn green" data-act="temp-file">${icon("down")}Choose CSV or Excel File</button><span class="hint" id="tempfilemsg"></span></div><input type="file" id="tempcsv" accept=".csv,.xlsx,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>`;
 }
 function tempMapDialog(pv, src) {
   const H = pv.headers, m = pv.map, opt = (sel, none) => `<option value="">${none || "(none)"}</option>` + H.map(h => `<option ${h === sel ? "selected" : ""}>${esc(h)}</option>`).join("");
@@ -2096,6 +2096,7 @@ const ACT = {
       readings.push({pointId: p.id, temp: t, notes: tOut(p, t) ? "" : note, action: tOut(p, t) ? note : ""}); const out = tOut(p, t); if (out && !note) return toast(`${p.name} is out of range. Write the corrective action in the notes box.`, true); }
     if (!readings.length) return toast("Enter at least one temperature.", true); if (!by) return toast("Enter your name or initials.", true); rememberWho(by);
     state.temps = await api("/api/temps", {method: "POST", body: JSON.stringify({by, readings})}); closeModal(); render(); toast(`${readings.length} reading${readings.length === 1 ? "" : "s"} saved.`); },
+  "temp-file"() { $("#tempcsv").click(); },
   async "temp-sync"() { try { const o = await api("/api/temps/sync", {method: "POST"}); state.temps = o.data; render(); toast(syncMsg(o)); } catch (e) { toast(e.message, true); } },
   async "temp-cols"() { try { tempMapDialog(await api("/api/temps/sheet-preview", {method: "POST"}), {sheet: true}); } catch (e) { toast(e.message, true); } },
   async "tsurl-save"() { state.temps = await api("/api/temps/settings", {method: "POST", body: JSON.stringify({url: $("#tsurl").value})}); render(); toast("Saved."); },
@@ -2356,7 +2357,13 @@ document.addEventListener("change", e => {
   else if (t.dataset.ch === "product" || t.dataset.ch === "kind") chemPick();
   else if (t.dataset.rp === "equipment") replPick(t);
   else if (t.dataset.act === "ca-filter") ACT["ca-filter"](t);
-  else if (t.id === "tempcsv" && t.files.length) { const f = t.files[0]; t.value = ""; (async () => { try { let csv; if (/\.xlsx$/i.test(f.name)) csv = (await api("/api/temps/xlsx", {method: "POST", body: await f.arrayBuffer()})).csv; else csv = await f.text(); tempMapDialog(await api("/api/temps/import/preview", {method: "POST", body: JSON.stringify({csv})}), {csv}); } catch (e) { toast(e.message, true); } })(); }
+  else if (t.id === "tempcsv" && t.files.length) { const f = t.files[0]; t.value = ""; const say = m => { const el = $("#tempfilemsg"); if (el) el.textContent = m; };
+    (async () => { try { say("Reading " + f.name + "..."); toast("Reading " + f.name + "..."); const buf = await f.arrayBuffer(); let csv;
+      if (/\.xlsx$/i.test(f.name)) csv = (await api("/api/temps/xlsx", {method: "POST", body: buf})).csv;
+      else { const u = new Uint8Array(buf), enc = u[0] === 0xFF && u[1] === 0xFE ? "utf-16le" : u[0] === 0xFE && u[1] === 0xFF ? "utf-16be" : "utf-8"; csv = new TextDecoder(enc).decode(buf).replace(/^\uFEFF/, ""); }
+      if (!csv.trim()) throw new Error("That file is empty.");
+      const pv = await api("/api/temps/import/preview", {method: "POST", body: JSON.stringify({csv})}); say(""); tempMapDialog(pv, {csv}); }
+    catch (e) { say("Could not read " + f.name + ": " + (e.message || e)); toast("Could not read that file: " + (e.message || e), true); } })(); }
   else if (t.dataset.repMonth !== undefined) state.repMonth = t.value;
   else if (t.id === "sumMonth") { if (t.value) loadSummary(t.value); }
   else if (t.id === "cat") { state.cat = t.value; state.focusQ = false; render(); }
