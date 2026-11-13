@@ -1255,20 +1255,33 @@ function oosClearAsk(id) {
 /* ---------- temperature log ---------- */
 const dayLong = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, {weekday: "short", year: "numeric", month: "short", day: "numeric"}); };
 const trOpen = (f, print) => window.open("/api/temp-reports/" + encodeURIComponent(f) + (print ? "?print=1" : ""), "_blank");
-async function loadTemps(days) { try { state.treports = (await api("/api/temp-reports")).reports; } catch (e) { state.treports = []; } state.tdays = days || state.tdays || 7; const from = ymd(new Date(Date.now() - (state.tdays - 1) * 864e5)); state.temps = await api("/api/temps?from=" + from); if (state.view === "temps" || state.view === "tpoints" || (state.view === "settings" && (state.tab === "tempsheet" || state.tab === "temppoints"))) render(); }
+async function loadTemps(days) { try { state.treports = (await api("/api/temp-reports")).reports; } catch (e) { state.treports = []; } if (days !== undefined && days !== null) state.tdays = days; if (state.tdays === undefined) state.tdays = 7; let q = ""; if (state.tdays === 0) { if (!state.tfrom) state.tfrom = ymd(new Date(Date.now() - 29 * 864e5)); if (!state.tto) state.tto = ymd(new Date()); q = "?from=" + state.tfrom + "&to=" + state.tto; } else q = "?from=" + ymd(new Date(Date.now() - (state.tdays - 1) * 864e5)); state.temps = await api("/api/temps" + q); if (state.view === "temps" || state.view === "tpoints" || (state.view === "settings" && (state.tab === "tempsheet" || state.tab === "temppoints"))) render(); }
+function tTrend(rows) {
+  const pts = rows.filter(r => r.temp !== undefined && r.temp !== null && r.temp !== "" && !isNaN(+r.temp)).slice().sort((a, b) => (a.at < b.at ? -1 : 1)); if (!pts.length) return "";
+  const v = pts.map(r => +r.temp), min = Math.min(...v), max = Math.max(...v), avg = v.reduce((x, y) => x + y, 0) / v.length, out = pts.filter(r => r.status === "Too Warm" || r.status === "Too Cold").length;
+  const W = 760, H = 150, P = 28, lo = Math.min(min, ...[]) - 2, hi = max + 2, rng = (hi - lo) || 1;
+  const X = i => P + (pts.length === 1 ? (W - 2 * P) / 2 : i * (W - 2 * P) / (pts.length - 1)), Y = t => H - P / 2 - (t - lo) / rng * (H - P);
+  const line = pts.map((r, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(+r.temp).toFixed(1)).join(" ");
+  const dots = pts.map((r, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(+r.temp).toFixed(1)}" r="3.5" fill="${r.status === "OK" ? "#2f7d4f" : "#a3243b"}"><title>${esc(when12(r.at))}: ${r.temp}°F</title></circle>`).join("");
+  return `<div class="card" style="padding:10px 14px;margin:10px 0"><div class="row" style="gap:18px"><span><b>${pts.length}</b> readings</span><span>Low <b>${min}°F</b></span><span>High <b>${max}°F</b></span><span>Average <b>${avg.toFixed(1)}°F</b></span><span>Out of range <b style="color:${out ? "#a3243b" : "inherit"}">${out}</b></span><span class="hint">Safe range: ${esc(pts[pts.length - 1].limit)}</span></div>
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;max-height:180px" role="img" aria-label="Temperature trend"><text x="2" y="${Y(max).toFixed(1)}" font-size="10" fill="currentColor">${max}°</text><text x="2" y="${Y(min).toFixed(1)}" font-size="10" fill="currentColor">${min}°</text><path d="${line}" fill="none" stroke="currentColor" stroke-opacity=".55" stroke-width="1.5"/>${dots}</svg>
+  <div class="hint" style="display:flex;justify-content:space-between"><span>${esc(dayLong(pts[0].at.slice(0, 10)))}</span><span>${esc(dayLong(pts[pts.length - 1].at.slice(0, 10)))}</span></div></div>`;
+}
 const tStatus = s => s === "OK" ? "OK" : s;
 function vTemps() {
   const d = state.temps; if (!d) { loadTemps(); return `<p class="hint">Loading...</p>`; }
-  const bad = state.tbad, rows = d.readings.filter(r => !bad || r.status === "Too Warm" || r.status === "Too Cold");
+  const bad = state.tbad, rows = d.readings.filter(r => (!bad || r.status === "Too Warm" || r.status === "Too Cold") && (!state.tpoint || r.point === state.tpoint));
   const needs = r => (r.status === "Too Warm" || r.status === "Too Cold") && !(r.action || "").trim();
   const isBad = r => r.status === "Too Warm" || r.status === "Too Cold";
   return `<div class="row"><button class="btn green big" data-act="temp-enter">${icon("plus")}Enter Temperatures</button>${d.url ? `<button class="btn" data-act="temp-sync">${icon("down")}Sync Google Form</button>` : ""}
     <button class="btn" data-act="tr-save">${icon("print")}Save Daily Report</button><input type="date" class="field" id="trdate" value="${esc(state.trdate || ymd(new Date()))}" style="width:150px" title="Day for the daily report">
-    <select class="field" id="tdays" style="width:170px">${[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"], [90, "Last 90 days"], [365, "Last year"], [36500, "All readings"]].map(([n, l]) => `<option value="${n}" ${n === state.tdays ? "selected" : ""}>${l}</option>`).join("")}</select>
+    <select class="field" id="tdays" style="width:170px">${[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"], [90, "Last 90 days"], [365, "Last year"], [36500, "All readings"], [0, "Pick dates..."]].map(([n, l]) => `<option value="${n}" ${n === state.tdays ? "selected" : ""}>${l}</option>`).join("")}</select>
+    ${state.tdays === 0 ? `<label style="font-weight:400">From <input type="date" class="field" id="tfrom" value="${esc(state.tfrom || "")}" style="width:150px"></label><label style="font-weight:400">To <input type="date" class="field" id="tto" value="${esc(state.tto || "")}" style="width:150px"></label>` : ""}
+    <select class="field" id="tpoint" style="width:200px" title="Show one piece of equipment to see its trend"><option value="">All equipment</option>${[...new Set(d.readings.map(r => r.point))].sort().map(n => `<option ${n === state.tpoint ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
     <label style="font-weight:400"><input type="checkbox" data-act="temp-bad" ${bad ? "checked" : ""}> Out of range only</label>
     ${d.needAction ? `<span class="hint"><b>${d.needAction} reading${d.needAction === 1 ? "" : "s"} need a corrective action</b></span>` : ""}${d.syncedAt ? `<span class="hint">Form synced ${esc(d.syncedAt)}</span>` : ""}</div>
   ${!d.points.length ? `<p class="note warn">Add the places you check (coolers, freezers, hot wells) under Temperature Points, or import your Google Form responses in Settings, Temperature Form.</p>` : ""}
-  <div class="tablewrap">${!rows.length ? `<div class="empty"><b>No readings</b>Use Enter Temperatures for a round of checks.</div>`
+  ${state.tpoint ? tTrend(rows) : ""}<div class="tablewrap">${!rows.length ? `<div class="empty"><b>No readings</b>Use Enter Temperatures for a round of checks.</div>`
     : `<table class="plain"><thead><tr>${["When", "Point", "Temp", "Safe Range", "Status", "By", "Notes / Corrective Action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
       ${rows.map(r => `<tr><td>${esc(when12(r.at))}</td><td><b>${esc(r.point)}</b></td><td>${r.temp}°F</td><td>${esc(r.limit)}</td><td>${tag(tStatus(r.status))}</td><td>${esc(r.by)}</td><td>${esc([r.notes, r.action].filter(Boolean).join(" · "))}${r.edited ? `<div class="hint">Edited by ${esc(r.edited)}</div>` : ""}</td>
         <td style="text-align:right"><div class="acts">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button> ` : ""}<button class="btn small" data-act="temp-edit" data-id="${r.id}">${icon("edit")}Edit</button></div></td></tr>`).join("")}</tbody></table>`}</div>
@@ -2353,6 +2366,9 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   const t = e.target;
   if (t.id === "tdays") loadTemps(+t.value);
+  else if (t.id === "tfrom") { state.tfrom = t.value; if (state.tfrom && state.tto) loadTemps(0); }
+  else if (t.id === "tto") { state.tto = t.value; if (state.tfrom && state.tto) loadTemps(0); }
+  else if (t.id === "tpoint") { state.tpoint = t.value; render(); }
   else if (t.id === "trdate") state.trdate = t.value;
   else if (t.dataset.ch === "product" || t.dataset.ch === "kind") chemPick();
   else if (t.dataset.rp === "equipment") replPick(t);
