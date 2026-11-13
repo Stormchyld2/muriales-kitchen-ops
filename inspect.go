@@ -49,6 +49,7 @@ type Inspection struct {
 	IssueID     string          `json:"issueId,omitempty"`
 	PMDone      bool            `json:"pmDone"`
 	Fails       int             `json:"fails"`
+	Edited      string          `json:"edited,omitempty"` // who corrected it, and when
 }
 
 func (s *store) inspectionList() []*Inspection {
@@ -66,6 +67,70 @@ func (s *store) inspectionRoutes(mux *http.ServeMux) {
 			items = append(items, map[string]string{"key": it[0], "label": it[1]})
 		}
 		writeJSON(w, 200, map[string]any{"inspections": s.inspectionList(), "items": items, "conditions": inspectConditions})
+	})
+	mux.HandleFunc("PUT /api/inspections/{id}", func(w http.ResponseWriter, r *http.Request) {
+		var in2 struct {
+			Date, Condition, Readings, Work, Parts, Corrective, Priority, EditedBy string
+			Results                                                                map[string]InspectResult
+		}
+		if jsonDecode(r, &in2) != nil {
+			fail(w, 400, "Could not read that.")
+			return
+		}
+		if strings.TrimSpace(in2.EditedBy) == "" {
+			fail(w, 400, "Enter your name.")
+			return
+		}
+		if !oneOf(inspectConditions, in2.Condition) {
+			fail(w, 400, "Choose the condition of the equipment.")
+			return
+		}
+		if d, err := time.Parse(dayFmt, in2.Date); err != nil || d.After(time.Now().AddDate(0, 0, 1)) {
+			fail(w, 400, "Enter the date of the inspection (today or earlier).")
+			return
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if s.isReadOnly() {
+			s.maintFail(w, errReadOnly)
+			return
+		}
+		all := s.inspectionList()
+		for _, x := range all {
+			if x.ID != r.PathValue("id") {
+				continue
+			}
+			x.Date, x.Condition = in2.Date, in2.Condition
+			x.Readings, x.Work, x.Parts = strings.TrimSpace(in2.Readings), strings.TrimSpace(in2.Work), strings.TrimSpace(in2.Parts)
+			x.Corrective = strings.TrimSpace(in2.Corrective)
+			if p := fixPriority(in2.Priority); oneOf(priorities, p) {
+				x.Priority = p
+			}
+			x.Items, x.Fails = nil, 0
+			for _, it := range inspectItems {
+				res := in2.Results[it[0]]
+				v := res.Result
+				if v != "Pass" && v != "Fail" && v != "N/A" {
+					v = "Pass"
+				}
+				if v == "Fail" {
+					x.Fails++
+				}
+				x.Items = append(x.Items, InspectResult{it[0], it[1], v, strings.TrimSpace(res.Note)})
+			}
+			if (x.Fails > 0 || x.Condition == "Poor" || x.Condition == "Unsafe") && x.Corrective == "" {
+				fail(w, 400, "Describe what needs to be done. Something failed or the condition is Poor or Unsafe.")
+				return
+			}
+			x.Edited = strings.TrimSpace(in2.EditedBy) + ", " + stamp()
+			if err := s.writeMaint("inspections.json", all); err != nil {
+				s.maintFail(w, err)
+				return
+			}
+			writeJSON(w, 200, map[string]any{"ok": true})
+			return
+		}
+		fail(w, 404, "That inspection is not on file.")
 	})
 	mux.HandleFunc("POST /api/inspections", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct {

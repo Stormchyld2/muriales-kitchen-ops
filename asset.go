@@ -159,6 +159,50 @@ func (s *store) serviceRoutes(mux *http.ServeMux, reply func(http.ResponseWriter
 		s.addService(in2)
 		reply(w)
 	})
+	mux.HandleFunc("PUT /api/maint/service/{id}", func(w http.ResponseWriter, r *http.Request) {
+		var in2 ServiceRecord
+		if jsonDecode(r, &in2) != nil || strings.TrimSpace(in2.Description) == "" || strings.TrimSpace(in2.By) == "" {
+			fail(w, 400, "Say what was done and enter your name.")
+			return
+		}
+		if d, err := time.Parse(dayFmt, in2.Date); err != nil || d.After(time.Now().AddDate(0, 0, 1)) {
+			fail(w, 400, "Enter the date the work was done (today or earlier).")
+			return
+		}
+		if in2.Cost < 0 || in2.Cost > 10000000 {
+			fail(w, 400, "Enter the cost as a dollar amount, or 0 if there was no charge.")
+			return
+		}
+		if !oneOf(serviceTypes, in2.Type) {
+			in2.Type = "Repair"
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if s.isReadOnly() {
+			s.maintFail(w, errReadOnly)
+			return
+		}
+		var all []ServiceRecord
+		s.readMaint("service.json", &all)
+		found := false
+		for i := range all {
+			if all[i].ID == r.PathValue("id") {
+				x := &all[i]
+				x.Date, x.Type, x.Cost = in2.Date, in2.Type, in2.Cost
+				x.Description, x.Vendor, x.By = strings.TrimSpace(in2.Description), strings.TrimSpace(in2.Vendor), strings.TrimSpace(in2.By)
+				found = true
+			}
+		}
+		if !found {
+			fail(w, 404, "That record is not on file.")
+			return
+		}
+		if err := s.writeMaint("service.json", all); err != nil {
+			s.maintFail(w, err)
+			return
+		}
+		reply(w)
+	})
 	mux.HandleFunc("DELETE /api/maint/service/{id}", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()

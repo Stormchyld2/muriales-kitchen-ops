@@ -1185,3 +1185,78 @@ func o2(e *env) int {
 	}
 	return n
 }
+
+func TestInspectionReadyAndWeeklySummary(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/temps/points/starter", `{}`)
+	_, o := e.get2("/api/temps?from=2020-01-01")
+	pid := o["points"].([]any)[0].(map[string]any)["id"].(string)
+	e.post("/api/temps", `{"by":"AB","readings":[{"pointId":"`+pid+`","temp":70}]}`)
+	for _, id := range []string{"inspection-ready", "weekly-summary"} {
+		rec, _ := e.get("/api/reports/" + id)
+		if rec.Code != 200 {
+			t.Fatalf("%s: %d", id, rec.Code)
+		}
+		body := rec.Body.String()
+		if id == "inspection-ready" && (!strings.Contains(body, "Temperatures taken today") || !strings.Contains(body, "Sign-off") || !strings.Contains(body, "Hand Sinks")) {
+			t.Fatalf("inspection-ready content missing")
+		}
+		if id == "inspection-ready" && !strings.Contains(body, "FIX") {
+			t.Fatal("a 70F cooler reading should need a corrective action")
+		}
+		if id == "weekly-summary" && (!strings.Contains(body, "Readings out of range") || !strings.Contains(body, "Manager notes")) {
+			t.Fatalf("weekly summary content missing")
+		}
+	}
+	_, o = e.get2("/api/reports")
+	found := 0
+	for _, r := range o["reports"].([]any) {
+		switch r.(map[string]any)["id"] {
+		case "inspection-ready", "weekly-summary":
+			found++
+		}
+	}
+	if found != 2 {
+		t.Fatal("both reports should be in the catalog")
+	}
+}
+
+func TestEditServiceAndInspection(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/maint/equipment", `{"name":"Walk-in","type":"Cooler","area":"Back"}`)
+	_, o := e.get2("/api/maint")
+	eid := o["equipment"].([]any)[0].(map[string]any)["id"].(string)
+	e.post("/api/maint/service", `{"equipmentId":"`+eid+`","date":"2026-11-01","type":"Repair","description":"Fan","cost":50,"by":"AB"}`)
+	_, o = e.get2("/api/maint")
+	sid := o["service"].([]any)[0].(map[string]any)["id"].(string)
+	put := func(path, body string) int {
+		rec := httptest.NewRecorder()
+		e.h.ServeHTTP(rec, httptest.NewRequest("PUT", path, strings.NewReader(body)))
+		return rec.Code
+	}
+	if put("/api/maint/service/"+sid, `{"date":"2026-11-02","type":"Repair","description":"","cost":1,"by":"AB"}`) != 400 {
+		t.Fatal("empty description must be refused")
+	}
+	if put("/api/maint/service/"+sid, `{"date":"2026-11-02","type":"Preventive","description":"Fan motor","cost":75.5,"vendor":"ACME","by":"CD"}`) != 200 {
+		t.Fatal("edit failed")
+	}
+	_, o = e.get2("/api/maint")
+	r := o["service"].([]any)[0].(map[string]any)
+	if r["description"] != "Fan motor" || r["cost"].(float64) != 75.5 || r["equipmentId"] != eid {
+		t.Fatalf("%v", r)
+	}
+	e.post("/api/inspections", `{"equipmentId":"`+eid+`","date":"2026-11-03","condition":"Good","by":"AB"}`)
+	_, o = e.get2("/api/inspections")
+	iid := o["inspections"].([]any)[0].(map[string]any)["id"].(string)
+	if put("/api/inspections/"+iid, `{"date":"2026-11-03","condition":"Good","results":{"seals":{"result":"Fail"}},"editedBy":"CD"}`) != 400 {
+		t.Fatal("a failure needs a corrective action")
+	}
+	if put("/api/inspections/"+iid, `{"date":"2026-11-03","condition":"Fair","results":{"seals":{"result":"Fail","note":"torn"}},"corrective":"Replace gasket","priority":"P2 - Urgent","editedBy":"CD"}`) != 200 {
+		t.Fatal("inspection edit failed")
+	}
+	_, o = e.get2("/api/inspections")
+	q := o["inspections"].([]any)[0].(map[string]any)
+	if q["condition"] != "Fair" || q["fails"].(float64) != 1 || !strings.HasPrefix(q["edited"].(string), "CD") {
+		t.Fatalf("%v", q)
+	}
+}

@@ -1393,7 +1393,7 @@ function vCA() {
   <div class="tablewrap">${!rows.length ? `<div class="empty"><b>No forms here</b>Use New Corrective Action for a significant food-safety, sanitation, safety, maintenance or training issue.</div>`
     : `<table class="plain"><thead><tr>${["ID", "Date", "Area", "Priority", "Issue", "Owner", "Target", "Status"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${rows.map(x => `<tr><td><b>${esc(x.id)}</b></td><td>${esc(x.date)}</td><td>${esc(x.area)}</td><td>${esc(x.priority)}</td><td>${esc(x.issue.length > 90 ? x.issue.slice(0, 90) + "..." : x.issue)}</td><td>${esc(x.owner)}</td><td>${esc(x.target)}</td><td>${tag(over(x) ? "Overdue" : x.status)}</td>
-      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="ca-open" data-id="${esc(x.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="ca-print" data-id="${esc(x.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="ca-open" data-id="${esc(x.id)}">${icon("edit")}Edit</button> <button class="btn small" data-act="ca-print" data-id="${esc(x.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 async function caForm(id, pre) {
   if (!state.ca) await loadCA();
@@ -1427,7 +1427,7 @@ function vChemResp() {
   <div class="chips" style="margin:8px 0">${chips}</div>
   <div class="tablewrap" style="min-height:0;flex:none;overflow:visible"><table class="plain"><thead><tr>${["Situation", "Immediate action", "Do not", "PPE", "Call emergency help when", "Manager action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${rows.map(r => `<tr><td><b>${cell("situation", r)}</b><div class="hint">${cell("category", r)}</div></td><td>${cell("immediate", r)}</td><td>${cell("doNot", r)}</td><td>${cell("ppe", r)}</td><td>${cell("escalate", r)}</td><td>${cell("manager", r)}</td>
-      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="reg-open" data-c="chemquick" data-id="${esc(r.id)}">${icon("edit")}Open</button></div></td></tr>`).join("")}</tbody></table></div>
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="reg-open" data-c="chemquick" data-id="${esc(r.id)}">${icon("edit")}Edit</button></div></td></tr>`).join("")}</tbody></table></div>
   <p class="hint">Each product's own first aid steps are in the SDS Manager. Choosing the product when you report an incident shows them.</p>`;
 }
 function vChemLog() {
@@ -1435,7 +1435,7 @@ function vChemLog() {
   return `<div class="row"><button class="btn wine big" data-act="chem-new">${icon("plus")}Report an Incident</button><button class="btn" data-act="rep-print" data-id="chem-log">${icon("print")}Print Log</button><span class="hint">${d.incidents.length} on record</span></div>
   <div class="tablewrap">${!d.incidents.length ? `<div class="empty"><b>No incidents recorded</b>Use Report an Incident for any chemical spill or exposure.</div>` : `<table class="plain"><thead><tr>${["ID", "When", "Product", "What happened", "Person(s)", "Emergency help?", "CA ref", "Training follow-up?"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${d.incidents.map(c => `<tr><td><b>${esc(c.id)}</b></td><td>${esc(when12(c.at))}</td><td>${esc(c.product)}</td><td>${esc(c.kind)}</td><td>${esc(c.persons)}</td><td>${esc(c.emergency)}</td><td>${esc(c.caRef)}</td><td>${esc(c.training)}</td>
-      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="chem-open" data-id="${esc(c.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="chem-print" data-id="${esc(c.id)}">${icon("print")}Print</button> <button class="btn small" data-act="chem-ca" data-id="${esc(c.id)}">Corrective Action</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="chem-open" data-id="${esc(c.id)}">${icon("edit")}Edit</button> <button class="btn small" data-act="chem-print" data-id="${esc(c.id)}">${icon("print")}Print</button> <button class="btn small" data-act="chem-ca" data-id="${esc(c.id)}">Corrective Action</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 async function chemForm(id) {
   if (!state.chem) await loadChem();
@@ -1467,11 +1467,13 @@ function chemPick(quiet) {
 async function loadReady() { state.ready = await api("/api/readiness"); if (state.view === "ready") render(); }
 function vReady() {
   const d = state.ready; if (!d) { loadReady(); return `<p class="hint">Loading...</p>`; }
-  return `<div class="row"><button class="btn green big" data-act="rd-new">${icon("plus")}New Readiness Review</button><button class="btn" data-act="rep-print" data-id="readiness-blank">${icon("print")}Print Blank Checklist</button><button class="btn" data-act="rep-print" data-id="readiness-log">${icon("print")}Print History</button></div>
+  return `<div class="row"><button class="btn green big" data-act="rep-print" data-id="inspection-ready">${icon("print")}Inspection-Ready Checklist</button><button class="btn" data-act="rep-email-id" data-id="inspection-ready">${icon("ext")}Email It</button><button class="btn" data-act="rep-print" data-id="weekly-summary">${icon("print")}Weekly Summary</button><button class="btn" data-act="rep-email-id" data-id="weekly-summary">${icon("ext")}Email Weekly Summary</button></div>
+  <p class="hint" style="margin:6px 0 10px"><b>Inspection-Ready Checklist</b> checks your records right now (temperatures, cleaning, maintenance, corrective actions, SDS) and adds the walk-through points to check by eye. <b>Weekly Summary</b> is the last 7 days at a glance.</p>
+  <div class="row"><button class="btn green big" data-act="rd-new">${icon("plus")}New Readiness Review</button><button class="btn" data-act="rep-print" data-id="readiness-blank">${icon("print")}Print Blank Checklist</button><button class="btn" data-act="rep-print" data-id="readiness-log">${icon("print")}Print History</button></div>
   <p class="hint" style="margin-top:0">A manager self-inspection to run before a health department or internal food-safety inspection. Items that need attention can become Corrective Action Forms.</p>
   <div class="tablewrap">${!d.reviews.length ? `<div class="empty"><b>No reviews yet</b>Use New Readiness Review to walk the kitchen with the 30-point checklist.</div>` : `<table class="plain"><thead><tr>${["ID", "Date", "Manager", "Type", "Ready?", "Critical?", "Open actions", "Recheck", "Outcome"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${d.reviews.map(r => `<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.date)}</td><td>${esc(r.manager)}</td><td>${esc(r.type)}</td><td>${esc(r.overall)}</td><td>${esc(r.critical)}</td><td>${r.open}</td><td>${esc(r.recheck)}</td><td>${esc(r.outcome)}</td>
-      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="rd-open" data-id="${esc(r.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="rep-print" data-id="readiness:${esc(r.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="rd-open" data-id="${esc(r.id)}">${icon("edit")}Edit</button> <button class="btn small" data-act="rep-print" data-id="readiness:${esc(r.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 async function readyForm(id) {
   if (!state.ready) await loadReady();
@@ -1503,7 +1505,7 @@ function vReg(name) {
   return `<div class="row"><button class="btn green big" data-act="reg-new" data-c="${name}">${icon("plus")}${esc(def.newLabel)}</button><button class="btn" data-act="reg-print" data-id="${esc(def.report)}">${icon("print")}Print</button><span class="hint">${d.rows.length} on record</span></div>
   ${def.intro ? `<p class="hint" style="margin-top:0">${esc(def.intro)}</p>` : ""}
   <div class="tablewrap">${!d.rows.length ? `<div class="empty"><b>Nothing here yet</b></div>` : `<table class="plain"><thead><tr>${def.listCols.map(k => `<th class="nosort" style="width:auto">${esc(lab(k))}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
-    ${d.rows.map(r => `<tr>${def.listCols.map(k => `<td>${k === "id" ? `<b>${esc(r[k])}</b>` : k === "state" ? tag(r[k]) : k === "due" ? esc(shortDate(r[k] || "")) + (r.lastDone ? `<div class="hint">last ${esc(shortDate(r.lastDone))}</div>` : "") : ftype(k) === "date" ? esc(shortDate(r[k] || "")) : esc(clip(r[k], 90))}</td>`).join("")}<td style="text-align:right"><div class="acts">${extra(r)}${name === "cleanlog" && r.verifyStatus === "Pending" ? `<button class="btn small" data-act="cl-verify" data-id="${esc(r.id)}">Verify</button> ` : ""}<button class="btn small" data-act="reg-open" data-c="${name}" data-id="${esc(r.id)}">${icon("edit")}Open</button>${def.deletable ? ` <button class="btn small wine" data-act="reg-del" data-c="${name}" data-id="${esc(r.id)}">${icon("trash")}</button>` : ""}</div></td></tr>`).join("")}</tbody></table>`}</div>`;
+    ${d.rows.map(r => `<tr>${def.listCols.map(k => `<td>${k === "id" ? `<b>${esc(r[k])}</b>` : k === "state" ? tag(r[k]) : k === "due" ? esc(shortDate(r[k] || "")) + (r.lastDone ? `<div class="hint">last ${esc(shortDate(r.lastDone))}</div>` : "") : ftype(k) === "date" ? esc(shortDate(r[k] || "")) : esc(clip(r[k], 90))}</td>`).join("")}<td style="text-align:right"><div class="acts">${extra(r)}${name === "cleanlog" && r.verifyStatus === "Pending" ? `<button class="btn small" data-act="cl-verify" data-id="${esc(r.id)}">Verify</button> ` : ""}<button class="btn small" data-act="reg-open" data-c="${name}" data-id="${esc(r.id)}">${icon("edit")}Edit</button>${def.deletable ? ` <button class="btn small wine" data-act="reg-del" data-c="${name}" data-id="${esc(r.id)}">${icon("trash")}</button>` : ""}</div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 function regForm(name, id) {
   const d = state.reg[name], def = d.def, r = id ? d.rows.find(x => x.id === id) || {} : {};
@@ -1568,7 +1570,7 @@ function vRepl() {
   return `<div class="row"><button class="btn green big" data-act="repl-new" data-eq="">${icon("plus")}New Replacement Request</button><button class="btn" data-act="reg-print" data-id="replace-log">${icon("print")}Print History</button><span class="hint">Use when repeated repairs, downtime, safety risk or running cost suggest replacing instead of repairing again.</span></div>
   <div class="tablewrap">${!d.requests.length ? `<div class="empty"><b>No requests yet</b>Start one here, or from Assets &amp; Costs by opening a piece of equipment.</div>` : `<table class="plain"><thead><tr>${["ID", "Date", "Equipment", "Reason", "Recommendation", "Priority", "Decision", "Est. cost", "Completed"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
     ${d.requests.map(r => `<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.date)}</td><td>${esc(r.equipment)}</td><td>${esc((r.reasons || "").slice(0, 70))}</td><td>${esc(r.recommendation)}</td><td>${esc(r.priority)}</td><td>${esc(r.decision || "Pending")}</td><td>${r.replaceCost ? money(r.replaceCost) : ""}</td><td>${esc(r.completionDate)}</td>
-      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="repl-open" data-id="${esc(r.id)}">${icon("edit")}Open</button> <button class="btn small" data-act="repl-print" data-id="${esc(r.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
+      <td style="text-align:right"><div class="acts"><button class="btn small" data-act="repl-open" data-id="${esc(r.id)}">${icon("edit")}Edit</button> <button class="btn small" data-act="repl-print" data-id="${esc(r.id)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 function replRow(h) {
   h = h || {}; const tb = $("#rphist tbody"), tr = document.createElement("tr"), i = (k, w, t) => `<input class="field" data-rh="${k}" value="${esc(h[k] == null ? "" : h[k])}" ${t ? `type="${t}" step="0.01"` : ""} style="min-width:${w}px;width:100%">`;
@@ -1609,7 +1611,7 @@ function vInsp() {
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>No inspections yet</b>Use New Inspection, or Inspect on the Equipment PM screen.</div>`
     : `<table class="plain"><thead><tr>${["#", "Date", "Equipment", "PM Job", "Condition", "Failed", "By", "Issue"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
       ${list.map(q => { const is = state.maint.issues.find(p => p.id === q.issueId); return `<tr><td>${q.number}</td><td>${fmtDate(q.date)}</td><td>${esc(eqName(q.equipmentId))}</td><td>${esc(q.taskName)}</td><td>${tag(q.condition)}</td><td>${q.fails || ""}</td><td>${esc(q.by)}</td><td>${is ? "#" + is.number : ""}</td>
-        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="rep-view" data-id="inspection:${q.id}">${icon("print")}View / Print</button></div></td></tr>`; }).join("")}
+        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="insp-edit" data-id="${q.id}">${icon("edit")}Edit</button> <button class="btn small" data-act="rep-view" data-id="inspection:${q.id}">${icon("print")}View / Print</button></div>${q.edited ? `<div class="hint">Edited ${esc(q.edited)}</div>` : ""}</td></tr>`; }).join("")}
     </tbody></table>`}</div>`;
 }
 async function inspForm(taskId) {
@@ -1634,6 +1636,23 @@ async function inspForm(taskId) {
     <div class="foot"><button class="btn green big" data-act="insp-save">${icon("save")}Save Inspection</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
 
+function inspEdit(id) {
+  const q = state.insp.inspections.find(x => x.id === id); if (!q) return;
+  const res = Object.fromEntries((q.items || []).map(i => [i.key, i]));
+  showModal(`<h2>${icon("edit")}Edit PM Inspection #${q.number}: ${esc(eqName(q.equipmentId))}</h2><div class="body" id="iebody" data-id="${esc(q.id)}"><div class="fields">
+    <label>Date:</label><input type="date" class="field" data-ie="date" value="${esc(q.date)}" style="width:190px">
+    <label>Condition:</label><select class="field" data-ie="condition">${state.insp.conditions.map(c => `<option ${c === q.condition ? "selected" : ""}>${c}</option>`).join("")}</select></div>
+    <table class="plain" style="margin:8px 0"><thead><tr><th class="nosort" style="width:auto">Inspection point</th><th class="nosort" style="width:auto">Result</th><th class="nosort" style="width:auto">Notes</th></tr></thead><tbody>
+    ${state.insp.items.map(it => { const r = res[it.key] || {result: "Pass", note: ""}; return `<tr><td>${esc(it.label)}</td><td style="white-space:nowrap">${["Pass", "Fail", "N/A"].map(v => `<label style="font-weight:400;margin-right:8px"><input type="radio" name="ie_${it.key}" value="${v}" ${v === r.result ? "checked" : ""}> ${v}</label>`).join("")}</td><td><input class="field" data-ie-note="${it.key}" value="${esc(r.note || "")}"></td></tr>`; }).join("")}</tbody></table><div class="fields">
+    <label>Readings:</label><input class="field" data-ie="readings" value="${esc(q.readings || "")}">
+    <label>Work performed:</label><textarea class="field" rows="2" data-ie="work">${esc(q.work || "")}</textarea>
+    <label>Parts used:</label><input class="field" data-ie="parts" value="${esc(q.parts || "")}">
+    <label>Corrective action needed:</label><textarea class="field" rows="2" data-ie="corrective">${esc(q.corrective || "")}</textarea>
+    <label>Priority:</label><select class="field" data-ie="priority">${state.maint.priorities.map(x => `<option ${x === q.priority ? "selected" : ""}>${x}</option>`).join("")}</select>
+    <label>Your name: <span class="req">*</span></label><input class="field" data-ie="editedBy" value="${esc(who())}"></div>
+    <p class="hint">Changes here fix the record only. They do not create or change maintenance issues.</p></div>
+    <div class="foot"><button class="btn green big" data-act="insp-edit-go">${icon("save")}Save Changes</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
 function vProcs() {
   const p = state.procs; if (!p) { api("/api/procedures").then(r => { state.procs = r; render(); }); return `<p class="hint">Loading...</p>`; }
   return `<div class="row noprint"><button class="btn" data-act="rep-view" data-id="procedures">${icon("print")}Print</button><span class="hint">The wording is in Maintenance Data\\procedures.json if you want to change it.</span></div>
@@ -1671,8 +1690,8 @@ function vIssues() {
   return `<div class="row"><button class="btn wine big" data-act="issue-new" data-id="">${icon("warn")}Report Issue</button>
     <label style="font-weight:400"><input type="checkbox" data-act="issues-all" ${all ? "checked" : ""}> Show completed issues too</label></div>
   <div class="tablewrap">${!list.length ? `<div class="empty"><b>${all ? "No issues yet" : "No open issues"}</b>Use Report Issue when a piece of equipment is not working right.</div>`
-    : `<table><thead><tr>${["#", "Equipment", "Issue", "Priority", "Status", "Reported", "Work Order"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}</tr></thead><tbody>
-      ${list.map(p => `<tr data-act="issue-open" data-id="${p.id}"><td>${p.number}</td><td>${esc(eqName(p.equipmentId))}</td><td>${esc(p.title)}</td><td>${tag(p.priority)}</td><td>${tag(p.status)}</td><td>${fmtDate(p.reportedAt)}</td><td>${esc(p.workOrder)}</td></tr>`).join("")}
+    : `<table><thead><tr>${["#", "Equipment", "Issue", "Priority", "Status", "Reported", "Work Order"].map(h => `<th class="nosort" style="width:auto">${h}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
+      ${list.map(p => `<tr data-act="issue-open" data-id="${p.id}"><td>${p.number}</td><td>${esc(eqName(p.equipmentId))}</td><td>${esc(p.title)}</td><td>${tag(p.priority)}</td><td>${tag(p.status)}</td><td>${fmtDate(p.reportedAt)}</td><td>${esc(p.workOrder)}</td><td style="text-align:right"><div class="acts"><button class="btn small" data-act="issue-open" data-id="${p.id}">${icon("edit")}Edit</button></div></td></tr>`).join("")}
     </tbody></table>`}</div>`;
 }
 function tWorkbook() {
@@ -1833,7 +1852,7 @@ function assetDetail(id) {
     <p style="margin:12px 0 4px"><b>Spent on upkeep: ${money(a.total)}</b> · last 12 months ${money(a.last12)} · ${a.repairs || 0} repair${a.repairs === 1 ? "" : "s"} ${a.advice ? tag(a.advice) : ""}</p>
     <p class="hint" style="margin-top:0">${esc(a.reason || "Enter the purchase cost or the cost of a new unit to compare repair costs.")} This is a rule of thumb; also consider downtime, energy use and parts availability.</p>
     <h3 style="margin:10px 0 4px">Maintenance and repair history</h3>
-    <div class="hist" style="max-height:150px">${recs.map(r => `<div><b>${fmtDate(r.date)}</b> ${esc(r.type)}: ${esc(r.description)} · <b>${money(r.cost)}</b>${r.vendor ? " · " + esc(r.vendor) : ""} <span class="hint">(${esc(r.by)})</span> <a href="#" data-act="svc-delete" data-id="${r.id}" class="hint">remove</a></div>`).join("") || "<div class='hint'>Nothing recorded yet.</div>"}</div>
+    <div class="hist" style="max-height:150px">${recs.map(r => `<div><b>${fmtDate(r.date)}</b> ${esc(r.type)}: ${esc(r.description)} · <b>${money(r.cost)}</b>${r.vendor ? " · " + esc(r.vendor) : ""} <span class="hint">(${esc(r.by)})</span> <a href="#" data-act="svc-edit" data-id="${r.id}" class="hint">edit</a> · <a href="#" data-act="svc-delete" data-id="${r.id}" class="hint">remove</a></div>`).join("") || "<div class='hint'>Nothing recorded yet.</div>"}</div>
     <h3 style="margin:12px 0 4px">Record maintenance</h3><div class="fields">
       <label>Date:</label><input type="date" class="field" data-sv="date" value="${ymd(new Date())}" style="width:190px">
       <label>Type:</label><select class="field" data-sv="type" style="width:190px">${["Repair", "Preventive", "Inspection", "Other"].map(t => `<option>${t}</option>`).join("")}</select>
@@ -2086,7 +2105,19 @@ const ACT = {
   "asset-open"(el) { assetDetail(el.dataset.id); },
   async "svc-save"() { const v = grab("[data-sv]", "sv"), id = $("#asbody").dataset.id; v.equipmentId = id; v.cost = parseFloat(v.cost) || 0; rememberWho(v.by);
     state.maint = await api("/api/maint/service", {method: "POST", body: JSON.stringify(v)}); render(); assetDetail(id); toast("Recorded."); },
-  async "svc-delete"(el, e) { e && e.preventDefault(); const id = $("#asbody").dataset.id; state.maint = await api("/api/maint/service/" + el.dataset.id, {method: "DELETE"}); render(); assetDetail(id); },
+  "svc-edit"(el, e) { e && e.preventDefault(); const r = (state.maint.service || []).find(x => x.id === el.dataset.id); if (!r) return; const eq = r.equipmentId;
+    showModal(`<h2>${icon("edit")}Edit Maintenance Record</h2><div class="body" id="svbody" data-id="${esc(r.id)}" data-eq="${esc(eq)}"><div class="fields">
+      <label>Date:</label><input type="date" class="field" data-se="date" value="${esc(r.date)}" style="width:190px">
+      <label>Type:</label><select class="field" data-se="type" style="width:190px">${["Repair", "Preventive", "Inspection", "Other"].map(t => `<option ${t === r.type ? "selected" : ""}>${t}</option>`).join("")}</select>
+      <label>What was done:</label><input class="field" data-se="description" value="${esc(r.description)}">
+      <label>Cost ($):</label><input type="number" min="0" step="0.01" class="field" data-se="cost" style="width:150px" value="${r.cost || ""}">
+      <label>Done by (company):</label><input class="field" data-se="vendor" value="${esc(r.vendor || "")}">
+      <label>Recorded by: <span class="req">*</span></label><input class="field" data-se="by" value="${esc(who() || r.by)}"></div>
+      ${r.issueId ? `<p class="hint">This record came from a maintenance issue; changing the cost on the issue will overwrite what is here.</p>` : ""}</div>
+    <div class="foot"><button class="btn green big" data-act="svc-edit-go">${icon("save")}Save Changes</button><button class="btn big" data-act="close">Cancel</button></div>`); },
+  async "svc-edit-go"() { const v = grab("[data-se]", "se"), b = $("#svbody"); v.cost = parseFloat(v.cost) || 0; rememberWho(v.by);
+    state.maint = await api("/api/maint/service/" + b.dataset.id, {method: "PUT", body: JSON.stringify(v)}); closeModal(); render(); assetDetail(b.dataset.eq); toast("Saved."); },
+  async "svc-delete"(el, e) { e && e.preventDefault(); if (!confirm("Remove this maintenance record?")) return; const id = $("#asbody").dataset.id; state.maint = await api("/api/maint/service/" + el.dataset.id, {method: "DELETE"}); render(); assetDetail(id); },
   async "repct-save"() { state.maint = await api("/api/maint/settings", {method: "POST", body: JSON.stringify({replacePercent: parseInt($("#repct").value, 10) || 0})}); render(); toast("Saved."); },
   "pm-edit"(el) { pmForm(el.dataset.id, el.dataset.group); },
   async "pm-save"() { const v = grab("[data-pm]", "pm"); v.id = $("#pmbody").dataset.id; v.every = parseInt(v.every, 10) || 0; await maintDone(await api("/api/maint/pm", {method: "POST", body: JSON.stringify(v)}), "Job saved."); },
@@ -2104,6 +2135,7 @@ const ACT = {
   "rep-view"(el) { window.open("/api/reports/" + el.dataset.id + (state.reports ? repQuery(el.dataset.id) : ""), "_blank"); },
   async "handoff-email"() { if (!state.reports) state.reports = (await api("/api/reports")).reports || []; repEmail("handoff"); },
   "rep-email"(el) { repEmail(el.dataset.id); },
+  async "rep-email-id"(el) { if (!state.reports) state.reports = (await api("/api/reports")).reports || []; repEmail(el.dataset.id); },
   async "rep-email-go"() { const v = grab("[data-re]", "re"), b = $("#rebody"); if (!v.to.trim()) return toast("Enter who to send it to.", true);
     try { localStorage.setItem("repTo", v.to); } catch (e) {}
     const o = await api("/api/reports/email", {method: "POST", body: JSON.stringify({...v, id: b.dataset.id, month: b.dataset.month})}); closeModal(); emailResult(o, "report"); },
@@ -2205,6 +2237,10 @@ const ACT = {
     const o = await api("/api/inspections", {method: "POST", body: JSON.stringify(v)}); state.maint = o; state.insp = null; state.sum = null; closeModal(); if (state.view === "cal") await loadCal(true); if (state.view === "todo") await refreshTodo(); render();
     toast(`Inspection #${o.inspection.number} saved.${o.inspection.issueId ? " A maintenance issue was created." : ""}${o.inspection.pmDone ? " The PM job is marked done." : ""}`);
     if (o.inspection.condition === "Unsafe") { const e = o.equipment.find(x => x.id === o.inspection.equipmentId); if (e && e.status !== "Out of Service") showModal(`<h2>${icon("warn")}Condition is Unsafe</h2><div class="body"><p>Should <b>${esc(e.name)}</b> be taken out of service now?</p></div><div class="foot"><button class="btn wine big" data-act="oos-ask" data-id="${e.id}">Take Out of Service</button><button class="btn big" data-act="close">Not Now</button></div>`); } },
+  async "insp-edit"(el) { if (!state.insp) await loadInsp(); inspEdit(el.dataset.id); },
+  async "insp-edit-go"() { const v = grab("[data-ie]", "ie"), id = $("#iebody").dataset.id; rememberWho(v.editedBy); v.results = {};
+    for (const it of state.insp.items) v.results[it.key] = {result: (document.querySelector(`[name=ie_${it.key}]:checked`) || {}).value || "Pass", note: (document.querySelector(`[data-ie-note=${it.key}]`) || {}).value || ""};
+    await api("/api/inspections/" + id, {method: "PUT", body: JSON.stringify(v)}); state.insp = null; closeModal(); render(); toast("Inspection updated."); },
   "oos-ask"(el) { oosAsk(el.dataset.id); },
   "oos-clear-ask"(el) { oosClearAsk(el.dataset.id); },
   async "oos-go"() { const v = collectTag(); rememberWho(v.by); if (!v.reason.trim() || !v.by.trim()) return toast("Enter the reason and your name.", true);

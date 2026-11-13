@@ -27,8 +27,10 @@ Maintenance Data/
 Kitchen Backups/               SDS zips, plus a Maintenance zip with each backup
 ```
 
-Backup & Restore in Settings restores the SDS library only. Each backup also saves a Maintenance zip; to go back to one, close the program and copy its files over Maintenance Data. The "someone is editing" lock covers both modules.
+Settings, Backup & Restore has **Backup Both Folders**: one zip holding the SDS library and all the kitchen operations files. Restore it, or a Maintenance zip, from the same list (what is replaced is saved to Kitchen Backups first). The "someone is editing" lock covers both modules.
 
 ## Building
 
 Push to `main`; GitHub Actions builds `MurialesKitchenOps.exe` for Windows and runs the checks. It uses port 47715, so it can run beside the stand-alone SDS Manager (port 47615).
+
+- **Inspection-Ready Checklist and Weekly Summary** – in Food Safety, Inspection Readiness, and in Reports. The checklist reads your records live (temperatures today, out-of-range actions, corrective actions, cleaning, deep clean, manager checks, PM, issues, SDS, last walk-through) and adds the walk-through points with a sign-off line. The summary covers the last 7 days. Both can be emailed.

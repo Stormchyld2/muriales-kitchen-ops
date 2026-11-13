@@ -59,6 +59,8 @@ var reportCatalog = []reportDef{
 	{"chem-response", "Chemical Safety", "Spill / Exposure Response Sheet", "The immediate-response steps and exposure quick reference to post or keep at hand.", false},
 	{"chem-blank", "Chemical Safety", "Blank Chemical Incident Form", "Fill in by hand during an incident, then enter it in the log.", false},
 	{"chem-log", "Chemical Safety", "Chemical Incident Log", "Every chemical spill or exposure on record.", false},
+	{"inspection-ready", "Food Safety", "Inspection-Ready Checklist", "A live check of the records (temperatures, cleaning, maintenance, corrective actions, SDS) plus the walk-through points and a sign-off line.", false},
+	{"weekly-summary", "Summary", "Weekly Summary", "The last 7 days at a glance: temperatures, cleaning, maintenance, corrective actions and what is still open.", false},
 	{"readiness-blank", "Food Safety", "Blank Inspection Readiness Checklist", "The 30-point self-inspection to print and carry on a walk-through.", false},
 	{"readiness-log", "Food Safety", "Inspection Readiness History", "Every readiness review with the result and open actions.", false},
 	{"replace-log", "Maintenance", "Equipment Replacement History", "Every replacement request with the decision and cost.", false},
@@ -84,6 +86,12 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "handoff" {
 		return s.handoffReport(), true
+	}
+	if id == "inspection-ready" {
+		return s.inspectionReadyReport(), true
+	}
+	if id == "weekly-summary" {
+		return s.weeklySummaryReport(), true
 	}
 	if strings.HasPrefix(id, "inspection:") {
 		return s.inspectionReport(strings.TrimPrefix(id, "inspection:"))
