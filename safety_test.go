@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -303,5 +304,101 @@ func TestPacketSummaryAndStations(t *testing.T) {
 	}
 	if !trainApplies("Dish", rec{"position": "Steward"}) || !trainApplies("Bread & Dessert", rec{"stations": "Bread and Desserts"}) {
 		t.Fatal("dish/bread alias")
+	}
+}
+
+func TestFoodCosting(t *testing.T) {
+	e := newEnv(t)
+	// $62 for a 15 lb case of bacon, $3.60 for a 5 lb bag of flour... via the paste box
+	_, o := e.post("/api/costing/prices/import", `{"text":"Bacon | 60.00 | 15 | lb | Sysco\nEggs | 4.80 | 12 | each\nMozzarella, Shredded | 36 | 12 | lb\nOlive Oil | 24 | 1 | gal\nBad Line | x | 1 | lb"}`)
+	if o["added"].(float64) != 4 || len(o["bad"].([]any)) != 1 {
+		t.Fatalf("import: %v", o)
+	}
+	_, o = e.post("/api/costing/prices/import", `{"text":"Bacon | 75.00 | 15 | lb"}`)
+	if o["updated"].(float64) != 1 || o["added"].(float64) != 0 {
+		t.Fatalf("update: %v", o)
+	}
+	// 2 lb bacon @5.00 = 10, 8 oz mozzarella @3.00/lb = 1.50, 6 eggs @0.40 = 2.40, 2 tbsp olive oil, 1 cup flour (no price), salt as needed
+	_, c := e.post("/api/costing/calc", `{"ingredients":"2 lb | Bacon strips\n8 oz | Shredded Mozzarella\n6 | Large Eggs\n2 tbsp | Olive Oil\n1 cup | All Purpose Flour\nAs needed | Salt","portions":"4","price":"14"}`)
+	total := c["total"].(float64)
+	oil := 24.0 / 3785.41 * 14.7868 * 2
+	want := 10 + 1.5 + 2.4 + oil
+	if total < want-0.01 || total > want+0.01 {
+		t.Fatalf("total %v want %v: %v", total, want, c["lines"])
+	}
+	if c["missing"].(float64) != 1 || c["perPortion"].(float64) < total/4-0.001 {
+		t.Fatalf("missing/perPortion wrong: %v", c)
+	}
+	if pct := c["pct"].(float64); pct < 25 || pct > 26 {
+		t.Fatalf("food cost pct %v", pct)
+	}
+	// a typed cost wins over the price list; a weight against a count price is refused
+	_, c = e.post("/api/costing/calc", `{"ingredients":"2 lb | Bacon | 3.00\n1 lb | Eggs","portions":"1","price":"10"}`)
+	lines := c["lines"].([]any)
+	if lines[0].(map[string]any)["cost"].(float64) != 3 || lines[1].(map[string]any)["priced"].(bool) {
+		t.Fatalf("override/mismatch: %v", lines)
+	}
+	// specials list shows the computed columns, and employee meals now cost from the price list
+	e.post("/api/reg/specials", `{"name":"BLT Pizza","portions":"4","menuPrice":"14","ingredients":"2 lb | Bacon\n6 | Eggs"}`)
+	_, l := e.get2("/api/reg/specials")
+	r := l["rows"].([]any)[0].(map[string]any)
+	if r["perPortion"] != "$3.10" || r["foodPct"] == "" {
+		t.Fatalf("special row: %v", r)
+	}
+	e.post("/api/reg/mealrecipes", `{"name":"Costed Meal","week":"1","day":"Monday","meal":"Dinner","serves":"10","ingredients":"4 lb | Bacon"}`)
+	_, l = e.get2("/api/reg/mealrecipes")
+	for _, x := range l["rows"].([]any) {
+		if m := x.(map[string]any); m["name"] == "Costed Meal" && m["perServing"] != "$2.00" {
+			t.Fatalf("meal cost: %v", m)
+		}
+	}
+	if rep, ok := e.s.buildReport("special:"+r["id"].(string), ""); !ok || !strings.Contains(rep.html(true), "Bacon") {
+		t.Fatal("special report")
+	}
+	if q, u, ok := parseQty("1 1/2 cups"); !ok || q != 1.5 || u != "cup" {
+		t.Fatalf("parseQty %v %v", q, u)
+	}
+}
+
+func TestAutoSendSummary(t *testing.T) {
+	e := newEnv(t)
+	if c, _ := e.post("/api/summary/settings", `{"recipients":"","autoSend":"16:00"}`); c != 400 {
+		t.Fatal("auto send without recipients accepted")
+	}
+	if c, _ := e.post("/api/summary/settings", `{"recipients":"a@b.com","autoSend":"25:99"}`); c != 400 {
+		t.Fatal("bad time accepted")
+	}
+	if c, _ := e.post("/api/summary/settings", `{"recipients":"a@b.com","autoSend":"16:00"}`); c != 200 {
+		t.Fatal("settings refused")
+	}
+	sent := 0
+	var fail error
+	send := func(to []string, subject, body string) error {
+		if fail != nil {
+			return fail
+		}
+		sent++
+		return nil
+	}
+	day := time.Now().Truncate(24 * time.Hour)
+	at := func(h, m int) time.Time { return time.Date(day.Year(), day.Month(), day.Day(), h, m, 0, 0, time.Local) }
+	e.s.autoSendTick(at(15, 59), send)
+	if sent != 0 {
+		t.Fatal("sent before the set time")
+	}
+	fail = errors.New("outlook is closed")
+	e.s.autoSendTick(at(16, 0), send)
+	e.s.autoSendTick(at(16, 10), send) // inside the 30 minute wait: no second try
+	if st := e.s.summarySettings(); st.LastError == "" || st.LastSent != "" {
+		t.Fatalf("failure not recorded: %+v", st)
+	}
+	fail = nil
+	e.s.autoSendTick(at(16, 31), send)
+	e.s.autoSendTick(at(17, 5), send) // already sent today
+	if sent != 1 {
+		t.Fatalf("sent %d times", sent)
+	}
+	if st := e.s.summarySettings(); st.LastError != "" || st.LastSent == "" {
+		t.Fatalf("success not recorded: %+v", st)
 	}
 }

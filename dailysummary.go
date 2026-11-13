@@ -11,6 +11,7 @@ import (
 	"net/mail"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -18,6 +19,10 @@ import (
 type summarySettings struct {
 	Recipients string `json:"recipients"` // comma separated
 	CopyFolder string `json:"copyFolder"` // optional second place for the daily zip
+	AutoSend   string `json:"autoSend"`   // HH:MM to send the summary by itself, blank for off
+	LastSent   string `json:"lastSent,omitempty"`
+	LastTry    string `json:"lastTry,omitempty"`   // RFC 3339
+	LastError  string `json:"lastError,omitempty"` // why the last automatic send failed
 }
 
 func (s *store) summarySettings() summarySettings {
@@ -99,6 +104,15 @@ func (s *store) dailySummaryRoutes(mux *http.ServeMux) {
 			return
 		}
 		in.Recipients = strings.Join(addrs, ", ")
+		in.AutoSend = strings.TrimSpace(in.AutoSend)
+		if in.AutoSend != "" && !autoRe.MatchString(in.AutoSend) {
+			fail(w, 400, "Type the send time like 15:30, or leave it blank to turn it off.")
+			return
+		}
+		if in.AutoSend != "" && len(addrs) == 0 {
+			fail(w, 400, "Add at least one address before turning on the daily send.")
+			return
+		}
 		in.CopyFolder = strings.TrimSpace(in.CopyFolder)
 		if in.CopyFolder != "" {
 			if !filepath.IsAbs(in.CopyFolder) {
@@ -112,11 +126,21 @@ func (s *store) dailySummaryRoutes(mux *http.ServeMux) {
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		old := s.summarySettings()
+		in.LastSent, in.LastTry, in.LastError = old.LastSent, old.LastTry, ""
 		if err := s.writeMaint("summary-settings.json", in); err != nil {
 			fail(w, 500, err.Error())
 			return
 		}
 		writeJSON(w, 200, s.summarySettings())
+	})
+	// Sends it now through Outlook, no draft shown. Used to try the setup.
+	mux.HandleFunc("POST /api/summary/send", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.sendSummary(sendOutlookMail); err != nil {
+			fail(w, 400, "It could not be sent from here: "+err.Error()+". The Email Daily Summary button opens a draft you can send yourself.")
+			return
+		}
+		writeJSON(w, 200, map[string]any{"ok": true})
 	})
 	// Opens a draft addressed to the saved list. It never sends.
 	mux.HandleFunc("POST /api/summary/email", func(w http.ResponseWriter, r *http.Request) {
@@ -156,4 +180,61 @@ func (s *store) copyBackup(name string) {
 		return
 	}
 	prune(dst, "Daily Backup ", keepDailyZips)
+}
+
+var autoRe = regexp.MustCompile(`^([01]?[0-9]|2[0-3]):[0-5][0-9]$`)
+
+// sendSummary sends the summary through Outlook with no window. Called without s.mu.
+func (s *store) sendSummary(send func(to []string, subject, body string) error) error {
+	s.mu.Lock()
+	st := s.summarySettings()
+	rep := s.dailySummaryReport()
+	s.mu.Unlock()
+	addrs, _ := parseAddrs(st.Recipients)
+	if len(addrs) == 0 {
+		return fmt.Errorf("no one is on the daily summary list")
+	}
+	return send(addrs, "Daily Summary - "+time.Now().Format("Jan 2"), rep.text())
+}
+
+// autoSendTick sends the summary once a day at the set time, from the one
+// computer that is editing, and tries again after 30 minutes if it fails.
+func (s *store) autoSendTick(now time.Time, send func(to []string, subject, body string) error) {
+	s.mu.Lock()
+	st := s.summarySettings()
+	due := st.AutoSend != "" && !s.isReadOnly() && st.LastSent != now.Format(dayFmt)
+	if due {
+		hm := st.AutoSend
+		if len(hm) == 4 {
+			hm = "0" + hm
+		}
+		due = now.Format("15:04") >= hm
+	}
+	if due && st.LastTry != "" {
+		if t, err := time.Parse(time.RFC3339, st.LastTry); err == nil && now.Sub(t) < 30*time.Minute {
+			due = false
+		}
+	}
+	s.mu.Unlock()
+	if !due {
+		return
+	}
+	err := s.sendSummary(send)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	st = s.summarySettings()
+	st.LastTry = now.Format(time.RFC3339)
+	if err != nil {
+		st.LastError = err.Error()
+		s.logf("daily summary not sent: %v", err)
+	} else {
+		st.LastSent, st.LastError = now.Format(dayFmt), ""
+	}
+	_ = s.writeMaint("summary-settings.json", st)
+}
+
+func (s *store) autoSendLoop() {
+	for range time.Tick(time.Minute) {
+		s.autoSendTick(time.Now(), sendOutlookMail)
+	}
 }

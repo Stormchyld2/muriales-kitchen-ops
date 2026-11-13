@@ -35,3 +35,7 @@ func composeEmail(to []string, subject, body string) (string, string, bool) {
 	fmt.Println("compose email", to, subject)
 	return "outlook", "", false
 }
+
+func sendOutlookMail(to []string, subject, body string) error {
+	return fmt.Errorf("sending mail from the program works only on Windows with classic Outlook")
+}

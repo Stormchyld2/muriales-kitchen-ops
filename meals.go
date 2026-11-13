@@ -44,17 +44,6 @@ func mealNum(v string) float64 {
 	return f
 }
 
-// mealCost adds the optional third column of each ingredient line.
-func mealCost(ingredients string) float64 {
-	t := 0.0
-	for _, l := range strings.Split(ingredients, "\n") {
-		if p := strings.Split(l, "|"); len(p) >= 3 {
-			t += mealNum(p[len(p)-1])
-		}
-	}
-	return t
-}
-
 func money(f float64) string {
 	if f == 0 {
 		return ""
@@ -62,23 +51,16 @@ func money(f float64) string {
 	return fmt.Sprintf("$%.2f", f)
 }
 
-func mealPer(r rec) float64 {
-	if n := mealNum(r["serves"]); n > 0 {
-		return mealCost(r["ingredients"]) / n
-	}
-	return 0
-}
-
 func (s *store) decorateMeals(c *collDef, rows []rec) {
 	switch c.Name {
 	case "mealrecipes":
 		for _, r := range rows {
-			r["cost"], r["perServing"] = money(mealCost(r["ingredients"])), money(mealPer(r))
+			r["cost"], r["perServing"] = money(s.mealCostOf(r["ingredients"])), money(s.mealPer(r))
 		}
 	case "mealplan":
 		per, name := map[string]float64{}, map[string]string{}
 		for _, r := range s.regLoad(regDefs["mealrecipes"]) {
-			per[r["id"]], name[r["id"]] = mealPer(r), r["name"]
+			per[r["id"]], name[r["id"]] = s.mealPer(r), r["name"]
 		}
 		for _, r := range rows {
 			r["cost"] = money(per[r["recipeId"]] * mealNum(r["servings"]))
@@ -153,7 +135,7 @@ func (s *store) mealWeek(n int, monday time.Time) []mealDay {
 		if strings.EqualFold(r["meal"], "Dinner") {
 			slot = "dinner"
 		}
-		p := mealPer(r)
+		p := s.mealPer(r)
 		cell[r["day"]+"|"+slot] = &mealCell{ID: r["id"], Name: r["name"], Serves: r["serves"], Time: r["time"], PerPerson: money(p), PerNum: p}
 	}
 	today := time.Now().Format(dayFmt)
@@ -232,7 +214,7 @@ func (s *store) mealCoverage() []map[string]any {
 
 // ---- recipe pages ----
 
-func mealMarkdown(r rec, withCost bool) string {
+func (s *store) mealMarkdown(r rec, withCost bool) string {
 	var b strings.Builder
 	meta := []string{}
 	for _, p := range [][2]string{{"Week", r["week"]}, {"Day", r["day"]}, {"Meal", r["meal"]}, {"Kind", r["kind"]}, {"Feeds", firstNonEmpty(r["serves"], r["yield"])}, {"Target time", r["time"]}} {
@@ -241,28 +223,34 @@ func mealMarkdown(r rec, withCost bool) string {
 		}
 	}
 	b.WriteString(strings.Join(meta, "  \n") + "\n\n## Ingredients\n\n")
-	cost := withCost && mealCost(r["ingredients"]) > 0
+	lines, total, missing := s.priceBook().cost(r["ingredients"])
+	cost := withCost && total > 0
 	if cost {
 		b.WriteString("| Amount | Ingredient | Cost |\n|---|---|---|\n")
 	} else {
 		b.WriteString("| Amount | Ingredient |\n|---|---|\n")
 	}
-	for _, l := range strings.Split(r["ingredients"], "\n") {
-		if strings.TrimSpace(l) == "" {
-			continue
-		}
-		p := strings.Split(l, "|")
-		for len(p) < 3 {
-			p = append(p, "")
-		}
-		row := "| " + strings.TrimSpace(p[0]) + " | " + strings.TrimSpace(p[1])
+	for _, l := range lines {
+		row := "| " + l.Amount + " | " + l.Ingredient
 		if cost {
-			row += " | " + strings.TrimSpace(p[2])
+			c := money(l.Cost)
+			if !l.Priced && !l.Skipped {
+				c = "no price"
+			}
+			row += " | " + c
 		}
 		b.WriteString(row + " |\n")
 	}
 	if cost {
-		b.WriteString(fmt.Sprintf("\n**Total %s, about $%.2f a person.**\n", money(mealCost(r["ingredients"])), mealPer(r)))
+		per := 0.0
+		if n := mealNum(firstNonEmpty(r["serves"], r["yield"])); n > 0 {
+			per = total / n
+		}
+		b.WriteString(fmt.Sprintf("\n**Total %s, about $%.2f a person.**", money(total), per))
+		if missing > 0 {
+			b.WriteString(fmt.Sprintf(" (%d ingredient(s) have no price yet, so this is understated.)", missing))
+		}
+		b.WriteString("\n")
 	}
 	if strings.TrimSpace(r["method"]) != "" {
 		b.WriteString("\n## Method\n\n" + r["method"] + "\n")
@@ -315,8 +303,8 @@ func (s *store) mealsReport() *report {
 	recipes := [][]string{}
 	per := map[string]float64{}
 	for _, r := range s.regSorted(regDefs["mealrecipes"]) {
-		per[r["id"]] = mealPer(r)
-		recipes = append(recipes, []string{"Week " + r["week"] + " " + r["day"], r["meal"], r["name"], r["serves"], money(mealCost(r["ingredients"])), money(mealPer(r))})
+		per[r["id"]] = s.mealPer(r)
+		recipes = append(recipes, []string{"Week " + r["week"] + " " + r["day"], r["meal"], r["name"], r["serves"], money(s.mealCostOf(r["ingredients"])), money(s.mealPer(r))})
 	}
 	rep.Sections = append(rep.Sections, reportSection{Heading: "Meal recipes", Note: "Costs show only where ingredient costs were entered.", Cols: []string{"When", "Meal", "Recipe", "Feeds", "Total cost", "Per person"}, Rows: recipes})
 	from := time.Now().AddDate(0, 0, -29).Format(dayFmt)
@@ -367,7 +355,7 @@ func (s *store) mealReports(id string) (*report, bool) {
 		if rid, ok := strings.CutPrefix(id, p.pre); ok {
 			for _, r := range s.regLoad(regDefs[p.coll]) {
 				if r["id"] == rid {
-					return &report{Title: r["name"], Subtitle: "Employee meal recipe", Sections: []reportSection{{HTML: mdHTML(mealMarkdown(r, true)), Text: mdPlain(mealMarkdown(r, true))}}}, true
+					return &report{Title: r["name"], Subtitle: "Employee meal recipe", Sections: []reportSection{{HTML: mdHTML(s.mealMarkdown(r, true)), Text: mdPlain(s.mealMarkdown(r, true))}}}, true
 				}
 			}
 		}
@@ -424,7 +412,7 @@ func (s *store) mealRoutes(mux *http.ServeMux) {
 			defer s.mu.Unlock()
 			for _, x := range s.regLoad(regDefs[coll]) {
 				if x["id"] == r.PathValue("id") {
-					writeJSON(w, 200, map[string]any{"rec": x, "html": mdHTML(mealMarkdown(x, true)), "appendix": s.mealAppendixLinks(x), "title": html.EscapeString(x["name"])})
+					writeJSON(w, 200, map[string]any{"rec": x, "html": mdHTML(s.mealMarkdown(x, true)), "appendix": s.mealAppendixLinks(x), "title": html.EscapeString(x["name"])})
 					return
 				}
 			}

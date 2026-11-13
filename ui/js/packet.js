@@ -32,7 +32,9 @@ function tDsum() {
     <p class="hint">A short text of how the day stands: what is overdue, the gauges, alerts and urgent items. The program cannot send mail on its own. The Email Daily Summary button on the dashboard opens a ready-made message to this list and you press Send. To get it as a text, add your phone's email-to-text address (for example 5551234567@vtext.com for Verizon) to the list.</p>
     <label>Send to (email addresses separated by commas)</label><textarea id="ds-to" class="field" rows="3" placeholder="you@example.com, manager@example.com">${esc(d.recipients)}</textarea>
     <p class="hint">Take your own address out of this list when you leave so the summary stops coming to you.</p>
-    <div class="row"><button class="btn green" data-act="dsum-save">Save List</button><button class="btn" data-act="dsum-email">${icon("ext")}Email Daily Summary Now</button><button class="btn" data-act="rep-view" data-id="daily-summary">${icon("print")}Preview</button></div></div>
+    <label style="margin-top:8px;display:block">Send it by itself every day at (24-hour time, blank for off)</label><input id="ds-auto" class="field" style="max-width:120px" value="${esc(d.autoSend || "")}" placeholder="16:00">
+    <p class="hint">This sends through the Outlook that is signed in on this computer, with no window and no password. It needs classic Outlook (the new Outlook cannot be controlled by other programs), the program left running, and it only sends from the computer that has the program open for editing, so two computers never send it twice. If it fails, an alert shows on the dashboard.${d.lastSent ? ` Last sent: ${esc(d.lastSent)}.` : ""}${d.lastError ? ` <b>Last problem: ${esc(d.lastError)}</b>` : ""}</p>
+    <div class="row"><button class="btn green" data-act="dsum-save">Save</button><button class="btn" data-act="dsum-send">Send a Test Now</button><button class="btn" data-act="dsum-email">${icon("ext")}Open as a Draft</button><button class="btn" data-act="rep-view" data-id="daily-summary">${icon("print")}Preview</button></div></div>
   <div class="panel" style="max-width:860px"><h3 style="margin-top:0">Second place for backups</h3>
     <p class="hint">Each day the program zips everything into Kitchen Backups beside it. Type a folder here, for example one inside OneDrive, and each daily zip is also copied there (the last 14 are kept). Leave it blank to keep backups in one place.</p>
     <label>Backup copy folder (full path)</label><input id="ds-copy" class="field" value="${esc(d.copyFolder)}" placeholder="C:\\Users\\Name\\OneDrive - Company\\Kitchen Backups">
@@ -45,9 +47,10 @@ Object.assign(ACT, {
   async "pk-email"() { pkRead(); if (PK.to < PK.from) return toast("The end date is before the start date."); if (!state.reports) state.reports = (await api("/api/reports")).reports || []; const id = "packet:" + PK.from + ":" + PK.to + ":" + PK.parts.filter(p => !PK.off.has(p.key)).map(p => p.key).join(","); state.reports.push({id, title: "Health Inspection Packet"}); repEmail(id); },
   async "dsum-save"() {
     const to = $("#ds-to"), cp = $("#ds-copy"), cur = state.dsum || {};
-    state.dsum = await api("/api/summary/settings", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({recipients: to ? to.value : cur.recipients, copyFolder: cp ? cp.value : cur.copyFolder})});
+    state.dsum = await api("/api/summary/settings", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({recipients: to ? to.value : cur.recipients, copyFolder: cp ? cp.value : cur.copyFolder, autoSend: $("#ds-auto") ? $("#ds-auto").value : cur.autoSend})});
     render(); toast("Saved.");
   },
+  async "dsum-send"() { try { await api("/api/summary/send", {method: "POST"}); toast("Sent. Check your inbox or phone."); } catch (e) { toast(e.message); } },
   async "dsum-email"() {
     const r = await api("/api/summary/email", {method: "POST"});
     toast(r.method === "outlook" ? "A draft is open in Outlook. Check it and press Send." : "A draft was opened in your mail program. Check it and press Send.");

@@ -59,6 +59,9 @@ func (s *store) dashAlerts(today string, bwhen time.Time, hasBackup bool) []dash
 	if n := tm.Count["Expired"] + tm.Count["Missing"]; n > 0 {
 		out = append(out, dashAlert{"warn", plural(n, "training is expired or missing", "trainings are expired or missing"), "Employee Training Matrix", "trmatrix"})
 	}
+	if e := s.summarySettings().LastError; e != "" {
+		out = append(out, dashAlert{"warn", "The daily summary was not sent", e, "settings"})
+	}
 	if !hasBackup || time.Since(bwhen) > 48*time.Hour {
 		out = append(out, dashAlert{"warn", "No recent backup", "A backup is made each day the program runs", "settings"})
 	}

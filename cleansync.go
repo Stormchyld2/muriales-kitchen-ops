@@ -50,6 +50,10 @@ func (s *store) decorate(c *collDef, rows []rec) []rec {
 		s.decorateTraining(rows)
 		return rows
 	}
+	if c.Name == "prices" || c.Name == "specials" {
+		s.decorateCosting(c, rows)
+		return rows
+	}
 	if c.Name == "trainreq" {
 		s.decorateTrainReq(rows)
 		return rows

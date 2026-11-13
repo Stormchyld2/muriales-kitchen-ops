@@ -99,6 +99,9 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "handoff" {
 		return s.handoffReport(), true
 	}
+	if strings.HasPrefix(id, "special:") {
+		return s.specialReport(strings.TrimPrefix(id, "special:"))
+	}
 	if id == "daily-summary" {
 		return s.dailySummaryReport(), true
 	}

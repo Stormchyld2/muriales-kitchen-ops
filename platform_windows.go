@@ -140,9 +140,23 @@ func htmlToPDF(src, dst string) error {
 // shown, not sent. All text is passed through environment variables, never
 // put into the script, so nothing typed can run as code.
 func openOutlookDraft(to []string, subject, body string) error {
+	return outlookDo(false, to, subject, body)
+}
+
+// sendOutlookMail sends a message straight from the signed-in classic Outlook,
+// with no window. The new Outlook has no automation, so this fails there.
+func sendOutlookMail(to []string, subject, body string) error {
+	return outlookDo(true, to, subject, body)
+}
+
+func outlookDo(send bool, to []string, subject, body string) error {
 	script := "$ErrorActionPreference='Stop'; $o=New-Object -ComObject Outlook.Application; $m=$o.CreateItem(0); " +
 		"$m.To=$env:KO_TO; $m.Subject=$env:KO_SUBJECT; $m.Body=$env:KO_BODY; $m.Display(); " +
 		"try { $m.GetInspector.Activate() } catch {}; try { (New-Object -ComObject WScript.Shell).AppActivate($m.Subject) | Out-Null } catch {}"
+	if send {
+		script = "$ErrorActionPreference='Stop'; $o=New-Object -ComObject Outlook.Application; $m=$o.CreateItem(0); " +
+			"$m.To=$env:KO_TO; $m.Subject=$env:KO_SUBJECT; $m.Body=$env:KO_BODY; $m.Send()"
+	}
 	// Office installed as 32-bit cannot be reached from 64-bit PowerShell
 	// (error 80040154), so the 32-bit PowerShell is tried as well.
 	shells := []string{"powershell.exe"}

@@ -135,6 +135,7 @@ func main() {
 	s.purgeOld()
 	s.mu.Unlock()
 	go s.dailyBackupLoop()
+	go s.autoSendLoop()
 	go func() {
 		for range time.Tick(6 * time.Hour) {
 			s.mu.Lock()
