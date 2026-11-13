@@ -49,15 +49,7 @@ var chemSteps = []chemStep{
 	{"7", "DOCUMENT", "Notify management, preserve SDS/product information and complete the Chemical Incident Log / Corrective Action as required."},
 }
 
-var chemQuick = [][]string{
-	{"Eye Contact", "Begin flushing with clean water immediately and follow SDS duration/instructions", "Do not delay flushing while looking for paperwork", "Yes", "Severe pain, vision problem, corrosive exposure, persistent symptoms", "Call emergency/medical help as appropriate; bring SDS"},
-	{"Skin Contact", "Remove contaminated clothing/PPE and rinse skin per SDS", "Do not apply neutralizers unless SDS directs", "Yes", "Chemical burn, large exposure, persistent symptoms", "Get medical help as appropriate; secure contaminated clothing"},
-	{"Inhalation", "Move person to fresh air if it is safe to do so", "Do not enter hazardous vapor area without proper protection", "Yes", "Breathing difficulty, dizziness, loss of consciousness, toxic gas", "Call emergency services as appropriate; ventilate/evacuate only if safe"},
-	{"Ingestion", "Follow SDS/Poison Control instructions", "Do not induce vomiting unless specifically directed", "Yes", "Any significant ingestion or symptoms", "Contact Poison Control/emergency medical help as appropriate"},
-	{"Spill Only", "Isolate area; consult SDS; use spill kit/PPE only if trained and appropriate", "Do not mix chemicals or wash unknown spill into drains", "Yes", "Large spill, fumes, unknown product, fire/reactivity risk", "Evacuate/secure and call vendor/emergency response as appropriate"},
-}
-
-const chemNote = "Immediate-reference sheet only. Always follow the product SDS and emergency instructions. For serious exposure, breathing difficulty, major burns, uncontrolled spill or uncertain hazard, contact emergency services as appropriate."
+const chemNote = "Immediate-reference sheet only. Always follow the product SDS and emergency instructions. For serious exposure, breathing difficulty, major burns, uncontrolled spill or uncertain hazard, call 911. Poison Control (US): 1-800-222-1222."
 
 func (s *store) chemIncidents() []*ChemIncident {
 	out := []*ChemIncident{}
@@ -69,18 +61,26 @@ func (s *store) chemReport(id string) (*report, bool) {
 	today := time.Now().Format("January 2, 2006")
 	switch id {
 	case "chem-response":
-		var steps, quick [][]string
+		var steps [][]string
 		for _, st := range chemSteps {
 			steps = append(steps, []string{st.N, st.Title, st.Text})
 		}
-		for _, q := range chemQuick {
-			quick = append(quick, q)
+		secs := []reportSection{{Note: chemNote}, {Heading: "Immediate Response", Cols: []string{"#", "Step", "What to do"}, Rows: steps}}
+		byCat := map[string][][]string{}
+		var order []string
+		for _, q := range s.regLoad(regDefs["chemquick"]) {
+			if q["active"] == "No" {
+				continue
+			}
+			if _, ok := byCat[q["category"]]; !ok {
+				order = append(order, q["category"])
+			}
+			byCat[q["category"]] = append(byCat[q["category"]], []string{q["situation"], q["immediate"], q["doNot"], q["ppe"], q["escalate"], q["manager"]})
 		}
-		return &report{Title: "Chemical Spill / Exposure Response Sheet", Subtitle: today, Sections: []reportSection{
-			{Note: chemNote},
-			{Heading: "Immediate Response", Cols: []string{"#", "Step", "What to do"}, Rows: steps},
-			{Heading: "Exposure Quick Reference", Cols: []string{"Exposure", "Immediate Action", "Do Not", "SDS Needed?", "Emergency Escalation Trigger", "Manager Action"}, Rows: quick},
-		}}, true
+		for _, c := range order {
+			secs = append(secs, reportSection{Heading: "Quick Reference: " + c, Cols: []string{"Situation", "Immediate Action", "Do Not", "PPE", "Call Emergency Help When", "Manager Action"}, Rows: byCat[c]})
+		}
+		return &report{Title: "Chemical Spill / Exposure Response Sheet", Subtitle: today, Sections: secs}, true
 	case "chem-blank":
 		labels := []string{"Product / Chemical", "Manufacturer", "SDS Location", "Amount / Concentration", "Area", "Exposure / Spill Time", "Person(s) Involved", "PPE Used", "First Aid Given", "Emergency Services Called? (Yes / No)", "Poison Control / Medical Contact", "Management Notified? (Yes / No)", "Area Reopened By", "Time Reopened", "Corrective Action Ref", "Training Follow-Up? (Yes / No)", "Incident Summary"}
 		var rows [][]string
@@ -128,7 +128,7 @@ func (s *store) chemRoutes(mux *http.ServeMux) {
 			prods = append(prods, prod{p.ID, p.Name, p.Manufacturer, p.Location, p.FirstAidEyes, p.FirstAidSkin, p.FirstAidInhalation, p.FirstAidSwallowed, p.PPE, p.SignalWord})
 		}
 		sort.Slice(prods, func(i, j int) bool { return strings.ToLower(prods[i].Name) < strings.ToLower(prods[j].Name) })
-		return map[string]any{"incidents": list, "kinds": chemKinds, "products": prods, "steps": chemSteps, "quick": chemQuick, "note": chemNote}
+		return map[string]any{"incidents": list, "kinds": chemKinds, "products": prods, "steps": chemSteps, "note": chemNote}
 	}
 	mux.HandleFunc("GET /api/chem", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()

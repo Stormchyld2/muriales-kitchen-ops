@@ -86,6 +86,7 @@ type maintSettings struct {
 	// Where equipment sits. nil means the defaults below.
 	EquipmentAreas []string `json:"equipmentAreas"`
 	EquipmentTypes []string `json:"equipmentTypes"`
+	Departments    []string `json:"departments"`
 
 	// Temperature log: the published Google Form response sheet and how its
 	// columns map to a reading.
@@ -97,6 +98,15 @@ type maintSettings struct {
 var defaultEquipmentAreas = []string{"Front Line", "Back Line", "Prep", "Salad", "Dish", "Cooler 1", "Freezer 1", "Cooler 2", "Freezer 2", "Cooler 3"}
 
 var defaultEquipmentTypes = []string{"Lowboy", "Cook Tops", "Ovens", "Mixer", "Misc Equip", "Walk-in Cooler", "Walk-in Freezer", "Reach-in Refrigerator", "Freezer", "Fryer", "Grill / Flat Top", "Dish Machine", "Ice Machine", "Hood / Exhaust Fan", "Fire Suppression System", "HVAC / Rooftop Unit", "Make-up Air Unit", "Water Heater", "Grease Trap", "Water Filter", "Other"}
+
+var defaultDepartments = []string{"Front Line", "Back Line", "Prep", "Salad", "Dish", "Coolers & Freezers", "Receiving & Storage", "General"}
+
+func (st maintSettings) departments() []string {
+	if st.Departments == nil {
+		return defaultDepartments
+	}
+	return st.Departments
+}
 
 func (st maintSettings) types() []string {
 	if st.EquipmentTypes == nil {
@@ -251,7 +261,7 @@ func (s *store) maintPayload() map[string]any {
 	sort.Slice(eq, func(i, j int) bool { return strings.ToLower(eq[i].Name) < strings.ToLower(eq[j].Name) })
 	return map[string]any{"equipment": eq, "issues": is, "portalUrl": st.PortalURL,
 		"priorityUse": priorityUse, "pm": s.pmList(), "service": s.serviceList(), "assets": s.assetSummaries(eq, st.ReplacePercent), "replacePercent": st.ReplacePercent, "statuses": equipStatuses, "priorities": priorities, "issueStatuses": issueStatuses,
-		"managers": st.Managers, "areas": st.areas(), "types": st.types(), "oosLog": s.oosList()}
+		"managers": st.Managers, "areas": st.areas(), "types": st.types(), "departments": st.departments(), "oosLog": s.oosList()}
 }
 
 func (s *store) maintRoutes(mux *http.ServeMux) {
@@ -540,6 +550,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 			Managers       *[]string `json:"managers"`
 			Areas          *[]string `json:"areas"`
 			Types          *[]string `json:"types"`
+			Departments    *[]string `json:"departments"`
 		}
 		if json.NewDecoder(r.Body).Decode(&in2) != nil {
 			fail(w, 400, "Could not read that.")
@@ -563,6 +574,16 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 				if n = strings.TrimSpace(n); n != "" && !seen[strings.ToLower(n)] {
 					seen[strings.ToLower(n)] = true
 					st.EquipmentTypes = append(st.EquipmentTypes, n)
+				}
+			}
+		}
+		if in2.Departments != nil {
+			st.Departments = []string{}
+			seen := map[string]bool{}
+			for _, n := range *in2.Departments {
+				if n = strings.TrimSpace(n); n != "" && !seen[strings.ToLower(n)] {
+					seen[strings.ToLower(n)] = true
+					st.Departments = append(st.Departments, n)
 				}
 			}
 		}

@@ -1054,3 +1054,56 @@ func TestEditImportedReading(t *testing.T) {
 		t.Fatalf("edit not saved: %v", r)
 	}
 }
+
+func TestChemQuickReference(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/reg/chemquick")
+	rows := o["rows"].([]any)
+	if len(rows) < 25 {
+		t.Fatalf("quick reference should be comprehensive, got %d", len(rows))
+	}
+	cats := map[string]bool{}
+	for _, r := range rows {
+		cats[r.(map[string]any)["category"].(string)] = true
+	}
+	for _, c := range []string{"Eye Contact", "Skin Contact", "Inhalation / Fumes", "Ingestion", "Spill / Leak", "Mixing / Wrong Product", "Equipment / Gas", "Food & Food Contact"} {
+		if !cats[c] {
+			t.Errorf("missing category %s", c)
+		}
+	}
+	rec, _ := e.get("/api/reports/chem-response")
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), "1-800-222-1222") || !strings.Contains(rec.Body.String(), "Quick Reference: Eye Contact") {
+		t.Error("response sheet should carry the quick reference and the Poison Control number")
+	}
+}
+
+func TestTodoByDepartment(t *testing.T) {
+	e := newEnv(t)
+	from := time.Now().Format(dayFmt)
+	to := time.Now().AddDate(0, 0, 364).Format(dayFmt)
+	_, o := e.get2("/api/todo?from=" + from + "&to=" + to + "&freq=Daily,Weekly,Monthly,Quarterly,Semi-Annually,Yearly&sources=Cleaning")
+	count := map[string]int{}
+	for _, x := range o["items"].([]any) {
+		count[x.(map[string]any)["dept"].(string)]++
+	}
+	if count["Dish"] == 0 || count["General"] == 0 {
+		t.Fatalf("departments not assigned: %v", count)
+	}
+	_, d := e.get2("/api/todo?from=" + from + "&to=" + to + "&freq=Daily,Weekly&sources=Cleaning&dept=Dish")
+	items := d["items"].([]any)
+	if len(items) == 0 || len(items) >= count["Dish"]+count["General"]+count["Prep"] {
+		t.Fatalf("dish filter: %d", len(items))
+	}
+	for _, x := range items {
+		if x.(map[string]any)["dept"] != "Dish" {
+			t.Fatalf("non-dish item: %v", x)
+		}
+	}
+	if c, _ := e.post("/api/maint/settings", `{"departments":["Dish","Bar"," ","dish"]}`); c != 200 {
+		t.Fatal("departments setting")
+	}
+	_, m := e.get2("/api/maint")
+	if got := m["departments"].([]any); len(got) != 2 {
+		t.Errorf("departments saved: %v", got)
+	}
+}

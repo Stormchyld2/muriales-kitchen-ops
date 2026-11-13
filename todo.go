@@ -31,7 +31,8 @@ type todoItem struct {
 	Due    string `json:"due"`
 	State  string `json:"state"` // Overdue, Due Today, Upcoming, Open
 	Bucket string `json:"bucket,omitempty"`
-	Kind   string `json:"kind"` // task, issue, product, equipment, todo
+	Dept   string `json:"dept,omitempty"` // department it belongs to, for the handouts
+	Kind   string `json:"kind"`           // task, issue, product, equipment, todo
 	ID     string `json:"id"`
 }
 
@@ -217,11 +218,12 @@ func (s *store) todoRoutes(mux *http.ServeMux) {
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		dept := strings.TrimSpace(r.URL.Query().Get("dept"))
 		if len(freqs) > 0 {
-			writeJSON(w, 200, map[string]any{"items": s.withFrequencies(freqs, want), "generated": time.Now().Format("2006-01-02T15:04:05")})
+			writeJSON(w, 200, map[string]any{"items": s.byDept(s.withFrequencies(freqs, want), dept), "generated": time.Now().Format("2006-01-02T15:04:05")})
 			return
 		}
-		writeJSON(w, 200, map[string]any{"items": s.todoItems(from, to, want), "generated": time.Now().Format("2006-01-02T15:04:05")})
+		writeJSON(w, 200, map[string]any{"items": s.byDept(s.todoItems(from, to, want), dept), "generated": time.Now().Format("2006-01-02T15:04:05")})
 	})
 
 	mux.HandleFunc("POST /api/maint/todos", func(w http.ResponseWriter, r *http.Request) {
