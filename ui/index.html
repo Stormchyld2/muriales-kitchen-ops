@@ -675,7 +675,7 @@ function vNotes() {
     <div class="row" style="margin-top:8px"><label style="margin:0">Your name:</label><input id="noteby" class="field" style="width:200px" value="${esc(remembered("by"))}"><button class="btn green" data-act="note-add">${icon("plus")}Add Note</button></div>
   </div>
   <div class="panel" style="max-width:860px">
-    <h3 style="margin-top:0">Open notes</h3>
+    <div class="row" style="justify-content:space-between"><h3 style="margin:0">Open notes</h3><span><button class="btn small" data-act="rep-view" data-id="handoff">${icon("print")}View / Print Handoff</button> <button class="btn small green" data-act="handoff-email">${icon("ext")}Email Handoff</button></span></div>
     <div class="scrolly">${open.length ? open.map(n => `<div class="catrow"><div class="grow"><div style="white-space:pre-wrap">${esc(n.text)}</div><div class="hint">${esc(n.by) || "A manager"}, ${when(n.at)}</div></div><button class="btn small green" data-act="note-done" data-id="${n.id}">Done</button></div>`).join("") : `<p class="hint">No open notes.</p>`}</div>
   </div>
   ${done.length ? `<div class="panel" style="max-width:860px"><h3 style="margin-top:0">Finished notes</h3><div class="scrolly">${done.map(n => `<div class="catrow"><div class="grow"><div style="white-space:pre-wrap">${esc(n.text)}</div><div class="hint">${esc(n.by) || "A manager"}, ${when(n.at)} · finished ${when(n.doneAt)}${n.doneBy ? " by " + esc(n.doneBy) : ""}</div></div><button class="btn small" data-act="note-reopen" data-id="${n.id}">Reopen</button></div>`).join("")}</div></div>` : ""}`;
@@ -1993,6 +1993,7 @@ const ACT = {
   "issue-open"(el) { issueDetail(el.dataset.id); },
   async "issue-update"() { const v = grab("[data-id-f]", "idF"); for (const k of ["parts", "labor", "downtime"]) v[k] = parseFloat(v[k]) || 0; rememberWho(v.by); await maintDone(await api("/api/maint/issues/" + $("#idbody").dataset.id, {method: "PUT", body: JSON.stringify(v)}), "Issue updated."); },
   "rep-view"(el) { window.open("/api/reports/" + el.dataset.id + (state.reports ? repQuery(el.dataset.id) : ""), "_blank"); },
+  async "handoff-email"() { if (!state.reports) state.reports = (await api("/api/reports")).reports || []; repEmail("handoff"); },
   "rep-email"(el) { repEmail(el.dataset.id); },
   async "rep-email-go"() { const v = grab("[data-re]", "re"), b = $("#rebody"); if (!v.to.trim()) return toast("Enter who to send it to.", true);
     try { localStorage.setItem("repTo", v.to); } catch (e) {}

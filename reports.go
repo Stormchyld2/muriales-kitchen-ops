@@ -43,6 +43,7 @@ type reportDef struct {
 }
 
 var reportCatalog = []reportDef{
+	{"handoff", "Maintenance", "Manager Handoff", "The notes left for the next manager plus what is open: out-of-service equipment, issues, overdue jobs and missed cleaning.", false},
 	{"equipment", "Maintenance", "Equipment List", "Every piece of equipment with make, model, serial number, status and open issues.", false},
 	{"issues", "Maintenance", "Open Maintenance Issues", "Work orders not yet verified, with priority, who it is assigned to and the MaintainX number.", false},
 	{"assets", "Maintenance", "Asset Costs and Replacement Advice", "Spending on upkeep for each unit, last 12 months, and the repair-or-replace suggestion.", false},
@@ -81,6 +82,9 @@ var reportCatalog = []reportDef{
 }
 
 func (s *store) buildReport(id, month string) (*report, bool) {
+	if id == "handoff" {
+		return s.handoffReport(), true
+	}
 	if strings.HasPrefix(id, "inspection:") {
 		return s.inspectionReport(strings.TrimPrefix(id, "inspection:"))
 	}

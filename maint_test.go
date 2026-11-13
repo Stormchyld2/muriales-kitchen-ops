@@ -905,3 +905,18 @@ func TestMissedAndLogAutoFeed(t *testing.T) {
 		t.Error("equipment import must be idempotent")
 	}
 }
+
+func TestHandoffReportEmail(t *testing.T) {
+	e := newEnv(t)
+	if c, _ := e.post("/api/notes", `{"by":"AB","text":"Walk-in compressor is loud"}`); c != 200 {
+		t.Fatal("note")
+	}
+	rec, _ := e.get("/api/reports/handoff")
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), "Walk-in compressor is loud") {
+		t.Fatalf("handoff report: %d", rec.Code)
+	}
+	c, out := e.post("/api/reports/email", `{"id":"handoff","to":"next@example.com"}`)
+	if c != 200 || out["method"] != "outlook" {
+		t.Fatalf("handoff email: %v %v", c, out)
+	}
+}
