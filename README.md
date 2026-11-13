@@ -33,6 +33,10 @@ The Stations group holds the written guide for each station (search, open, Edit,
 - **Training & Safety:** matrix, new-hire checklist, safety meetings, incidents and near misses, and the Training Materials folder (copy slide decks and videos into the "Training Materials" folder next to the program).
 - **Emergency Binder:** index, emergency contacts, critical equipment plan, service contacts and a review log. Print the whole binder from Reports.
 
+## Employee meals
+
+Meal recipes (one ingredient per line: amount | item | cost) give a cost per serving. The meal plan records what was served each day and its cost; Print gives a 30-day cost report. Prices are typed in by hand. Inventory, purchasing and menu costing stay in R365.
+
 ## Files
 
 ```

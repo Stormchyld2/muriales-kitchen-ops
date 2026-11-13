@@ -45,6 +45,7 @@ type reportDef struct {
 
 var reportCatalog = []reportDef{
 	{"binder-all", "Emergency", "Emergency Response Binder", "The binder index, emergency contacts, critical equipment plan and vendor contacts, ready to print for the binder.", false},
+	{"meals-costs", "Employee Meals", "Employee Meal Costs", "Staff meal recipes with cost per serving, and what was served in the last 30 days with its cost.", false},
 	{"handoff", "Maintenance", "Manager Handoff", "The notes left for the next manager plus what is open: out-of-service equipment, issues, overdue jobs and missed cleaning.", false},
 	{"equipment", "Maintenance", "Equipment List", "Every piece of equipment with make, model, serial number, status and open issues.", false},
 	{"issues", "Maintenance", "Open Maintenance Issues", "Work orders not yet verified, with priority, who it is assigned to and the MaintainX number.", false},
@@ -95,6 +96,9 @@ var reportCatalog = []reportDef{
 func (s *store) buildReport(id, month string) (*report, bool) {
 	if id == "handoff" {
 		return s.handoffReport(), true
+	}
+	if id == "meals-costs" {
+		return s.mealsReport(), true
 	}
 	if strings.HasPrefix(id, "reg:") || strings.HasPrefix(id, "rec:") || strings.HasPrefix(id, "lototag:") || id == "binder-all" {
 		return s.safetyReport(id)

@@ -85,6 +85,7 @@ Object.assign(ACT, {
   "nh-done"() { nhSave(true); },
   async "inc-ca"(el) { const r = state.reg.incidents.rows.find(x => x.id === el.dataset.id); if (r) caForm("", {area: "Safety", priority: r.severity === "Minor" ? "P3 - Routine" : "P2 - Urgent", issue: `${r.type} (${r.id}) on ${r.date}${r.area ? " in " + r.area : ""}: ${r.what}`, immediate: r.immediate || ""}); },
   async "loto-off"(el) { const r = state.reg.lotolog.rows.find(x => x.id === el.dataset.id); if (!r) return; const d = new Date(); try { state.reg.lotolog = await api("/api/reg/lotolog", {method: "POST", body: JSON.stringify(Object.assign({}, r, {removed: ymd(d) + " " + d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})}))}); render(); toast("Marked removed."); } catch (e) { toast(e.message, true); } },
+  "mtg-ca"(el) { const r = state.reg.meetings.rows.find(x => x.id === el.dataset.id); if (r) caForm("", {area: "Training", priority: "P3 - Routine", issue: `${r.type} ${r.id} on ${r.date}: ${r.topic}${r.notes ? ". " + r.notes : ""}`}); },
   "mat-refresh"() { state.mats = null; render(); },
   async "mat-folder"() { await api("/api/materials/folder", {method: "POST", body: "{}"}); },
   async "mat-open"(el) { try { await api("/api/materials/open", {method: "POST", body: JSON.stringify({name: el.dataset.n})}); } catch (e) { toast(e.message, true); } },

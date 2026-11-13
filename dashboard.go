@@ -145,6 +145,7 @@ func (s *store) dashboard() map[string]any {
 		all[k] = true
 	}
 	items := s.todoItems(now, now, all)
+	items = append(s.safetyAttention(now.Format(dayFmt)), items...)
 	over, dueToday := 0, 0
 	for _, it := range items {
 		switch it.State {

@@ -363,3 +363,49 @@ func (s *store) lotoEnd(o *OOSRecord) {
 		r["notes"] += " Cleared for service by " + o.ClearedBy + ": " + o.ClearNote
 	})
 }
+
+// safetyAttention lists the safety items that need someone today: locks still
+// on, overdue procedure inspections, an overdue binder review and open incidents.
+func (s *store) safetyAttention(today string) []todoItem {
+	out := []todoItem{}
+	for _, r := range s.regLoad(regDefs["lotolog"]) {
+		if r["removed"] == "" {
+			st := "Due Today"
+			if r["date"] < today {
+				st = "Overdue"
+			}
+			out = append(out, todoItem{Group: "LOTO", Title: "Lockout still on: " + r["equipment"], Detail: "since " + r["date"] + " " + r["time"], Due: r["date"], State: st, Kind: "loto", ID: r["id"]})
+		}
+	}
+	for _, r := range s.regLoad(regDefs["lotoinsp"]) {
+		if r["nextReview"] != "" && r["nextReview"] < today {
+			out = append(out, todoItem{Group: "LOTO", Title: "Annual LOTO inspection overdue: " + r["procedure"], Due: r["nextReview"], State: "Overdue", Kind: "loto", ID: r["id"]})
+		}
+	}
+	last := ""
+	for _, r := range s.regLoad(regDefs["binderlog"]) {
+		if r["date"] > last {
+			last = r["date"]
+		}
+	}
+	if len(s.regLoad(regDefs["binder"])) > 0 {
+		cut := time.Now().AddDate(0, 0, -92).Format(dayFmt)
+		if last == "" || last < cut {
+			d := "never reviewed"
+			if last != "" {
+				d = "last reviewed " + last
+			}
+			out = append(out, todoItem{Group: "Binder", Title: "Emergency binder review is due", Detail: d, Due: last, State: "Overdue", Kind: "binder", ID: "binder"})
+		}
+	}
+	for _, r := range s.regLoad(regDefs["incidents"]) {
+		if (r["status"] == "Open" || r["status"] == "In Progress") && r["followUp"] != "" && r["followUp"] <= today {
+			st := "Due Today"
+			if r["followUp"] < today {
+				st = "Overdue"
+			}
+			out = append(out, todoItem{Group: "Incident", Title: "Incident follow-up: " + r["type"] + " " + r["id"], Detail: r["person"], Due: r["followUp"], State: st, Kind: "incident", ID: r["id"]})
+		}
+	}
+	return out
+}

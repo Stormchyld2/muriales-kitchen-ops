@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.30.0", "Employee Meals: meal recipes with cost per serving, a meal plan, and a 30-day cost report. Dashboard now flags a lockout left on, an overdue LOTO inspection, an overdue binder review and incident follow-ups. Safety meetings can start a corrective action."],
   ["2.29.1", "Dashboard re-laid out: Needs Attention full width, icon shortcut tiles to every area, Last Backup beside Recent Changes."],
   ["2.29.0", "Lockout / Tagout: taking equipment out of service now adds a filled-in LOTO Log line and a pre-filled lock tag, and clearing it marks the lock removed; equipment procedures and annual inspections. Daily Readiness Walk (25 checks) with history. New Hire Training checklist, Safety Meetings, Incidents & Near Misses, Training Materials folder. Emergency Binder: index, contacts, critical equipment plan, vendor contacts, review log. Station checklist gauge on the dashboard."],
   ["2.28.0", "Stations group: 74 station guides (overviews, SOPs, par sheets, recipes, training programs) you can search, read, edit and print; tick-off Opening and Closing checklists for each station with a log; charcoal theme with meter colors; date and time at the top; Enter Temperatures button on the dashboard fixed."],

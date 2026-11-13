@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestSafetyProgram(t *testing.T) {
@@ -101,5 +102,33 @@ func TestLotoFollowsOutOfService(t *testing.T) {
 	e.s.mu.Unlock()
 	if r := e.s.regLoad(regDefs["lotolog"])[0]; r["removed"] == "" || !strings.Contains(r["notes"], "Guard replaced") {
 		t.Fatalf("lock not marked removed: %v", r)
+	}
+}
+
+func TestEmployeeMealsAndAttention(t *testing.T) {
+	e := newEnv(t)
+	if c, _ := e.post("/api/reg/mealrecipes", `{"name":"Pasta & Sausage","serves":"10","ingredients":"2 lb | sausage | 9.50\n3 lb | rigatoni | 5.50","active":"Yes"}`); c != 200 {
+		t.Fatal("recipe refused")
+	}
+	_, o := e.get2("/api/reg/mealrecipes")
+	if r := o["rows"].([]any)[0].(map[string]any); r["cost"] != "$15.00" || r["perServing"] != "$1.50" {
+		t.Fatalf("costing wrong: %v", r)
+	}
+	e.post("/api/reg/mealplan", `{"date":"`+time.Now().Format(dayFmt)+`","service":"Lunch","recipeId":"EMR-001","mealName":"Pasta & Sausage","servings":"8"}`)
+	_, o = e.get2("/api/reg/mealplan")
+	if r := o["rows"].([]any)[0].(map[string]any); r["cost"] != "$12.00" {
+		t.Fatalf("plan cost wrong: %v", r)
+	}
+	if rep, ok := e.s.buildReport("meals-costs", ""); !ok || !strings.Contains(rep.html(true), "$12.00") {
+		t.Fatal("cost report")
+	}
+	// attention: a lock left on, and an unreviewed binder
+	e.post("/api/reg/lotolog", `{"date":"2026-01-01","equipment":"Slicer","reason":"x","authorized":"Brian"}`)
+	titles := ""
+	for _, it := range e.s.safetyAttention(time.Now().Format(dayFmt)) {
+		titles += it.Title + ";"
+	}
+	if !strings.Contains(titles, "Lockout still on: Slicer") || !strings.Contains(titles, "binder review") {
+		t.Fatalf("attention items: %s", titles)
 	}
 }
