@@ -1260,3 +1260,21 @@ func TestEditServiceAndInspection(t *testing.T) {
 		t.Fatalf("%v", q)
 	}
 }
+
+func TestWriteEML(t *testing.T) {
+	dir := t.TempDir()
+	f := filepath.Join(dir, "Report.pdf")
+	os.WriteFile(f, pdf("x"), 0o644)
+	p := writeEML([]string{"a@b.com", "c@d.com"}, "Handoff\r\nBcc: x@y.com", "Hello\nWorld", f, dir)
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	if !strings.HasPrefix(s, "X-Unsent: 1") || !strings.Contains(s, "To: a@b.com; c@d.com") || !strings.Contains(s, `filename="Report.pdf"`) {
+		t.Fatal(s)
+	}
+	if strings.Contains(s, "\r\nBcc:") {
+		t.Fatal("header injection")
+	}
+}
