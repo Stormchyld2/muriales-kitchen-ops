@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
@@ -1132,4 +1133,55 @@ func TestCleaningIssueAndOwnItemOnTodo(t *testing.T) {
 	if !issue || !own {
 		t.Errorf("dish list should hold the cleaning issue and the own item: issue=%v own=%v", issue, own)
 	}
+}
+
+func TestFullBackupAndRestore(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/temps/points/starter", `{}`)
+	code, o := e.post("/api/backup/full", "")
+	if code != 200 {
+		t.Fatalf("full backup %d %v", code, o)
+	}
+	name := o["file"].(string)
+	if !strings.HasPrefix(name, "Full Backup") {
+		t.Fatal(name)
+	}
+	zr, err := zip.OpenReader(filepath.Join(e.s.backupDir(), name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var sds, maint bool
+	for _, f := range zr.File {
+		sds = sds || strings.HasPrefix(f.Name, "SDS Data/")
+		maint = maint || strings.HasPrefix(f.Name, "Maintenance Data/")
+	}
+	zr.Close()
+	if !sds || !maint {
+		t.Fatalf("both folders expected sds=%v maint=%v", sds, maint)
+	}
+	// change the maintenance data, then restore it from the full backup
+	e.post("/api/temps/points/starter", `{}`)
+	os.WriteFile(filepath.Join(e.s.maintDir(), "temp-points.json"), []byte("[]"), 0o644)
+	code, o = e.post("/api/backup/restore-other", `{"file":"`+name+`"}`)
+	if code != 200 {
+		t.Fatalf("restore %d %v", code, o)
+	}
+	_, o = e.get2("/api/temps?from=2020-01-01")
+	if len(o["points"].([]any)) == 0 {
+		t.Fatal("points were not restored")
+	}
+	if o["points"] == nil || o2(e) == 0 {
+		t.Fatal("no safety copy")
+	}
+}
+
+func o2(e *env) int {
+	n := 0
+	entries, _ := os.ReadDir(e.s.backupDir())
+	for _, x := range entries {
+		if strings.HasPrefix(x.Name(), "Maintenance Before Restore") {
+			n++
+		}
+	}
+	return n
 }

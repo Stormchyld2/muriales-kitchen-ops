@@ -885,6 +885,7 @@ func now() string { return time.Now().Format("2006-01-02T15:04:05") }
 
 func (s *store) routes(mux *http.ServeMux) {
 	s.moreRoutes(mux)
+	s.fullBackupRoutes(mux)
 	s.lockRoutes(mux)
 	mux.HandleFunc("GET /api/library", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
@@ -1250,12 +1251,13 @@ func (s *store) routes(mux *http.ServeMux) {
 			File    string `json:"file"`
 			Created string `json:"created"`
 			Size    int64  `json:"size"`
+			Kind    string `json:"kind"`
 		}
 		list := []item{}
 		entries, _ := os.ReadDir(s.backupDir())
 		for _, e := range entries {
-			if info, err := e.Info(); err == nil && !e.IsDir() && strings.EqualFold(filepath.Ext(e.Name()), ".zip") {
-				list = append(list, item{e.Name(), info.ModTime().Format("2006-01-02T15:04:05"), info.Size()})
+			if info, err := e.Info(); err == nil && !e.IsDir() && !strings.HasPrefix(e.Name(), ".") && strings.EqualFold(filepath.Ext(e.Name()), ".zip") {
+				list = append(list, item{e.Name(), info.ModTime().Format("2006-01-02T15:04:05"), info.Size(), backupKind(e.Name())})
 			}
 		}
 		sort.Slice(list, func(i, j int) bool { return list[i].Created > list[j].Created })

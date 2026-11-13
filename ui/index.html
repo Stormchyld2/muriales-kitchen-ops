@@ -587,14 +587,14 @@ function tBackup() {
   return `
   <div class="panel" style="max-width:860px">
     <h3 style="margin-top:0">Backup</h3>
-    <p>Creates one zip file containing the whole library in the “SDS Backups” folder beside the library folder. Copy it to a USB drive or cloud folder so the library survives if this computer fails.</p>
-    <div class="row"><button class="btn green" data-act="backup">${icon("down")}Create Backup</button><button class="btn" data-act="open-backups">${icon("folder")}Open Backups Folder</button></div>
+    <p><b>Backup Both Folders</b> puts the SDS library and all the kitchen operations files (equipment, PM jobs, temperatures, cleaning, to-do, settings) into one zip in the Kitchen Backups folder beside the program. Copy it to a USB drive or cloud folder so everything survives if this computer fails.</p>
+    <div class="row"><button class="btn green" data-act="backup-full">${icon("down")}Backup Both Folders</button><button class="btn" data-act="backup">${icon("down")}SDS Library Only</button><button class="btn" data-act="open-backups">${icon("folder")}Open Backups Folder</button></div>
   </div>
   <div class="panel" style="max-width:860px">
     <h3 style="margin-top:0">Restore from a backup</h3>
     <p class="hint">To restore a backup kept on a USB drive or another computer, copy its zip file into the backups folder first, then come back to this screen.</p>
     ${!b ? `<p class="hint">Looking for backups...</p>` : !b.backups.length ? `<p class="hint">No backups found in ${esc(b.folder)}.</p>`
-      : b.backups.map(x => `<div class="catrow"><div class="grow"><b>${esc(x.file)}</b><div class="hint">Created ${fmtDate(x.created)} at ${esc(x.created.slice(11, 16))} · ${(x.size / 1048576).toFixed(1)} MB</div></div><button class="btn small" data-act="restore-ask" data-file="${esc(x.file)}">Restore...</button></div>`).join("")}
+      : b.backups.map(x => `<div class="catrow"><div class="grow"><b>${esc(x.file)}</b><div class="hint">${x.kind === "full" ? "Both folders" : x.kind === "maint" ? "Kitchen operations files only" : "SDS library only"} · Created ${fmtDate(x.created)} at ${esc(x.created.slice(11, 16))} · ${(x.size / 1048576).toFixed(1)} MB</div></div><button class="btn small" data-act="${x.kind === "library" ? "restore-ask" : "restore-other"}" data-file="${esc(x.file)}">Restore...</button></div>`).join("")}
   </div>`;
 }
 function tTransfer() {
@@ -2353,6 +2353,10 @@ const ACT = {
     showModal(`<h2>${icon("edit")}Rename Category</h2><div class="body"><input id="rename" class="field" value="${esc(old)}" maxlength="40" data-old="${esc(old)}"></div><div class="foot"><button class="btn green big" data-act="cat-rename-go">Save</button><button class="btn big" data-act="close">Cancel</button></div>`); $("#rename").select(); },
   "cat-rename-go"() { const el = $("#rename"), old = el.dataset.old, v = el.value.trim(); if (!v || v === old) return closeModal(); const c = state.lib.categories; if (c.some(x => x !== old && x.toLowerCase() === v.toLowerCase())) return toast("That category already exists.", true); closeModal(); if (state.cat === old) state.cat = v; return saveCats(c.map(x => x === old ? v : x), {[old]: v}); },
   "open-folder"() { return api("/api/open-folder", {method: "POST"}); },
+  async "backup-full"() { const r = await api("/api/backup/full", {method: "POST"}); await loadBackups(); toast("Backup of both folders created: " + r.file); },
+  async "restore-other"(el) { const full = /^Full Backup/.test(el.dataset.file);
+    if (!confirm((full ? "Replace the SDS library AND the kitchen operations files with this backup?" : "Replace the kitchen operations files (equipment, PM jobs, temperatures, cleaning, to-do) with this backup?") + "\n\nWhat is there now is saved to the Kitchen Backups folder first.")) return;
+    const r = await api("/api/backup/restore-other", {method: "POST", body: JSON.stringify({file: el.dataset.file})}); state.sel.clear(); await reload(); await loadBackups(); toast("Restored. The files that were replaced are kept in " + (r.previousKeptIn || "the Kitchen Backups folder")); },
   async backup() { const r = await api("/api/backup", {method: "POST"}); await loadBackups(); toast("Backup created: " + r.file); },
   "pv-print"() { try { $("#pvFrame").contentWindow.focus(); $("#pvFrame").contentWindow.print(); } catch (e) { toast("Use the printer button in the top right corner of the preview.", true); } },
   "pv-save"() { const a = document.createElement("a"); a.href = pv.url; a.download = pv.name; a.click(); },
