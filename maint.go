@@ -323,6 +323,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.eventsRoutes(mux)
 	s.parsRoutes(mux)
 	s.menuRoutes(mux)
+	s.phoneRoutes(mux)
 	s.referenceRoutes(mux)
 	s.workflowRoutes(mux)
 	s.g90Routes(mux)

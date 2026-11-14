@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.43.0", "New phone page. In Settings, Phone Access, turn on the switch once and it stays on. It shows an address to open in Chrome on the phone (on the kitchen Wi-Fi), then Add to Home screen. The phone can log temperatures, do the par check, tick Today's Workflow, log breakage and leave a handoff note, and nothing else in the program. The computer must be on with this program open."],
   ["2.42.2", "Adding an Order Guide item: Where it is kept is now a pick list of the places already used on the Sysco list (Cooler 1, Freezer 1, Drystock and so on), and you can still type a new place."],
   ["2.42.1", "Order Guide Pars now works one vendor at a time: pick the vendor from the View list (it opens on Sysco, and vendors due today are marked), see only that vendor's items grouped by where they are kept, and print that vendor's order sheet with the Print button."],
   ["2.42.0", "Settings has a new Show / Hide Tabs page: untick any tab or subtab to hide it from the menu on every computer, and tick it again to bring it back (nothing is deleted). Order Guide Pars now shows every vendor, including ones with no items yet, and Add Order Item opens a form for each line (vendor, where it is kept, product, item number, pack, busy and slow par)."],

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#2c2e33"><link rel="manifest" href="manifest.json"><link rel="icon" href="/favicon.png"><link rel="apple-touch-icon" href="/app-icon.png">
+<title>Muriale's Kitchen</title>
+<style>
+:root{--bg:#2c2e33;--panel:#35383e;--line:#565a62;--text:#f1f1f1;--mute:#b9bcc2;--wine:#8a1626;--green:#1e7d30;--gold:#e0bc6e;--red:#c8202f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:17px/1.4 system-ui,Roboto,Arial,sans-serif}
+::-webkit-scrollbar{display:none}*{scrollbar-width:none}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#25272b;border-bottom:3px solid var(--wine)}
+header h1{font:700 19px Georgia,serif;margin:0;flex:1}
+header button{background:none;border:0;color:var(--text);font-size:15px;padding:8px}
+main{padding:14px;max-width:640px;margin:0 auto;padding-bottom:90px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 10px;text-align:center;font-weight:700;font-size:17px;color:var(--text);min-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.tile small{text-decoration:none;font-weight:400;color:var(--mute);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+input,select,textarea{width:100%;font:inherit;background:#24262a;color:var(--text);border:1px solid #6b6f78;border-radius:8px;padding:12px;min-height:48px}
+textarea{min-height:90px}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
+.btn{display:block;width:100%;border:0;border-radius:10px;padding:15px;font:700 17px inherit;color:#fff;background:var(--green);margin:12px 0}
+.btn.alt{background:#4a4d55}.btn.sm{display:inline-block;width:auto;padding:10px 16px;margin:0;font-size:15px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.row>.fix{flex:none}
+.ok{color:#7fd48d}.bad{color:#ff8a93;font-weight:700}.mute{color:var(--mute);font-size:14px}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px;background:#25272b;border-top:1px solid var(--line)}.bar .btn{margin:0;max-width:640px;margin:0 auto}
+#toast{position:fixed;left:14px;right:14px;bottom:80px;background:#111;border:1px solid var(--gold);border-radius:10px;padding:14px;display:none;z-index:9}#toast.err{border-color:var(--red)}
+.tick{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #45484f}.tick:last-child{border:0}
+.tick input{width:30px;height:30px;min-height:0;flex:none;margin-top:2px}
+h2{font:700 18px Georgia,serif;margin:16px 0 6px;color:var(--gold)}
+</style></head>
+<body>
+<header><button id="back" style="display:none">‹ Home</button><h1 id="ttl">Muriale's Kitchen</h1><button id="who"></button></header>
+<main id="v"></main><div id="toast"></div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s), esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const V=$("#v"); let toastT;
+function toast(m,err){const t=$("#toast");t.textContent=m;t.className=err?"err":"";t.style.display="block";clearTimeout(toastT);toastT=setTimeout(()=>t.style.display="none",err?7000:2800);}
+async function api(p,o){const r=await fetch(p,o);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"That did not work. Try again.");return j;}
+const post=(p,b)=>api(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+function me(){try{return localStorage.getItem("kname")||""}catch(e){return ""}}
+function setMe(v){const n=(v||"").trim().split(/\s+/)[0]||"";const t=n?n[0].toUpperCase()+n.slice(1):"";try{localStorage.setItem("kname",t)}catch(e){}$("#who").textContent=t?"👤 "+t:"Who?";return t;}
+function whoField(){return `<label>Your first name</label><input id="by" value="${esc(me())}" autocomplete="off" autocapitalize="words" placeholder="First name">`;}
+function needBy(){const v=setMe($("#by").value);if(!v){toast("Type your first name.",true);$("#by").focus();return "";}return v;}
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+const SCREENS={home,temps,par,work,brk,note};
+async function route(){const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
+  try{await (SCREENS[name]||home)(decodeURIComponent(arg||""));}catch(e){V.innerHTML=`<div class="card bad">${esc(e.message)}</div><button class="btn alt" onclick="route()">Try again</button>`;}}
+window.addEventListener("hashchange",route);$("#back").onclick=()=>location.hash="home";
+$("#who").onclick=()=>{const n=prompt("Your first name",me());if(n!==null){setMe(n);}};
+function title(t){$("#ttl").textContent=t;}
+
+function home(){title("Muriale's Kitchen");
+  V.innerHTML=`<div class="tiles">
+  <a class="tile" href="#temps">🌡️<span>Temperatures</span></a>
+  <a class="tile" href="#par">✅<span>Par Check</span></a>
+  <a class="tile" href="#work">📋<span>Today's Workflow</span></a>
+  <a class="tile" href="#brk">🥣<span>Log Breakage</span></a>
+  <a class="tile" href="#note" style="grid-column:span 2">📝<span>Handoff Note</span><small>Leave a note for the next shift</small></a></div>
+  <p class="mute" style="text-align:center;margin-top:20px">${esc(new Date().toDateString())}</p>`;}
+
+async function temps(){title("Temperatures");const d=await api("/api/temps");const t=today();
+  const done={};(d.readings||[]).forEach(r=>{if((r.at||"").slice(0,10)===t)done[r.pointId]=r;});
+  const groups={};d.points.forEach(p=>(groups[p.area||p.kind||"Other"]=groups[p.area||p.kind||"Other"]||[]).push(p));
+  if(!d.points.length){V.innerHTML=`<div class="card">No temperature points are set up yet. Add them on the computer in Settings.</div>`;return;}
+  V.innerHTML=whoField()+Object.entries(groups).map(([g,ps])=>`<h2>${esc(g)}</h2>`+ps.map(p=>{const r=done[p.id];const lim=(p.min!=null?p.min+"°":"")+(p.min!=null&&p.max!=null?" to ":"")+(p.max!=null?(p.min==null?"max ":"")+p.max+"°":"");
+    return `<div class="card" data-p="${esc(p.id)}"><div class="row"><b>${esc(p.name)}</b>${lim?`<span class="mute fix">${esc(lim)}</span>`:""}</div>
+    ${r?`<div class="ok mute">Logged today: ${esc(r.temp)}°F at ${esc(r.at.slice(11))} by ${esc(r.by)}</div>`:""}
+    <input class="tv" type="number" inputmode="decimal" step="any" placeholder="°F">
+    <input class="ta" style="display:none;margin-top:8px" placeholder="Corrective action (required, out of range)"></div>`;}).join("")).join("")+`<div class="bar"><button class="btn" id="go">Save Temperatures</button></div>`;
+  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const rows=[...V.querySelectorAll("[data-p]")].map(c=>({pointId:c.dataset.p,temp:parseFloat(c.querySelector(".tv").value),action:c.querySelector(".ta").value.trim()})).filter(x=>!isNaN(x.temp));
+    if(!rows.length){toast("Enter at least one temperature.",true);return;}
+    try{await post("/api/temps",{by,readings:rows});toast("Saved "+rows.length+" reading"+(rows.length>1?"s":""));temps();}
+    catch(e){if(/out of range/.test(e.message)){V.querySelectorAll("[data-p]").forEach(c=>{if(c.querySelector(".tv").value!=="")c.querySelector(".ta").style.display="block";});}toast(e.message,true);}};}
+
+async function par(st){if(!st){title("Par Check");const d=await api("/api/parcheck");V.innerHTML=`<p class="mute">Pick your station.</p><div class="tiles">${d.stations.map(s=>`<a class="tile" href="#par/${encodeURIComponent(s)}">${esc(s)}</a>`).join("")}</div>`;return;}
+  title(st+" Par Check");const d=await api("/api/parcheck?station="+encodeURIComponent(st));const c=d.check||{};const On=c.on||{},Mk=c.make||{},In=c.init||{};
+  V.innerHTML=whoField()+(c.by?`<div class="ok mute">Already checked today by ${esc(c.by)} at ${esc(c.time)}. You can update it.</div>`:"")+d.items.map(i=>`<div class="card" data-i="${esc(i.id)}"><b>${esc(i.item)}</b> <span class="mute">PAR: ${esc(i.par||"-")}</span>
+    <div class="row" style="margin-top:6px"><div><label>On hand</label><input class="on" value="${esc(On[i.id]||"")}"></div><div><label>Make / order</label><input class="mk" value="${esc(Mk[i.id]||"")}"></div></div></div>`).join("")+
+    (d.notes.length?`<h2>Notes</h2>${d.notes.map(n=>`<p class="mute">${esc(n)}</p>`).join("")}`:"")+`<div class="bar"><button class="btn" id="go">Save Par Check</button></div>`;
+  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const rows=[...V.querySelectorAll("[data-i]")].map(c=>({id:c.dataset.i,on:c.querySelector(".on").value,make:c.querySelector(".mk").value,init:by}));
+    try{await post("/api/parcheck",{station:st,by,rows});toast("Par check saved.");location.hash="par";}catch(e){toast(e.message,true);}};}
+
+async function work(){title("Today's Workflow");const d=await api("/api/dw/today");
+  V.innerHTML=whoField()+`<p class="mute" id="cnt">${d.done} of ${d.total} done</p>`+d.blocks.map(b=>`<h2>${esc(b.block)} <span class="mute">${esc(b.start||"")}${b.end?" - "+esc(b.end):""}</span></h2><div class="card">${b.items.map(i=>`<label class="tick" style="margin:0;color:var(--text);font-size:17px"><input type="checkbox" data-i="${esc(i.id)}" ${i.done?"checked":""}><span>${esc(i.text)}${i.done&&i.by?`<br><span class="mute">${esc(i.by)} ${esc(i.time||"")}</span>`:""}</span></label>`).join("")}</div>`).join("");
+  V.onchange=async e=>{const el=e.target;if(!el.dataset.i)return;const by=setMe($("#by").value);if(!by){el.checked=!el.checked;toast("Type your first name first.",true);return;}
+    try{await post("/api/dw/tick",{Date:d.date,ItemID:el.dataset.i,By:by,On:el.checked});}catch(err){el.checked=!el.checked;toast(err.message,true);}};}
+
+async function brk(){title("Log Breakage");const d=await api("/api/reg/breakage");const f={};d.def.fields.forEach(x=>f[x.key]=x);
+  const sel=(k,dv)=>`<select id="b-${k}">${(f[k].opts||[]).map(o=>`<option ${o===dv?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+  V.innerHTML=whoField()+`<label>Area</label>${sel("area")}<label>What broke or went missing?</label><input id="b-item" placeholder="Item, e.g. 6 qt cambro">
+  <label>Issue</label>${sel("issueType")}<label>Quantity</label><input id="b-qty" inputmode="numeric" value="1"><label>Cause (optional)</label><select id="b-cause"><option value=""></option>${(f.cause.opts||[]).map(o=>`<option>${esc(o)}</option>`).join("")}</select>
+  <label>Replacement needed?</label><select id="b-replace">${(f.replace.opts||["Yes","No"]).map(o=>`<option>${esc(o)}</option>`).join("")}</select><label>Notes</label><textarea id="b-notes"></textarea>
+  <div class="bar"><button class="btn" id="go">Save Breakage</button></div>`;
+  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const g=k=>$("#b-"+k).value.trim();
+    try{await post("/api/reg/breakage",{date:today(),area:g("area"),item:g("item"),issueType:g("issueType"),qty:g("qty"),cause:g("cause"),by,replace:g("replace"),notes:g("notes"),status:(f.status.opts||["Open"])[0]});toast("Logged.");location.hash="home";}catch(e){toast(e.message,true);}};}
+
+function note(){title("Handoff Note");V.innerHTML=whoField()+`<label>Note for the next shift</label><textarea id="nt" style="min-height:160px" maxlength="2000"></textarea><div class="bar"><button class="btn" id="go">Leave Note</button></div>`;
+  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const text=$("#nt").value.trim();if(!text){toast("Write the note first.",true);return;}
+    try{await post("/api/notes",{by,text});toast("Note left.");location.hash="home";}catch(e){toast(e.message,true);}};}
+route();
+</script></body></html>

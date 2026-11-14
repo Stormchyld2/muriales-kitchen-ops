@@ -2,9 +2,9 @@
 
 /* Settings, storage, backups and recovery */
 
-const TABS = [["menu","Show / Hide Tabs"],["maintainx","MaintainX"],["eqareas","Areas, Types & Departments"],["temppoints","Temperature Points"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["dsum","Daily Summary &amp; Backup Copy"],["history","Edit History"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
+const TABS = [["menu","Show / Hide Tabs"],["phone","Phone Access"],["maintainx","MaintainX"],["eqareas","Areas, Types & Departments"],["temppoints","Temperature Points"],["tempsheet","Temperature Form"],["workbook","Load Workbook Data"],["storage","Library Folder"],["areas","Storage Areas"],["backup","Backup &amp; Restore"],["dsum","Daily Summary &amp; Backup Copy"],["history","Edit History"],["transfer","Import &amp; Export"],["cleanup","Clean Up"],["recovery","Recovery"],["diagnostics","Diagnostics"]];
 
-function loadTab() { if (state.view !== "settings") return; const f = {dsum: loadDsum, eqareas: loadMaint, tempsheet: loadTemps, maintainx: loadMaint, backup: loadBackups, recovery: loadRecovery, diagnostics: loadDiag, history: () => loadHistory("")}[state.tab]; if (f) f(); }
+function loadTab() { if (state.view !== "settings") return; const f = {phone: loadPhone, dsum: loadDsum, eqareas: loadMaint, tempsheet: loadTemps, maintainx: loadMaint, backup: loadBackups, recovery: loadRecovery, diagnostics: loadDiag, history: () => loadHistory("")}[state.tab]; if (f) f(); }
 
 async function loadBackups() { state.backups = await api("/api/backups"); if (state.view === "settings") render(); }
 
@@ -14,7 +14,7 @@ async function loadDiag() { state.diag = await api("/api/diagnostics"); if (stat
 
 function vSettings() {
   const tabs = `<div class="tabs">${TABS.map(([k, l]) => `<button class="${state.tab === k ? "on" : ""}" data-act="tab" data-t="${k}">${l}</button>`).join("")}</div>`;
-  const body = ({menu: tMenu, dsum: tDsum, storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, workbook: tWorkbook, eqareas: tEqAreas, temppoints: vTPoints, tempsheet: tTempSheet, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag, history: tHistory}[state.tab] || tStorage)();
+  const body = ({menu: tMenu, phone: tPhone, dsum: tDsum, storage: tStorage, areas: tAreas, backup: tBackup, transfer: tTransfer, cleanup: tCleanup, workbook: tWorkbook, eqareas: tEqAreas, temppoints: vTPoints, tempsheet: tTempSheet, maintainx: tMaintainx, recovery: tRecovery, diagnostics: tDiag, history: tHistory}[state.tab] || tStorage)();
   return tabs + body;
 }
 

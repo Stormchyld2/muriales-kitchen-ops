@@ -172,8 +172,11 @@ func main() {
 		fs.ServeHTTP(w, r)
 	}))
 
+	inner := s.gate(s.history(mux))
+	phone.inner = inner
+	s.phoneApply(s.phoneEnabled())
 	go func() {
-		if err := http.Serve(ln, guard(port, s.gate(s.history(mux)))); err != nil {
+		if err := http.Serve(ln, guard(port, inner)); err != nil {
 			log.Printf("server stopped: %v", err)
 		}
 	}()
