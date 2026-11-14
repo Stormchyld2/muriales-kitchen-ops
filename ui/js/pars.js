@@ -42,19 +42,30 @@ function prToday() {
   return `<div class="note" style="max-width:1100px"><b>Order today (${day}):</b> ${r ? esc(r.vendors) : "no order days entered"}</div>`;
 }
 
+function prView(d) {
+  const vendors = [...new Set([...(d.def.fields.find(f => f.key === "vendor").opts || []), ...d.rows.map(r => r.vendor)])];
+  if (!PR.vendor || !vendors.includes(PR.vendor)) PR.vendor = vendors.includes("Sysco") ? "Sysco" : vendors[0];
+  return vendors;
+}
+
 function vOrderPars() {
-  const d = prLoad("orderpars"); if (!d) return `<p class="hint">Loading...</p>`; prLoad("orderdays");
-  const vendors = [...new Set([...(d.def.fields.find(f => f.key === "vendor").opts || []), ...d.rows.map(r => r.vendor)])], q = PR.q.toLowerCase();
-  const rows = d.rows.filter(r => (!PR.vendor || r.vendor === PR.vendor) && (!q || (r.item + " " + r.location + " " + r.upc).toLowerCase().includes(q)));
-  return `${prToday()}<div class="row" style="flex-wrap:wrap;align-items:flex-end"><button class="btn green big" data-act="pr-new" data-c="orderpars">${icon("plus")}Add Order Item</button><button class="btn" data-act="rep-view" data-id="${PR.vendor ? "orderpars:" + esc(PR.vendor) : "orderpars-all"}">${icon("print")}Print ${PR.vendor ? esc(PR.vendor) : "All Vendors"}</button><button class="btn" data-act="rep-view" data-id="orderpars-days">${icon("print")}Print Order Days</button><label style="margin-left:10px">Find<br><input id="pr-q" class="field" style="width:220px" value="${esc(PR.q)}" placeholder="product or location"></label><span class="hint">${rows.length} of ${d.rows.length} items</span></div>
-  <p class="hint" style="margin-top:0">${esc(d.def.intro)}</p>${prChips(vendors, PR.vendor, "pr-vendor", true)}
-  <div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Vendor</th><th class="nosort" style="width:auto">Where</th><th class="nosort" style="width:auto">Product</th><th class="nosort" style="width:auto">Pack</th><th class="nosort" style="width:auto">Busy par</th><th class="nosort" style="width:auto">Slow par</th><th class="nosort"></th></tr></thead><tbody>${!rows.length ? `<tr><td colspan="7" class="hint">Nothing here yet${PR.vendor ? " for " + esc(PR.vendor) : ""}. Use Add Order Item to enter a line: vendor, where it is kept, product, item number, pack, busy and slow par.</td></tr>` : ""}${rows.slice(0, 400).map(r => `<tr><td>${esc(r.vendor)}</td><td>${esc(r.location)}</td><td><b>${esc(r.item)}</b></td><td>${esc(r.pack)}</td><td>${prIn("orderpars", r, "busy", 80)}</td><td>${prIn("orderpars", r, "slow", 80)}</td><td style="text-align:right"><div class="acts">${prBtns("orderpars", r.id)}</div></td></tr>`).join("")}</tbody></table></div>`;
+  const d = prLoad("orderpars"); if (!d) return `<p class="hint">Loading...</p>`; if (!prLoad("orderdays")) return `<p class="hint">Loading...</p>`;
+  const vendors = prView(d), q = PR.q.toLowerCase(), od = state.reg.orderdays.rows, today = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
+  const dueToday = v => { const r = od.find(x => x.day === today); return r && r.vendors.toLowerCase().replace(/[^a-z ,]/g, "").includes(v.toLowerCase().replace(/[^a-z ]/g, "")); };
+  const rows = d.rows.filter(r => r.vendor === PR.vendor && (!q || (r.item + " " + r.location + " " + r.upc).toLowerCase().includes(q)));
+  const locs = [...new Set(rows.map(r => r.location || "No location"))];
+  const body = locs.map(l => `<tr><td colspan="6" style="background:rgba(255,255,255,.06);font-weight:700">${esc(l)}</td></tr>` + rows.filter(r => (r.location || "No location") === l).map(r => `<tr><td><b>${esc(r.item)}</b></td><td>${esc(r.upc)}</td><td>${esc(r.pack)}</td><td>${prIn("orderpars", r, "busy", 80)}</td><td>${prIn("orderpars", r, "slow", 80)}</td><td style="text-align:right"><div class="acts">${prBtns("orderpars", r.id)}</div></td></tr>`).join("")).join("");
+  return `${prToday()}<div class="row" style="flex-wrap:wrap;align-items:flex-end"><label>View<br><select id="pr-view" class="field" style="width:240px">${vendors.map(v => `<option value="${esc(v)}" ${v === PR.vendor ? "selected" : ""}>${esc(v)}${dueToday(v) ? " (order today)" : ""}</option>`).join("")}</select></label>
+    <button class="btn green big" data-act="pr-new" data-c="orderpars">${icon("plus")}Add ${esc(PR.vendor)} Item</button><button class="btn" data-act="rep-view" data-id="orderpars:${esc(PR.vendor)}">${icon("print")}Print ${esc(PR.vendor)} Sheet</button><button class="btn" data-act="rep-view" data-id="orderpars-days">${icon("print")}Print Order Days</button>
+    <label style="margin-left:10px">Find<br><input id="pr-q" class="field" style="width:220px" value="${esc(PR.q)}" placeholder="product or location"></label><span class="hint">${rows.length} items in this view</span></div>
+  <p class="hint" style="margin-top:0">One vendor at a time. Pick the vendor from View, count against the busy or slow par, and print the sheet. Type a new par straight into the list. This is a par reference; purchasing stays in 365.</p>
+  <div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Product</th><th class="nosort" style="width:auto">Item #</th><th class="nosort" style="width:auto">Pack</th><th class="nosort" style="width:auto">Busy par</th><th class="nosort" style="width:auto">Slow par</th><th class="nosort"></th></tr></thead><tbody>${!rows.length ? `<tr><td colspan="6" class="hint">Nothing here yet for ${esc(PR.vendor)}. Use Add ${esc(PR.vendor)} Item to enter a line: where it is kept, product, item number, pack, busy and slow par.</td></tr>` : body}</tbody></table></div>`;
 }
 
 Object.assign(ACT, {
   "pr-station"(el) { PR.station = el.dataset.v; PR.chk = null; render(); },
   "pr-ploc"(el) { PR.ploc = el.dataset.v; render(); },
-  "pr-vendor"(el) { PR.vendor = el.dataset.v; render(); },
+  
   "pr-new"(el) { regForm(el.dataset.c, "", el.dataset.c === "orderpars" ? {vendor: PR.vendor} : {station: PR.ploc}); },
   async "pr-save"() {
     const by = ($("#pr-by").value || "").trim(); if (!by) return toast("Type your first name first.");
@@ -62,6 +73,7 @@ Object.assign(ACT, {
     try { const o = await api("/api/parcheck", {method: "POST", body: JSON.stringify({station: PR.station, by, rows})}); remembered("by", by); PR.chk = null; toast("Par check saved at " + o.time + "."); render(); } catch (e) { toast(e.message || "Could not save.", true); }
   },
 });
+document.addEventListener("change", e => { if (e.target.id === "pr-view") { PR.vendor = e.target.value; PR.q = ""; render(); } });
 document.addEventListener("input", e => { if (e.target.id === "pr-q") { PR.q = e.target.value; const p = e.target.selectionStart; render(); const n = $("#pr-q"); if (n) { n.focus(); n.setSelectionRange(p, p); } } });
 document.addEventListener("change", async e => {
   const el = e.target.closest && e.target.closest(".ipe"); if (!el) return;

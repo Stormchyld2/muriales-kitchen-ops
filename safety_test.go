@@ -830,3 +830,15 @@ func TestMenuHidden(t *testing.T) {
 		t.Fatalf("not kept: %v", o)
 	}
 }
+
+func TestOrderGuideVendorPrint(t *testing.T) {
+	e := newEnv(t)
+	rr, _ := e.get("/api/reports/orderpars:Paragon?print=1")
+	b := rr.Body.String()
+	if rr.Code != 200 || !strings.Contains(b, "Paragon Order Guide") || !strings.Contains(b, "Microgreens") || strings.Contains(b, "Sysco") || strings.Contains(b, "Cheese Provolone") {
+		t.Fatalf("vendor print: %d", rr.Code)
+	}
+	if !strings.Contains(b, "Cooler 1") || !strings.Contains(b, "Cooler 3") {
+		t.Fatal("not grouped by location")
+	}
+}

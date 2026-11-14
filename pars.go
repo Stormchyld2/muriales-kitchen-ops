@@ -250,7 +250,8 @@ func (s *store) parsReport(id, month string) (*report, bool) {
 		return &report{Title: "Ordering Schedule for Vendors", Subtitle: "The days the order must be placed", Sections: []reportSection{{Cols: []string{"Day", "Vendors"}, Rows: rows}}}, true
 	case id == "orderpars-all" || strings.HasPrefix(id, "orderpars:"):
 		only := strings.TrimPrefix(id, "orderpars:")
-		by := map[string][][]string{}
+		type line struct{ loc, item, upc, pack, busy, slow string }
+		by := map[string][]line{}
 		order := []string{}
 		for _, r := range s.regSorted(regDefs["orderpars"]) {
 			if id != "orderpars-all" && r["vendor"] != only {
@@ -259,20 +260,38 @@ func (s *store) parsReport(id, month string) (*report, bool) {
 			if _, ok := by[r["vendor"]]; !ok {
 				order = append(order, r["vendor"])
 			}
-			by[r["vendor"]] = append(by[r["vendor"]], []string{r["location"], r["item"], r["pack"], r["busy"], r["slow"], "", ""})
+			by[r["vendor"]] = append(by[r["vendor"]], line{r["location"], r["item"], r["upc"], r["pack"], r["busy"], r["slow"]})
 		}
 		secs := []reportSection{}
 		for _, v := range order {
-			secs = append(secs, reportSection{Heading: v, Group: id == "orderpars-all", Cols: []string{"Where", "Product", "Pack", "Busy par", "Slow par", "On hand", "Order"}, Rows: by[v]})
+			if id == "orderpars-all" {
+				secs = append(secs, reportSection{Heading: v, Group: true})
+			}
+			locs, groups := []string{}, map[string][][]string{}
+			for _, l := range by[v] {
+				k := l.loc
+				if k == "" {
+					k = "No location"
+				}
+				if _, ok := groups[k]; !ok {
+					locs = append(locs, k)
+				}
+				groups[k] = append(groups[k], []string{l.item, l.upc, l.pack, l.busy, l.slow, "", ""})
+			}
+			for _, k := range locs {
+				secs = append(secs, reportSection{Heading: k, Cols: []string{"Product", "Item #", "Pack", "Busy par", "Slow par", "On hand", "Order"}, Rows: groups[k]})
+			}
 		}
 		if len(secs) == 0 {
-			secs = []reportSection{{Note: "No order guide items yet."}}
+			secs = []reportSection{{Note: "No order guide items yet for this vendor."}}
 		}
 		t := "Order Guide Pars"
-		if only != "" && id != "orderpars-all" {
-			t += ": " + only
+		sub := time.Now().Format("January 2, 2006")
+		if id != "orderpars-all" {
+			t = only + " Order Guide"
+			sub = "Count against busy or slow par. " + sub
 		}
-		return &report{Title: t, Subtitle: time.Now().Format("January 2, 2006"), Sections: secs}, true
+		return &report{Title: t, Subtitle: sub, Sections: secs}, true
 	case id == "breakage-month":
 		if _, err := time.Parse("2006-01", month); err != nil {
 			month = time.Now().Format("2006-01")
