@@ -5,7 +5,10 @@
 const WK = {checks: null, items: {}, f: {}, svc: ""};
 const WK_STATUS = ["Ready", "Needs Attention", "Corrected", "N/A"];
 
+async function loadWalkRecent() { try { WK.recent = (await api("/api/reg/walks")).rows.slice(0, 6); } catch (e) { WK.recent = []; } }
+
 async function loadWalk() {
+  await loadWalkRecent();
   try { WK.checks = (await api("/api/reg/walkchecks")).rows.filter(r => r.active !== "No"); } catch (e) { WK.checks = []; }
   WK.checks.forEach(c => { const n = +c.id.replace(/\D/g, ""); if (!WK.items[n]) WK.items[n] = {status: "Ready", finding: "", priority: "P3 - Routine", owner: "", corrected: "No"}; });
   if (!WK.svc) WK.svc = new Date().getHours() < 11 ? "Breakfast/Lunch" : "Dinner";
@@ -16,7 +19,8 @@ function vWalk() {
   if (!WK.checks) { loadWalk(); return `<p class="hint">Loading...</p>`; }
   const f = WK.f, bad = WK.checks.filter(c => (WK.items[+c.id.replace(/\D/g, "")] || {}).status === "Needs Attention").length;
   const yn2 = (k, d) => `<select class="field" data-wf="${k}" style="width:100px">${["No", "Yes"].map(o => `<option ${(f[k] || d || "No") === o ? "selected" : ""}>${o}</option>`).join("")}</select>`;
-  return `<p class="hint" style="margin-top:0">Walk the kitchen before service. Everything starts as Ready, so only change the checks that are not. Fix what you can on the spot and mark it Corrected.</p>
+  const rec = (WK.recent || []).map(w => `<div class="catrow"><div class="grow"><b>${esc(w.id)}</b> · ${esc(shortDate(w.date))} ${esc(w.time || "")} · ${esc(w.service)} · ${esc(w.by)} · ${w.overall === "Yes" ? "Ready" : "<b>Not ready</b>"}${w.issues ? `<div class="hint" style="white-space:pre-wrap">${esc(w.issues)}</div>` : ""}</div></div>`).join("");
+  return `${rec ? `<div class="panel" style="margin:0 0 10px"><h3 style="margin:0 0 6px">Recent walks (includes walks sent from a phone)</h3>${rec}<div class="row" style="margin-top:6px"><button class="btn small" data-act="nav" data-v="walkhist">Open Walk History</button></div></div>` : ""}<p class="hint" style="margin-top:0">Walk the kitchen before service. Everything starts as Ready, so only change the checks that are not. Fix what you can on the spot and mark it Corrected.</p>
   <div class="row"><label>Service:</label><select class="field" data-wf="service" style="width:170px">${["Breakfast/Lunch", "Dinner", "Both", "Prep"].map(o => `<option ${WK.svc === o ? "selected" : ""}>${o}</option>`).join("")}</select><label>Your first name:</label><input class="field" data-wf="by" value="${esc(f.by !== undefined ? f.by : who())}" style="width:180px"><span class="hint">${bad} need attention</span><button class="btn" data-act="wk-reset">Start Over</button></div>
   <div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:36px">#</th><th class="nosort" style="width:150px">Area</th><th class="nosort" style="width:auto">Check</th><th class="nosort" style="width:170px">Status</th></tr></thead><tbody>
   ${WK.checks.map(c => { const n = +c.id.replace(/\D/g, ""), it = WK.items[n]; return `<tr><td>${n}</td><td><b>${esc(c.area)}</b></td><td>${esc(c.check)}</td><td><select class="field" data-wk="${n}" data-k="status">${WK_STATUS.map(o => `<option ${it.status === o ? "selected" : ""}>${o}</option>`).join("")}</select></td></tr>
@@ -76,7 +80,7 @@ Object.assign(ACT, {
     const items = WK.checks.map(c => { const n = +c.id.replace(/\D/g, ""); return Object.assign({n, area: c.area, check: c.check}, WK.items[n]); });
     try {
       const r = await api("/api/walk", {method: "POST", body: JSON.stringify({service: WK.svc, by, notes: f.notes || "", overall: f.overall || (bad.length ? "No" : "Yes"), p1: f.p1 || "No", oos: f.oos || "No", oosAsset: f.oosAsset || "", sanit: f.sanit || "No", supply: f.supply || "No", release: f.release || "", items})});
-      WK.items = {}; WK.f = {}; WK.checks = null; delete state.reg.walks; state.today = null; toast("Walk saved.");
+      WK.items = {}; WK.f = {}; WK.checks = null; delete state.reg.walks; WK.recent = null; state.today = null; toast("Walk saved.");
       if (r.need.length && confirm(r.need.length + " item(s) still need attention.\n\nCreate a corrective action for them now?")) caForm("", {area: "Maintenance", priority: "P2 - Urgent", issue: "Readiness walk " + r.id + ":\n" + r.need.join("\n")}); else render();
     } catch (e) { toast(e.message, true); }
   },
