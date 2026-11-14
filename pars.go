@@ -34,7 +34,7 @@ func init() {
 	regDefs["orderpars"] = &collDef{Name: "orderpars", Title: "Order Guide Pars", NewLabel: "Add Order Item", Prefix: "OP-", Digits: 4, Deletable: true, Starter: "orderpars.json", Report: "orderpars-all",
 		Intro:    "The vendor order guide: where it is stored, pack size, and the Busy and Slow par. Type new pars straight into the list. This is a par reference; purchasing and costs stay in 365.",
 		ListCols: []string{"id", "vendor", "location", "item", "pack", "busy", "slow"},
-		Fields:   []fieldDef{sel("vendor", "Vendor", orderVend, true), txt("location", "Where it is kept", false), txt("item", "Product", true), txt("upc", "Vendor item number", false), txt("pack", "Pack / size", false), txt("busy", "Busy par", false), txt("slow", "Slow par", false), lng("notes", "Notes", false)}}
+		Fields:   []fieldDef{sel("vendor", "Vendor", orderVend, true), fieldDef{Key: "location", Label: "Where it is kept (pick from the Sysco places or type a new one)", Type: "combo", Src: "orderpars"}, txt("item", "Product", true), txt("upc", "Vendor item number", false), txt("pack", "Pack / size", false), txt("busy", "Busy par", false), txt("slow", "Slow par", false), lng("notes", "Notes", false)}}
 	regDefs["orderdays"] = &collDef{Name: "orderdays", Title: "Order Days", NewLabel: "Add Day", Prefix: "OD-", Digits: 3, Starter: "orderdays.json", Report: "orderpars-days", Deletable: true,
 		Intro:    "The vendors whose order must be placed each day.",
 		ListCols: []string{"id", "day", "vendors"},

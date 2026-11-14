@@ -16,11 +16,13 @@ function vReg(name) {
 function regForm(name, id, preset) {
   if (!state.reg[name]) { api("/api/reg/" + name).then(o => { state.reg[name] = o; regForm(name, id, preset); }); return; }
   const d = state.reg[name], def = d.def, r = id ? d.rows.find(x => x.id === id) || {} : {}; preset = preset || {};
-  const need = def.fields.filter(f => (f.type === "ref" && !state.reg[f.src]) || (f.type === "station" && !state.reg.stations)).map(f => f.src || "stations");
+  const need = def.fields.filter(f => ((f.type === "ref" || f.type === "combo") && !state.reg[f.src]) || (f.type === "station" && !state.reg.stations)).map(f => f.src || "stations");
   if (need.length) { Promise.all(need.map(n => api("/api/reg/" + n).then(o => { state.reg[n] = o; }))).then(() => regForm(name, id, preset)); return; }
   const defaults = {date: ymd(new Date()), active: "Yes", status: def.fields.find(f => f.key === "status")?.opts?.[0], priority: "P3 - Routine", verifyStatus: "Pending", completedBy: who(), by: who(), assignedTo: ""};
   const val = f => id ? (r[f.key] || "") : f.key in preset ? preset[f.key] : (f.key in defaults && ["date", "active", "status", "priority", "completedBy", "by"].includes(f.key) ? defaults[f.key] || "" : "");
   const input = f => { const v = val(f), a = `data-rg="${f.key}"`;
+    if (f.type === "combo") { const rows = (state.reg[f.src] || {}).rows || [], seen = [], add = x => { x = (x[f.key] || "").trim(); if (x && !seen.includes(x)) seen.push(x); }; rows.filter(x => x.vendor === "Sysco").forEach(add); rows.forEach(add);
+      return `<input class="field" list="dl-${f.key}" ${a} value="${esc(v)}" placeholder="Pick one, or type a new place"><datalist id="dl-${f.key}">${seen.map(o => `<option value="${esc(o)}">`).join("")}</datalist>`; }
     return f.type === "doc" ? `<textarea class="field" rows="22" style="font-family:Consolas,monospace;font-size:13px" ${a}>${esc(v)}</textarea>` : f.type === "station" ? `<select class="field" ${a}><option value="">Choose...</option>${((state.reg.stations || {}).rows || []).map(o => o.name).filter((n, i, a2) => a2.indexOf(n) === i).map(n => `<option ${n === v ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>` : f.type === "long" ? `<textarea class="field" rows="3" ${a}>${esc(v)}</textarea>` : f.type === "date" ? `<input type="date" class="field" ${a} value="${esc(v)}" style="width:190px">`
       : f.type === "select" ? `<select class="field" ${a}>${(f.req ? f.opts : ["", ...f.opts]).map(o => `<option ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`
       : f.type === "ref" ? `<select class="field" ${a}><option value="">Choose...</option>${((state.reg[f.src] || {}).rows || []).filter(o => (o.status || "Active") !== "Inactive" && o.active !== "No" || o.id === v).map(o => `<option value="${esc(o.id)}" ${o.id === v ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select>`
