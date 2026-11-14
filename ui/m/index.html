@@ -49,6 +49,7 @@ const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth
 const SCREENS={home,temps,par,work,clean,todo,walk,brk,note};
 async function route(){$("#errbar").style.display="none";const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
   try{await (SCREENS[name]||home)(decodeURIComponent(arg||""));}catch(e){V.innerHTML=`<div class="card bad">${esc(e.message)}</div><button class="btn alt" onclick="route()">Try again</button>`;}}
+document.addEventListener("click",e=>{const b=e.target.closest(".bar .btn");if(!b)return;if(b.dataset.busy){e.stopImmediatePropagation();e.preventDefault();return;}b.dataset.busy="1";setTimeout(()=>{delete b.dataset.busy;},2500);},true);
 window.addEventListener("hashchange",route);$("#back").onclick=()=>location.hash="home";
 $("#who").onclick=()=>{const n=prompt("Your first name",me());if(n!==null){setMe(n);}};
 function title(t){$("#ttl").textContent=t;}
@@ -115,7 +116,7 @@ async function brk(){title("Log Breakage");const d=await api("/api/reg/breakage"
   <label>Issue</label>${sel("issueType")}<label>Quantity</label><input id="b-qty" inputmode="numeric" value="1"><label>Cause (optional)</label><select id="b-cause"><option value=""></option>${(f.cause.opts||[]).map(o=>`<option>${esc(o)}</option>`).join("")}</select>
   <label>Replacement needed?</label><select id="b-replace">${(f.replace.opts||["Yes","No"]).map(o=>`<option>${esc(o)}</option>`).join("")}</select><label>Notes</label><textarea id="b-notes"></textarea>
   <div class="bar"><button class="btn" id="go">Save Breakage</button></div>`;
-  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const g=k=>$("#b-"+k).value.trim();
+  $("#go").onclick=async()=>{if(!$("#b-area"))return;const by=needBy();if(!by)return;const g=k=>$("#b-"+k).value.trim();
     try{await post("/api/reg/breakage",{date:today(),area:g("area"),item:g("item"),issueType:g("issueType"),qty:g("qty"),cause:g("cause"),by,replace:g("replace"),notes:g("notes"),status:(f.status.opts||["Open"])[0]});toast("Logged.");location.hash="home";}catch(e){toast(e.message,true);}};}
 
 
