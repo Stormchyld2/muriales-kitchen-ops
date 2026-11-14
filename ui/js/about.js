@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.44.2", "Temperature Check window is wider and no longer runs off the side; the safe range now sits under each point name and is easier to read."],
   ["2.44.1", "Temperature Log: you can now delete a single reading (trash button on its row in a check), a whole check (Delete This Check), or every reading for a day (pick the day beside Save Daily Report, then Delete Day). Each asks you to confirm first. Readings from the Google Form stay deleted when the form is synced again."],
   ["2.44.0", "Temperatures: the phone now shows OK, TOO WARM or TOO COLD as you type each temperature and opens the corrective action box right away when one is out of range, then lists any out-of-range readings after saving. On the computer, the Temperature Log shows one row per check (all the temps taken together); click it to open every reading in that check and edit the temps, notes and corrective actions, the time or who took them. Pick a single piece of equipment to see its individual readings and trend."],
   ["2.43.3", "Phone page: each temperature now has a ± button beside it, so freezer readings below zero can be entered (the phone number pad has no minus sign). Tap it to put a minus in front, tap again to take it off."],

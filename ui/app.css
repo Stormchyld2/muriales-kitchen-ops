@@ -80,7 +80,7 @@ dt{font-weight:600}dd{margin:0}
 .hint{color:var(--mute);font-size:13px}
 #modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20}
 #modal.show{display:flex}
-.dialog{background:var(--cream);color:#1b1b1b;border-radius:8px;width:min(560px,92vw);overflow:hidden;box-shadow:0 20px 60px #000;max-height:94vh;display:flex;flex-direction:column}.dialog:has(#inbody),.dialog:has(#rdbody),.dialog:has(#rpbody){width:min(1000px,96vw)}
+.dialog{background:var(--cream);color:#1b1b1b;border-radius:8px;width:min(560px,92vw);overflow:hidden;box-shadow:0 20px 60px #000;max-height:94vh;display:flex;flex-direction:column}.dialog:has(#inbody),.dialog:has(#rdbody),.dialog:has(#rpbody),.dialog:has(#tgbody){width:min(1000px,96vw)}#tgbody .hint{color:#555}#tgbody td input[data-f=notes],#tgbody td input[data-f=action]{min-width:120px}#tgbody td{vertical-align:middle}
 .dialog h2{margin:0;padding:12px 18px;font-size:21px;color:#fff;background:linear-gradient(var(--wine),var(--wine2));display:flex;gap:12px;align-items:center}
 .dialog h2 svg{width:28px;height:28px}
 .dialog .body{padding:16px 20px;overflow:auto;flex:1 1 auto;min-height:0}.dialog h2,.dialog .foot{flex:none}
