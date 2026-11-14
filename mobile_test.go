@@ -74,3 +74,33 @@ func TestPhoneSetting(t *testing.T) {
 		t.Fatalf("turn off = %d %v", c, m)
 	}
 }
+
+func TestFixTempLimits(t *testing.T) {
+	e := newEnv(t)
+	lo, hi, hot, cap := -10.0, 0.0, 200.0, 33.0
+	h135, h41 := 135.0, 41.0
+	pts := []*TempPoint{
+		{ID: "1", Name: "Back Line Single Door Cooler 2", Kind: "Freezer", Min: &lo, Max: &hi},
+		{ID: "2", Name: "Cooler 1", Kind: "Cold Holding", Min: &cap, Max: &h41},
+		{ID: "3", Name: "Freezer 1", Kind: "Freezer", Min: &lo, Max: &hi},
+		{ID: "4", Name: "Steam", Kind: "Hot Holding", Min: &h135, Max: &hot},
+		{ID: "5", Name: "Custom", Kind: "Cold Holding", Min: &lo, Max: &h41},
+	}
+	if err := e.s.writeMaint("temp-points.json", pts); err != nil {
+		t.Fatal(err)
+	}
+	e.s.fixTempLimits()
+	got := e.s.tempPoints()
+	if got[0].Kind != "Cold Holding" || got[0].Min != nil || *got[0].Max != 41 {
+		t.Errorf("cooler 2 not fixed: %+v", got[0])
+	}
+	if got[1].Min != nil || got[2].Min != nil || got[3].Max != nil || *got[3].Min != 135 {
+		t.Error("starter floors and ceiling not cleared")
+	}
+	if got[4].Min == nil || *got[4].Min != -10 {
+		t.Error("a point the user changed must be left alone")
+	}
+	if got[0].check(41) != "OK" || got[0].check(45) != "Too Warm" || got[2].check(-5) != "OK" {
+		t.Error("limits are wrong after the fix")
+	}
+}

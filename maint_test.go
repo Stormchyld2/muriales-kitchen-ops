@@ -601,8 +601,9 @@ func TestMicrosoftFormImport(t *testing.T) {
 	if c != 200 || res["Added"].(float64) != 8 || res["Unreadable"].(float64) != 0 || res["NewPoints"].(float64) != 0 {
 		t.Fatalf("import: %v", r)
 	}
-	// 20 and -17.5 on freezers, 31 on a 33-41 cooler, 210 on a 135-200 well,
-	if res["OutOfRange"].(float64) != 5 {
+	// Only the 20 on a freezer is out of range: coolers are limited to 41 and
+	// above, freezers to 0 and below, hot wells to 135 and above.
+	if res["OutOfRange"].(float64) != 1 {
 		t.Errorf("out of range: %v", res)
 	}
 	if got, _ := parseWhen("46260.5", ""); got != "2026-08-26 12:00" {

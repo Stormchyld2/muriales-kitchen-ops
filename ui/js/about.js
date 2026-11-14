@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.43.2", "Fixed the temperature limits. Coolers now only need to be 41°F or below, freezers 0°F or below and hot holding 135°F or above, as the FDA Food Code says; the made-up floors (33° and -10°) and the 200° ceiling are gone, so a cold cooler or a very cold freezer no longer shows as out of range. Back Line Single Door Cooler 2 was listed as a freezer and is now a cooler. Points you changed yourself are left alone."],
   ["2.43.1", "New program icon: a cream Muriale's M on a wine tile with a gold border, replacing the SDS Manager icon. It is used on the program file, the taskbar and the phone shortcut."],
   ["2.43.0", "New phone page. In Settings, Phone Access, turn on the switch once and it stays on. It shows an address to open in Chrome on the phone (on the kitchen Wi-Fi), then Add to Home screen. The phone can log temperatures, do the par check, tick Today's Workflow, log breakage and leave a handoff note, and nothing else in the program. The computer must be on with this program open."],
   ["2.42.2", "Adding an Order Guide item: Where it is kept is now a pick list of the places already used on the Sysco list (Cooler 1, Freezer 1, Drystock and so on), and you can still type a new place."],

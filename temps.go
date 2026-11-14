@@ -15,6 +15,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -429,7 +431,41 @@ func (s *store) fetchSheet(raw string) (string, error) {
 	return string(b), nil
 }
 
+// fixTempLimits runs once. Early starter points carried made-up floors
+// (33 and -10) and a 200 ceiling that no rule asks for, and one cooler was
+// listed as a freezer. Only points still on those exact starter values change.
+func (s *store) fixTempLimits() {
+	flag := filepath.Join(s.maintDir(), "seed-templimits.flag")
+	if _, err := os.Stat(flag); err == nil {
+		return
+	}
+	pts := s.tempPoints()
+	if len(pts) == 0 {
+		return
+	}
+	is := func(v *float64, n float64) bool { return v != nil && *v == n }
+	for _, p := range pts {
+		switch {
+		case p.Kind == "Freezer" && strings.EqualFold(p.Name, "Back Line Single Door Cooler 2") && is(p.Min, -10) && is(p.Max, 0):
+			p.Kind, p.Min, p.Max = "Cold Holding", nil, fp(41)
+		case p.Kind == "Cold Holding" && is(p.Min, 33) && is(p.Max, 41):
+			p.Min = nil
+		case p.Kind == "Freezer" && is(p.Min, -10) && is(p.Max, 0):
+			p.Min = nil
+		case p.Kind == "Hot Holding" && is(p.Min, 135) && is(p.Max, 200):
+			p.Max = nil
+		}
+	}
+	if s.writeMaint("temp-points.json", pts) == nil {
+		_ = os.MkdirAll(s.maintDir(), 0o755)
+		_ = os.WriteFile(flag, []byte(time.Now().Format(time.RFC3339)), 0o644)
+	}
+}
+
 func (s *store) tempRoutes(mux *http.ServeMux) {
+	s.mu.Lock()
+	s.fixTempLimits()
+	s.mu.Unlock()
 	settings := func() (st maintSettings) { _, _, st = s.loadMaint(); return }
 	payload := func(from, to string) map[string]any {
 		st := settings()
