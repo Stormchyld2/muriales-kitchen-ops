@@ -124,7 +124,7 @@ aside .wo{margin:14px 10px 0;width:calc(100% - 20px);font-size:13px;padding:8px 
 .status.Low,.status.P4,.status.Needed{background:#9aa0a8}
 .status.Current,.status.Active{background:#58b368}.status.Expired,.status.Missing{background:#e0525e}.status.Inactive{background:#9aa0a8}
 .status{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700;color:#111;background:#9aa0a8}
-.oos{background:#7f1d1d!important;border-color:#ef4444!important;color:#fff!important;font-size:15px}.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0}.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}.stat .n{font-size:24px;font-weight:700}.stat.warn{border-color:#b45309;background:#fff7ed}
+.oos{background:#7f1d1d!important;border-color:#ef4444!important;color:#fff!important;font-size:15px}.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0}.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}.stat .n{font-size:24px;font-weight:700}.stat.warn{border-color:#d97706;background:rgba(217,119,6,.18)}.stat.warn .n{color:#fbbf24}
 .hist{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px}.hist div{margin-bottom:6px}
 aside .nav.mod{font-weight:700}.nav .grow{flex:1}.nav .chev{opacity:.6;font-size:12px}
 .nav.sub{padding:7px 12px 7px 42px;font-size:14px;margin:1px 0}.navsep{height:1px;background:var(--line);margin:10px 8px}
