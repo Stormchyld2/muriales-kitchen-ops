@@ -151,6 +151,15 @@ var phoneAllowed = []phoneRule{
 	{"GET", regexp.MustCompile(`^/api/reg/breakage$`)},
 	{"POST", regexp.MustCompile(`^/api/reg/breakage$`)},
 	{"POST", regexp.MustCompile(`^/api/notes$`)},
+	// cleaning and the to-do list: see what is due and mark it done (verifying stays on the computer)
+	{"GET", regexp.MustCompile(`^/api/clean/today$`)},
+	{"POST", regexp.MustCompile(`^/api/clean/done$`)},
+	{"POST", regexp.MustCompile(`^/api/clean/deepdone$`)},
+	{"POST", regexp.MustCompile(`^/api/mgr/done$`)},
+	{"GET", regexp.MustCompile(`^/api/todo$`)},
+	{"POST", regexp.MustCompile(`^/api/maint/pm/[^/]+/done$`)},
+	{"POST", regexp.MustCompile(`^/api/maint/todos$`)},
+	{"POST", regexp.MustCompile(`^/api/maint/todos/[^/]+/done$`)},
 }
 
 // phoneGate refuses anything that is not on the allowed list, and anything

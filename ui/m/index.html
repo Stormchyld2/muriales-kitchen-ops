@@ -46,7 +46,7 @@ function setMe(v){const n=(v||"").trim().split(/\s+/)[0]||"";const t=n?n[0].toUp
 function whoField(){return `<label>Your first name</label><input id="by" value="${esc(me())}" autocomplete="off" autocapitalize="words" placeholder="First name">`;}
 function needBy(){const v=setMe($("#by").value);if(!v){toast("Type your first name.",true);$("#by").focus();return "";}return v;}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
-const SCREENS={home,temps,par,work,brk,note};
+const SCREENS={home,temps,par,work,clean,todo,brk,note};
 async function route(){$("#errbar").style.display="none";const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
   try{await (SCREENS[name]||home)(decodeURIComponent(arg||""));}catch(e){V.innerHTML=`<div class="card bad">${esc(e.message)}</div><button class="btn alt" onclick="route()">Try again</button>`;}}
 window.addEventListener("hashchange",route);$("#back").onclick=()=>location.hash="home";
@@ -58,8 +58,10 @@ function home(){title("Muriale's Kitchen");
   <a class="tile" href="#temps">🌡️<span>Temperatures</span></a>
   <a class="tile" href="#par">✅<span>Par Check</span></a>
   <a class="tile" href="#work">📋<span>Today's Workflow</span></a>
+  <a class="tile" href="#clean">🧽<span>Cleaning</span></a>
+  <a class="tile" href="#todo">🛠️<span>To-Do &amp; Maintenance</span></a>
   <a class="tile" href="#brk">🥣<span>Log Breakage</span></a>
-  <a class="tile" href="#note" style="grid-column:span 2">📝<span>Handoff Note</span><small>Leave a note for the next shift</small></a></div>
+  <a class="tile" href="#note">📝<span>Handoff Note</span><small>Leave a note for the next shift</small></a></div>
   <p class="mute" style="text-align:center;margin-top:20px">${esc(new Date().toDateString())}</p>`;}
 
 let tempMsg="";
@@ -114,6 +116,42 @@ async function brk(){title("Log Breakage");const d=await api("/api/reg/breakage"
   <div class="bar"><button class="btn" id="go">Save Breakage</button></div>`;
   $("#go").onclick=async()=>{const by=needBy();if(!by)return;const g=k=>$("#b-"+k).value.trim();
     try{await post("/api/reg/breakage",{date:today(),area:g("area"),item:g("item"),issueType:g("issueType"),qty:g("qty"),cause:g("cause"),by,replace:g("replace"),notes:g("notes"),status:(f.status.opts||["Open"])[0]});toast("Logged.");location.hash="home";}catch(e){toast(e.message,true);}};}
+
+
+function expandList(items,render,onDone){ // rows that open to a small form with a Done button
+  return items.map((it,i)=>`<div class="card" data-x="${i}"><div class="tick" style="border:0;padding:0;cursor:pointer" data-open="${i}"><span style="flex:1"><b>${esc(it.title)}</b><br><span class="mute">${esc(it.sub||"")}</span></span>${it.badge?`<span class="${it.bad?"bad":"mute"}">${esc(it.badge)}</span>`:""}</div><div class="more" style="display:none">${render(it,i)}</div></div>`).join("");
+}
+function wireList(items,onDone){
+  V.onclick=async e=>{const o=e.target.closest("[data-open]");if(o){const m=o.parentNode.querySelector(".more");m.style.display=m.style.display==="none"?"block":"none";return;}
+    const b=e.target.closest("[data-done]");if(!b||b.disabled)return;const card=b.closest("[data-x]"),it=items[+card.dataset.x];const by=needBy();if(!by)return;
+    b.disabled=true;b.textContent="Saving...";try{await onDone(it,by,card);toast("Saved.");route();}catch(err){toast(err.message,true);b.disabled=false;b.textContent="Done";}};
+}
+async function clean(){title("Cleaning");const d=await api("/api/clean/today");const items=[];
+  const sec=(label,list,kind,f)=>list.forEach(x=>items.push({kind,label,...f(x)}));
+  sec("Cleaning",d.tasks.filter(x=>x.state!=="Upcoming"),"task",x=>({id:x.id,title:x.area+": "+x.task,sub:[x.timing,x.role].filter(Boolean).join(" · ")+(x.verify==="Yes"?" · manager verifies":""),badge:x.state,bad:x.state==="Overdue",done:x.state==="Done Today"}));
+  sec("Weekly deep clean",(d.deep||[]),"deep",x=>({id:x.id,title:x.area+": "+x.task,sub:[x.day,x.role].filter(Boolean).join(" · "),badge:x.state,bad:x.state==="Overdue",done:x.state==="Done Today"}));
+  sec("Manager checks",d.checks.filter(x=>x.state!=="Upcoming"),"check",x=>({id:x.id,title:(x.area?x.area+": ":"")+x.check,sub:x.whatCheck||x.frequency||"",badge:x.state,bad:x.state==="Overdue",done:x.state==="Done Today"}));
+  const open=items.filter(i=>!i.done),done=items.filter(i=>i.done);
+  const all=[...open,...done];let last="";
+  V.innerHTML=whoField()+`<p class="mute">${open.length} to do, ${done.length} done today</p>`+(all.length?all.map((it,i)=>{const h=it.label!==last&&!it.done?(last=it.label,`<h2>${esc(it.label)}</h2>`):"";return h+expandList([it],it2=>it.done?`<div class="ok mute">Already done today.</div>`:
+    (it.kind==="check"?`<label>Result</label><select class="res"><option>Pass</option><option>Needs Attention</option><option>N/A</option></select>`:it.kind==="task"?`<label class="tick" style="margin:0;color:var(--text);font-size:16px"><input type="checkbox" class="iss"><span>I found a problem</span></label>`:"")+`<label>Notes (optional)</label><input class="nt"><button class="btn" data-done>Done</button>`).replace('data-x="0"',`data-x="${i}"`);}).join(""):`<div class="card">Nothing due right now.</div>`);
+  wireList(all,async(it,by,card)=>{const notes=card.querySelector(".nt").value.trim();
+    if(it.kind==="task")await post("/api/clean/done",{id:it.id,by,issue:card.querySelector(".iss").checked,notes});
+    else if(it.kind==="deep")await post("/api/clean/deepdone",{id:it.id,by,notes});
+    else await post("/api/mgr/done",{ID:it.id,By:by,Result:card.querySelector(".res").value,Notes:notes});});}
+
+async function todo(){title("To-Do & Maintenance");const t=today();
+  const d=await api("/api/todo?from="+t+"&to="+t+"&sources="+encodeURIComponent("Equipment PM,Grounds / Facility,Issue,Other"));
+  const list=d.items.filter(x=>x.state!=="Upcoming").map(x=>({kind:x.kind,id:x.id,group:x.group,title:x.title,sub:x.detail||"",badge:x.state==="Open"?"":x.state,bad:x.state==="Overdue"}));
+  const groups={};list.forEach(i=>(groups[i.group]=groups[i.group]||[]).push(i));let n=0;const flat=[];
+  V.innerHTML=whoField()+`<button class="btn alt" id="add">+ Add a to-do</button><div id="addbox" class="card" style="display:none"><label>What needs doing</label><input id="a-t"><label>Type</label><select id="a-ty"><option>Maintenance</option><option>Cleaning</option><option>General</option></select><label>Due date (optional)</label><input id="a-d" type="date"><button class="btn" id="a-go">Add</button></div>`+
+    (list.length?Object.entries(groups).map(([g,its])=>`<h2>${esc(g)}</h2>`+its.map(it=>{const i=flat.push(it)-1;const canDone=it.kind==="task"||it.kind==="todo";
+      return expandList([it],()=>canDone?`<label>Notes (optional)</label><input class="nt"><button class="btn" data-done>Done</button>`:`<div class="mute">${it.kind==="issue"?"Update or close this on the computer, or tell the maintenance lead.":"This one is finished on the computer."}</div>`).replace('data-x="0"',`data-x="${i}"`);}).join("")).join(""):`<div class="card">Nothing due right now.</div>`);
+  wireList(flat,async(it,by,card)=>{const note=card.querySelector(".nt").value.trim();
+    if(it.kind==="task")await post("/api/maint/pm/"+encodeURIComponent(it.id)+"/done",{By:by,Note:note});else await post("/api/maint/todos/"+encodeURIComponent(it.id)+"/done",{by});});
+  $("#add").onclick=()=>{const b=$("#addbox");b.style.display=b.style.display==="none"?"block":"none";};
+  $("#a-go").onclick=async()=>{const by=needBy();if(!by)return;const title=$("#a-t").value.trim();if(!title){toast("Write what needs doing.",true);return;}
+    try{await post("/api/maint/todos",{title,type:$("#a-ty").value,due:$("#a-d").value,createdBy:by});toast("Added.");route();}catch(e){toast(e.message,true);}};}
 
 function note(){title("Handoff Note");V.innerHTML=whoField()+`<label>Note for the next shift</label><textarea id="nt" style="min-height:160px" maxlength="2000"></textarea><div class="bar"><button class="btn" id="go">Leave Note</button></div>`;
   $("#go").onclick=async()=>{const by=needBy();if(!by)return;const text=$("#nt").value.trim();if(!text){toast("Write the note first.",true);return;}
