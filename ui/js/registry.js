@@ -10,7 +10,7 @@ function vReg(name) {
   return `<div class="row"><button class="btn green big" data-act="reg-new" data-c="${name}">${icon("plus")}${esc(def.newLabel)}</button><button class="btn" data-act="reg-print" data-id="${esc(def.report)}">${icon("print")}Print</button><span class="hint">${d.rows.length} on record</span></div>
   ${def.intro ? `<p class="hint" style="margin-top:0">${esc(def.intro)}</p>` : ""}
   <div class="tablewrap">${!d.rows.length ? `<div class="empty"><b>Nothing here yet</b></div>` : `<table class="plain"><thead><tr>${def.listCols.map(k => `<th class="nosort" style="width:auto">${esc(lab(k))}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
-    ${d.rows.map(r => `<tr>${def.listCols.map(k => `<td>${k === "id" ? `<b>${esc(r[k])}</b>` : k === "state" || k === "flag" || k === "band" ? tag(r[k]) : k === "due" ? esc(shortDate(r[k] || "")) + (r.lastDone ? `<div class="hint">last ${esc(shortDate(r.lastDone))}</div>` : "") : ftype(k) === "date" ? esc(shortDate(r[k] || "")) : esc(clip(r[k], 90))}</td>`).join("")}<td style="text-align:right"><div class="acts">${extra(r)}${name === "cleanlog" && r.verifyStatus === "Pending" ? `<button class="btn small" data-act="cl-verify" data-id="${esc(r.id)}">Verify</button> ` : ""}<button class="btn small" data-act="reg-open" data-c="${name}" data-id="${esc(r.id)}">${icon("edit")}Edit</button>${def.deletable ? ` <button class="btn small wine" data-act="reg-del" data-c="${name}" data-id="${esc(r.id)}">${icon("trash")}</button>` : ""}</div></td></tr>`).join("")}</tbody></table>`}</div>`;
+    ${d.rows.map(r => `<tr>${def.listCols.map(k => `<td>${name === "smallware" && (k === "par" || k === "onHand") ? `<input class="field swq" data-id="${esc(r.id)}" data-k="${k}" value="${esc(r[k] || "")}" style="width:84px">` : k === "id" ? `<b>${esc(r[k])}</b>` : k === "state" || k === "flag" || k === "band" ? tag(r[k]) : k === "due" ? esc(shortDate(r[k] || "")) + (r.lastDone ? `<div class="hint">last ${esc(shortDate(r.lastDone))}</div>` : "") : ftype(k) === "date" ? esc(shortDate(r[k] || "")) : esc(clip(r[k], 90))}</td>`).join("")}<td style="text-align:right"><div class="acts">${extra(r)}${name === "cleanlog" && r.verifyStatus === "Pending" ? `<button class="btn small" data-act="cl-verify" data-id="${esc(r.id)}">Verify</button> ` : ""}<button class="btn small" data-act="reg-open" data-c="${name}" data-id="${esc(r.id)}">${icon("edit")}Edit</button>${def.deletable ? ` <button class="btn small wine" data-act="reg-del" data-c="${name}" data-id="${esc(r.id)}">${icon("trash")}</button>` : ""}</div></td></tr>`).join("")}</tbody></table>`}</div>`;
 }
 
 function regForm(name, id, preset) {
@@ -37,4 +37,12 @@ Object.assign(ACT, {
   async "reg-save"() { const c = $("#rgbody").dataset.c, v = grab("[data-rg]", "rg"); v.id = $("#rgbody").dataset.id;
     try { state.reg[c] = await api("/api/reg/" + c, {method: "POST", body: JSON.stringify(v)}); state.today = null; state.trm = null; state.trr = null; closeModal(); render(); toast("Saved."); } catch (e) { toast(e.message, true); } },
   "reg-print"(el) { repPrint(el.dataset.id); },
+});
+
+document.addEventListener("change", async e => {
+  const el = e.target.closest && e.target.closest(".swq"); if (!el) return;
+  const d = state.reg.smallware, row = d && d.rows.find(x => x.id === el.dataset.id); if (!row) return;
+  const body = {...row, [el.dataset.k]: el.value.trim()}; if (el.dataset.k === "onHand") body.lastCounted = ymd(new Date());
+  try { state.reg.smallware = await api("/api/reg/smallware", {method: "POST", body: JSON.stringify(body)}); toast("Saved."); state.today = null; } catch (err) { toast(err.message || "Could not save.", true); }
+  render();
 });

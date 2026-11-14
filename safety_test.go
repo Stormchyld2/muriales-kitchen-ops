@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -726,5 +727,27 @@ func TestMealBinderAndPlanFields(t *testing.T) {
 	r := o["rows"].([]any)[0].(map[string]any)
 	if r["assignedTo"] != "Sam" || r["status"] != "Planned" || r["sides"] != "Pasta" || r["overstock"] != "Yes" {
 		t.Fatalf("plan fields not kept: %v", r)
+	}
+}
+
+func TestSmallwareConditionAndQty(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.post("/api/reg/smallware", `{"item":"Test ramekins","category":"China","par":"40","onHand":"30","condition":"Needs Replacement","location":"Shelf 2","labeled":"Yes","action":"Order 10"}`)
+	var r map[string]any
+	for _, x := range o["rows"].([]any) {
+		if x.(map[string]any)["item"] == "Test ramekins" {
+			r = x.(map[string]any)
+		}
+	}
+	if r == nil || r["state"] != "Short" || r["condition"] != "Needs Replacement" {
+		t.Fatalf("new item: %v", r)
+	}
+	r["onHand"] = "45"
+	b, _ := json.Marshal(r)
+	_, o = e.post("/api/reg/smallware", string(b))
+	for _, x := range o["rows"].([]any) {
+		if m := x.(map[string]any); m["item"] == "Test ramekins" && (m["state"] != "OK" || m["onHand"] != "45") {
+			t.Fatalf("qty edit: %v", m)
+		}
 	}
 }

@@ -23,9 +23,9 @@ func init() {
 		ListCols: []string{"id", "station", "item", "unit", "parWeekday", "parWeekend"},
 		Fields:   []fieldDef{txt("station", "Station", true), txt("item", "Prep item", true), txt("unit", "Unit (qt, pan, each...)", false), txt("parWeekday", "Par Sun-Thu", false), txt("parWeekend", "Par Fri-Sat", false), lng("notes", "Notes (shelf life, how to make)", false)}}
 	regDefs["smallware"] = &collDef{Name: "smallware", Title: "Smallware & Service-Ware Pars", NewLabel: "Add Item", Prefix: "SW-", Digits: 3, Deletable: true, Starter: "smallware.json", Report: "reg:smallware",
-		Intro:    "China, glass, silver and banquet ware against a par. Count it, type the number in On hand, and anything under par shows as Short.",
-		ListCols: []string{"id", "item", "category", "par", "onHand", "state", "lastCounted"},
-		Fields:   []fieldDef{txt("item", "Item", true), sel("category", "Type", []string{"China", "Glass", "Silver", "Banquet ware", "Other"}, true), txt("par", "Par", false), txt("onHand", "On hand", false), dat("lastCounted", "Last counted", false), txt("countedBy", "Counted by", false), lng("notes", "Notes", false)}}
+		Intro:    "China, glass, silver and banquet ware against a par. Type a new number straight into Par or On hand and it saves; anything under par shows as Short. Use Add Item for new items, and Condition for what needs repair, replacing or throwing out.",
+		ListCols: []string{"id", "item", "category", "par", "onHand", "state", "condition", "location", "lastCounted"},
+		Fields:   []fieldDef{txt("item", "Item", true), sel("category", "Type", []string{"China", "Glass", "Silver", "Banquet ware", "Other"}, true), txt("par", "Par", false), txt("onHand", "On hand", false), sel("condition", "Condition", []string{"Good", "Needs Repair", "Needs Replacement", "Evaluate", "Dispose"}, false), txt("location", "Where it is kept", false), yn("labeled", "Labeled?"), lng("action", "What to do (repair, replace, throw out)", false), dat("lastCounted", "Last counted", false), txt("countedBy", "Counted by", false), lng("notes", "Notes", false)}}
 	regDefs["winterprep"] = &collDef{Name: "winterprep", Title: "Winter Preparedness", NewLabel: "Add Item", Prefix: "WP-", Digits: 3, Deletable: true, Starter: "winterprep.json", Report: "reg:winterprep",
 		Intro:    "Snow, ice and severe-weather readiness. Give each item an owner and a date.",
 		ListCols: []string{"id", "item", "area", "owner", "due", "status"},
