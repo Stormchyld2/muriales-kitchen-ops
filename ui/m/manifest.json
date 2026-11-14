@@ -1,1 +1,1 @@
-{"name":"Muriale's Kitchen","short_name":"Kitchen","start_url":"/m/","scope":"/m/","display":"standalone","background_color":"#2c2e33","theme_color":"#2c2e33","icons":[{"src":"/app-icon.png","sizes":"512x512","type":"image/png"}]}
+{"name":"Muriale's Kitchen","short_name":"Kitchen","start_url":"/m/","scope":"/m/","display":"standalone","background_color":"#2c2e33","theme_color":"#2c2e33","icons":[{"src":"/app-icon.png","sizes":"256x256","type":"image/png"}]}
