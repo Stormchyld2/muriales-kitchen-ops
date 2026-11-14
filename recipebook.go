@@ -6,7 +6,6 @@ import (
 	"math"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // Recipe Book: every menu recipe with its procedure, standards, food safety
@@ -85,7 +84,7 @@ func (s *store) rbRecost(reason, onlyID string) int {
 	c, h := regDefs["recipes"], regDefs["costhist"]
 	rows := s.regLoad(c)
 	hist := s.regLoad(h)
-	n, today := 0, time.Now().Format("2006-01-02")
+	n, today := 0, nowT().Format("2006-01-02")
 	dirty := false
 	for _, r := range rows {
 		if onlyID != "" && r["id"] != onlyID {
@@ -106,7 +105,7 @@ func (s *store) rbRecost(reason, onlyID string) int {
 		if w := strings.TrimSpace(r["changeReason"]); w != "" {
 			why = w
 		}
-		e := rec{"date": today, "recipe": r["name"], "oldCost": r["lastCost"], "newCost": cost, "oldPrice": r["lastPrice"], "newPrice": price, "reason": why, "by": "", "created": time.Now().Format("2006-01-02 15:04")}
+		e := rec{"date": today, "recipe": r["name"], "oldCost": r["lastCost"], "newCost": cost, "oldPrice": r["lastPrice"], "newPrice": price, "reason": why, "by": "", "created": nowT().Format("2006-01-02 15:04")}
 		e["id"] = h.nextID(hist)
 		hist = append(hist, e)
 		r["lastCost"], r["lastPrice"], r["changeReason"], dirty = cost, price, "", true
@@ -188,7 +187,7 @@ func (s *store) recipeReport(id string) (*report, bool) {
 		for _, r := range rows {
 			out = append(out, []string{r["id"], r["name"], r["category"], r["perPortion"], money(mealNum(r["menuPrice"])), r["foodPct"], r["suggest"], r["flag"]})
 		}
-		return &report{Title: "Recipe Cost Summary", Subtitle: time.Now().Format("January 2, 2006"), Sections: []reportSection{{Cols: []string{"ID", "Recipe", "Category", "Portion cost", "Price", "Food cost", "Price at target", "Flag"}, Rows: out}}}, true
+		return &report{Title: "Recipe Cost Summary", Subtitle: nowT().Format("January 2, 2006"), Sections: []reportSection{{Cols: []string{"ID", "Recipe", "Category", "Portion cost", "Price", "Food cost", "Price at target", "Flag"}, Rows: out}}}, true
 	}
 	if id == "rbook-all" {
 		rows := s.regSorted(regDefs["recipes"])
@@ -202,7 +201,7 @@ func (s *store) recipeReport(id string) (*report, bool) {
 		if len(secs) == 0 {
 			secs = []reportSection{{Note: "No recipes have been added yet."}}
 		}
-		return &report{Title: "Recipe Book", Subtitle: time.Now().Format("January 2, 2006"), Sections: secs}, true
+		return &report{Title: "Recipe Book", Subtitle: nowT().Format("January 2, 2006"), Sections: secs}, true
 	}
 	if !strings.HasPrefix(id, "rbook:") {
 		return nil, false

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // Event costing: price a catering event from its menu and other costs, then
@@ -216,7 +215,7 @@ func (s *store) eventReport(id string) (*report, bool) {
 		}
 		m := s.evSummary()
 		note := fmt.Sprintf("%v open, %v confirmed. Quoted and confirmed events: revenue %s, cost %s, gross margin %.1f%%.", m["open"], m["confirmed"], money(m["revenue"].(float64)), money(m["cost"].(float64)), m["margin"])
-		return &report{Title: "Event Costing Summary", Subtitle: time.Now().Format("January 2, 2006"), Sections: []reportSection{{Note: note, Cols: []string{"ID", "Event", "Date", "Service", "Guests", "Status", "Cost", "Quote", "Margin", "Band"}, Rows: out}}}, true
+		return &report{Title: "Event Costing Summary", Subtitle: nowT().Format("January 2, 2006"), Sections: []reportSection{{Note: note, Cols: []string{"ID", "Event", "Date", "Service", "Guests", "Status", "Cost", "Quote", "Margin", "Band"}, Rows: out}}}, true
 	}
 	if !strings.HasPrefix(id, "event:") {
 		return nil, false

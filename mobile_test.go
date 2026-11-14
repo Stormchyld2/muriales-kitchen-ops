@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestPhoneGate(t *testing.T) {
@@ -235,5 +237,86 @@ func TestWalkKeepsItemsAndDeletes(t *testing.T) {
 	e.h.ServeHTTP(rec, httptest.NewRequest("DELETE", "/api/reg/walks/"+rows[0]["id"].(string), nil))
 	if rec.Code != 200 {
 		t.Fatalf("delete status %d", rec.Code)
+	}
+}
+
+func TestPhoneQueuedSaveNoDoubleAndRealTime(t *testing.T) {
+	e := newEnv(t)
+	phone.dir, phone.seen, phone.seenLog = e.s.dir, nil, nil
+	g := phoneGate(e.h)
+	send := func(id string, at int64) (int, string) {
+		req := httptest.NewRequest("POST", "/api/notes", strings.NewReader(`{"by":"Sam","text":"queued note"}`))
+		req.RemoteAddr = "192.168.1.50:5000"
+		req.Header.Set("X-Queue-Id", id)
+		req.Header.Set("X-Queued-At", strconv.FormatInt(at, 10))
+		w := httptest.NewRecorder()
+		g.ServeHTTP(w, req)
+		return w.Code, w.Body.String()
+	}
+	at := time.Now().Add(-3 * time.Hour).UnixMilli()
+	if c, _ := send("abc123", at); c != 200 {
+		t.Fatalf("first send = %d", c)
+	}
+	if c, b := send("abc123", at); c != 200 || !strings.Contains(b, "duplicate") {
+		t.Fatalf("retry = %d %s", c, b)
+	}
+	e.s.mu.Lock()
+	n := len(e.s.lib.Notes)
+	var got string
+	if n > 0 {
+		got = e.s.lib.Notes[0].At
+	}
+	e.s.mu.Unlock()
+	if n != 1 {
+		t.Fatalf("notes = %d, want 1 (retry must not double)", n)
+	}
+	want := time.UnixMilli(at).Format("2006-01-02T15")
+	if !strings.HasPrefix(got, want) {
+		t.Errorf("note time %s, want it stamped with the real entry hour %s", got, want)
+	}
+	if clockAt.Load() != nil {
+		t.Error("clock override must be cleared after the save")
+	}
+}
+
+func TestWalkPhotos(t *testing.T) {
+	e := newEnv(t)
+	g := phoneGate(e.h)
+	png := "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+	req := httptest.NewRequest("POST", "/api/photo", strings.NewReader(`{"data":"`+png+`"}`))
+	req.RemoteAddr = "192.168.1.50:5000"
+	w := httptest.NewRecorder()
+	g.ServeHTTP(w, req)
+	var r struct{ Name string }
+	_ = json.Unmarshal(w.Body.Bytes(), &r)
+	if w.Code != 200 || r.Name == "" {
+		t.Fatalf("photo upload %d %s", w.Code, w.Body.String())
+	}
+	req = httptest.NewRequest("POST", "/api/photo", strings.NewReader(`{"data":"data:text/html;base64,AAAA"}`))
+	req.RemoteAddr = "192.168.1.50:5000"
+	w = httptest.NewRecorder()
+	g.ServeHTTP(w, req)
+	if w.Code != 400 {
+		t.Errorf("non-picture accepted: %d", w.Code)
+	}
+	body := `{"service":"Dinner","by":"Dana","overall":"No","inspection":true,"items":[{"n":1,"area":"Freezers","status":"Needs Attention","finding":"Door loose","priority":"P2 - Urgent","corrected":"No","photos":["` + r.Name + `","../../evil.jpg","nope.jpg"]}]}`
+	if c, o := e.post("/api/walk", body); c != 200 || o["findings"].(float64) != 1 {
+		t.Fatalf("walk %d %v", c, o)
+	}
+	fs := e.s.findingList()
+	if len(fs) != 1 || len(fs[0].Photos) != 1 || fs[0].Photos[0] != r.Name {
+		t.Errorf("photos on finding: %+v", fs[0].Photos)
+	}
+	if c, _ := e.get("/api/photo/" + r.Name); c.Code != 200 {
+		t.Errorf("view photo = %d", c.Code)
+	}
+	for _, p := range []string{"/api/phone/attention", "/api/phone/sds", "/api/stchecklists", "/api/guides", "/api/phone/notes"} {
+		req := httptest.NewRequest("GET", p, nil)
+		req.RemoteAddr = "192.168.1.50:5000"
+		w := httptest.NewRecorder()
+		g.ServeHTTP(w, req)
+		if w.Code != 200 {
+			t.Errorf("phone GET %s = %d", p, w.Code)
+		}
 	}
 }

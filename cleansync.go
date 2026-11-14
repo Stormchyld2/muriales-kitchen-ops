@@ -81,7 +81,7 @@ func (s *store) decorate(c *collDef, rows []rec) []rec {
 		s.decorateMeals(c, rows)
 		return rows
 	}
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	tt, _ := time.Parse(dayFmt, today)
 	for _, r := range rows {
 		switch c.Name {
@@ -117,7 +117,7 @@ type overdueItem struct{ key, src, id, area, task, priority, who, due string }
 
 // overdueItems lists everything on the cleaning side that is past due.
 func (s *store) overdueItems() []overdueItem {
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	tt, _ := time.Parse(dayFmt, today)
 	var out []overdueItem
 	for _, r := range s.regLoad(regDefs["cleantasks"]) {
@@ -157,7 +157,7 @@ func (s *store) syncMissed() {
 	}
 	have := map[string]bool{}
 	changed := false
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	for _, r := range rows {
 		k := r["key"]
 		if k == "" {
@@ -173,7 +173,7 @@ func (s *store) syncMissed() {
 		if have[it.key] {
 			continue
 		}
-		n := rec{"id": mc.nextID(rows), "created": time.Now().Format("2006-01-02 15:04"), "key": it.key, "date": today, "taskId": it.id, "area": it.area, "task": it.task,
+		n := rec{"id": mc.nextID(rows), "created": nowT().Format("2006-01-02 15:04"), "key": it.key, "date": today, "taskId": it.id, "area": it.area, "task": it.task,
 			"reason": "Overdue: was due " + it.due + ".", "priority": it.priority, "assignedTo": it.who, "target": today, "status": "Open", "source": it.src}
 		if n["priority"] == "" {
 			n["priority"] = "P3 - Routine"
@@ -219,7 +219,7 @@ func (s *store) cleanSyncRoutes(mux *http.ServeMux) {
 			if x["id"] != in2.ID {
 				continue
 			}
-			now := time.Now()
+			now := nowT()
 			if _, err := s.regAdd(regDefs["cleanlog"], rec{"date": now.Format(dayFmt), "taskId": x["id"], "area": x["area"], "task": x["task"], "completedBy": strings.TrimSpace(in2.By), "time": now.Format("3:04 PM"), "issue": "No", "verifyStatus": "Not required", "notes": in2.Notes, "source": "Weekly deep clean"}); err != nil {
 				fail(w, 500, err.Error())
 				return

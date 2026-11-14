@@ -31,23 +31,43 @@ label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
 h2{font:700 18px Georgia,serif;margin:16px 0 6px;color:var(--gold)}
 </style></head>
 <body>
-<header><button id="back" style="display:none">‹ Home</button><h1 id="ttl">Muriale's Kitchen</h1><button id="who"></button></header>
+<header><button id="back" style="display:none">‹ Home</button><h1 id="ttl">Muriale's Kitchen</h1><button id="qbtn" style="display:none"></button><button id="who"></button></header>
 <main><div id="errbar" onclick="this.style.display='none'"></div><div id="v"></div></main><div id="toast"></div>
 <script>
 "use strict";
 const $=s=>document.querySelector(s), esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const V=$("#v"); let toastT;
 window.addEventListener("unhandledrejection",e=>toast("Something went wrong: "+((e.reason&&e.reason.message)||e.reason),true));window.addEventListener("error",e=>toast("Something went wrong: "+e.message,true));
-function toast(m,err){if(err){const e=$("#errbar");e.innerHTML="⚠ "+esc(m)+'<div class="mute" style="font-weight:400">Nothing was lost on the screen. Tap here to close, fix it and try again.</div>';e.style.display="block";window.scrollTo(0,0);return;}$("#errbar").style.display="none";const t=$("#toast");t.textContent=m;t.className=err?"err":"";t.style.display="block";clearTimeout(toastT);toastT=setTimeout(()=>t.style.display="none",err?7000:2800);}
-async function api(p,o){let r;try{r=await fetch(p,o);}catch(e){throw new Error("Could not reach the kitchen computer. Check the Wi-Fi and that Kitchen Ops is open on it. Your entries are still on this screen, so try Save again.");}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"That did not work. Try again.");return j;}
-const post=(p,b)=>api(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(r=>{$("#errbar").style.display="none";return r;});
+function toast(m,err){if(err){const e=$("#errbar");e.innerHTML="⚠ "+esc(m)+'<div class="mute" style="font-weight:400">Nothing was lost on the screen. Tap here to close, fix it and try again.</div>';e.style.display="block";window.scrollTo(0,0);return;}if(m!==QMSG&&Date.now()-qflash<2500)return;$("#errbar").style.display="none";const t=$("#toast");t.textContent=m;t.className=err?"err":"";t.style.display="block";clearTimeout(toastT);toastT=setTimeout(()=>t.style.display="none",m===QMSG?6000:err?7000:2800);}
+async function api(p,o){let r;try{r=await fetch(p,o);}catch(e){const x=new Error("Could not reach the kitchen computer. Check the Wi-Fi and that Kitchen Ops is open on it.");x.net=true;throw x;}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"That did not work. Try again.");return j;}
+const QLAB={"/api/temps":"Temperatures","/api/parcheck":"Par check","/api/dw/tick":"Workflow check","/api/reg/breakage":"Breakage","/api/notes":"Handoff note","/api/clean/done":"Cleaning done","/api/clean/deepdone":"Deep clean done","/api/mgr/done":"Manager check","/api/walk":"Walkthrough","/api/maint/todos":"New to-do"};
+const QMSG="No Wi-Fi right now. Saved on this phone. It will send by itself as soon as the connection is back.";let qflash=0,flushing=false;
+const Q={get(k){try{return JSON.parse(localStorage.getItem(k||"kq")||"[]")}catch(e){return []}},set(a,k){try{localStorage.setItem(k||"kq",JSON.stringify(a))}catch(e){}showQ();}};
+function qlabel(p){return QLAB[p]||(/\/pm\/.*\/done$/.test(p)?"Maintenance done":/\/todos\/.*\/done$/.test(p)?"To-do done":"Entry");}
+function qtime(at){return new Date(at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});}
+function showQ(){const w=Q.get().length,f=Q.get("kqf").length,b=$("#qbtn");if(!b)return;b.style.display=w||f?"":"none";b.className=f?"bad":"";b.textContent=f?"⚠ "+f+" not sent":"⏳ "+w+" waiting";}
+async function flushQ(){if(flushing)return;flushing=true;try{for(;;){const a=Q.get();if(!a.length)break;const it=a[0];let r;
+  try{r=await fetch(it.p,{method:"POST",headers:{"Content-Type":"application/json","X-Queue-Id":it.id,"X-Queued-At":String(it.at)},body:JSON.stringify(it.b)});}catch(e){break;}
+  const rest=Q.get().filter(x=>x.id!==it.id);
+  if(r.ok){Q.set(rest);qdone=true;}else{const j=await r.json().catch(()=>({}));it.err=j.error||"The computer refused it.";Q.set(rest);Q.set(Q.get("kqf").concat([it]),"kqf");}}
+  }finally{flushing=false;showQ();if(qdone){qdone=false;if(!Q.get().length)toast("Saved entries were sent to the kitchen computer.");}}}
+let qdone=false;
+function qpanel(){const w=Q.get(),f=Q.get("kqf");let d=$("#qpanel");if(!d){d=document.createElement("div");d.id="qpanel";d.style.cssText="position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.7);padding:14px;overflow:auto";document.body.appendChild(d);}
+  d.innerHTML=`<div class="card" style="max-width:640px;margin:30px auto"><h2 style="margin-top:0">Waiting to send</h2>${w.length?w.map(x=>`<div class="tick"><div>${esc(qlabel(x.p))} <span class="mute">entered ${qtime(x.at)}${x.b&&x.b.by?" by "+esc(x.b.by):""}</span></div></div>`).join(""):'<p class="mute">Nothing waiting.</p>'}
+  ${f.length?`<h2>Could not be sent</h2>${f.map((x,i)=>`<div class="tick"><div><b>${esc(qlabel(x.p))}</b> <span class="mute">entered ${qtime(x.at)}</span><div class="bad">${esc(x.err)}</div><button class="btn alt sm" data-q="${i}">Discard</button></div></div>`).join("")}`:""}
+  <button class="btn" id="qnow">Try to send now</button><button class="btn alt" id="qx">Close</button></div>`;
+  $("#qx").onclick=()=>d.remove();$("#qnow").onclick=async()=>{await flushQ();qpanel();};
+  d.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{const a=Q.get("kqf");a.splice(+b.dataset.q,1);Q.set(a,"kqf");qpanel();});}
+async function post(p,b){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8),at=Date.now();
+  try{const r=await api(p,{method:"POST",headers:{"Content-Type":"application/json","X-Queue-Id":id,"X-Queued-At":String(at)},body:JSON.stringify(b)});$("#errbar").style.display="none";return r;}
+  catch(e){if(!e.net)throw e;Q.set(Q.get().concat([{id,p,b,at}]));qflash=Date.now();toast(QMSG);return {queued:true,id:"(waiting to send)",need:[],findings:0};}}
 function me(){try{return localStorage.getItem("kname")||""}catch(e){return ""}}
 function setMe(v){const n=(v||"").trim().split(/\s+/)[0]||"";const t=n?n[0].toUpperCase()+n.slice(1):"";try{localStorage.setItem("kname",t)}catch(e){}$("#who").textContent=t?"👤 "+t:"Who?";return t;}
 function whoField(){return `<label>Your first name</label><input id="by" value="${esc(me())}" autocomplete="off" autocapitalize="words" placeholder="First name">`;}
 function needBy(){const v=setMe($("#by").value);if(!v){toast("Type your first name.",true);$("#by").focus();return "";}return v;}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
-const SCREENS={home,temps,par,work,clean,todo,walk,brk,note};
-async function route(){$("#errbar").style.display="none";const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
+const SCREENS={home,temps,par,work,clean,todo,walk,brk,note,attn,chk,guide,sds};
+async function route(){V.oninput=V.onchange=V.onclick=null;$("#errbar").style.display="none";const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
   try{await (SCREENS[name]||home)(decodeURIComponent(arg||""));}catch(e){V.innerHTML=`<div class="card bad">${esc(e.message)}</div><button class="btn alt" onclick="route()">Try again</button>`;}}
 document.addEventListener("click",e=>{const b=e.target.closest(".bar .btn");if(!b)return;if(b.dataset.busy){e.stopImmediatePropagation();e.preventDefault();return;}b.dataset.busy="1";setTimeout(()=>{delete b.dataset.busy;},2500);},true);
 window.addEventListener("hashchange",route);$("#back").onclick=()=>location.hash="home";
@@ -63,8 +83,13 @@ function home(){title("Muriale's Kitchen");
   <a class="tile" href="#todo">🛠️<span>To-Do &amp; Maintenance</span></a>
   <a class="tile" href="#brk">🥣<span>Log Breakage</span></a>
   <a class="tile" href="#walk">🔍<span>Facility Walkthrough</span></a>
-  <a class="tile" href="#note">📝<span>Handoff Note</span><small>Leave a note for the next shift</small></a></div>
-  <p class="mute" style="text-align:center;margin-top:20px">${esc(new Date().toDateString())}</p>`;}
+  <a class="tile" href="#note">📝<span>Handoff Notes</span><small id="nn">Read and leave notes</small></a>
+  <a class="tile" href="#chk">☑️<span>Station Checklists</span></a>
+  <a class="tile" href="#guide">📖<span>Station Guides</span></a>
+  <a class="tile" href="#sds">🧪<span>SDS Lookup</span></a>
+  <a class="tile" href="#attn">⚠️<span>Needs Attention</span><small id="na">&nbsp;</small></a></div>
+  <p class="mute" style="text-align:center;margin-top:20px">${esc(new Date().toDateString())}</p>`;
+  api("/api/phone/attention").then(d=>{const n=(d.items||[]).length+(d.alerts||[]).length,m=(d.notes||[]).length;if($("#na"))$("#na").innerHTML=n?`<b class="bad">${n} to look at</b>`:'<span class="ok">All clear</span>';if($("#nn")&&m)$("#nn").textContent=m+" open note"+(m>1?"s":"");}).catch(()=>{});}
 
 let tempMsg="";
 function lim(p,kinds){const k=(kinds.find(x=>x.kind===p.kind)||{});const own=p.min!=null||p.max!=null;return {min:own?p.min:k.min,max:own?p.max:k.max};}
@@ -92,8 +117,8 @@ async function temps(){title("Temperatures");const d=await api("/api/temps");con
     const rows=[],badList=[];for(const c of cards){const v=num(c),s=stat(L[c.dataset.p],v),a=c.querySelector(".ta").value.trim(),name=c.querySelector("b").textContent;
       if(s&&s!=="ok"){if(!a){c.querySelector(".ta").focus();toast(name+" is out of range. Enter Corrective Action.",true);return;}badList.push(name+" "+v+"°F");}
       rows.push({pointId:c.dataset.p,temp:v,action:s&&s!=="ok"?a:""});}
-    try{await post("/api/temps",{by,readings:rows});
-      tempMsg=badList.length?`<b class="bad">OUT OF RANGE (${badList.length}):</b><br>${badList.map(esc).join("<br>")}<br><span class="mute">Corrective action saved.</span>`:`<b class="ok">Saved ${rows.length} reading${rows.length>1?"s":""}. All in range.</b>`;
+    try{const pr=await post("/api/temps",{by,readings:rows});
+      tempMsg=pr.queued?`<b class="ok">No Wi-Fi: ${rows.length} reading${rows.length>1?"s":""} saved on this phone.</b><br><span class="mute">They will send by themselves when the connection is back.</span>`:badList.length?`<b class="bad">OUT OF RANGE (${badList.length}):</b><br>${badList.map(esc).join("<br>")}<br><span class="mute">Corrective action saved.</span>`:`<b class="ok">Saved ${rows.length} reading${rows.length>1?"s":""}. All in range.</b>`;
       window.scrollTo(0,0);temps();}
     catch(e){toast(e.message,true);}};}
 
@@ -158,57 +183,101 @@ async function todo(){title("To-Do & Maintenance");const t=today();
 const WST=["Ready","Needs Attention","Corrected","N/A"];
 function wdraft(){try{return JSON.parse(localStorage.getItem("walkdraft")||"null")}catch(e){return null}}
 function wsave(d){try{localStorage.setItem("walkdraft",JSON.stringify(d))}catch(e){}}
+let phTarget=null;
+function phHtml(l){return (l||[]).map(n=>`<img src="/api/photo/${encodeURIComponent(n)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;margin:6px 6px 0 0;border:1px solid var(--line)">`).join("");}
+function shrink(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",0.72));};im.onerror=()=>{URL.revokeObjectURL(u);no(new Error("That file is not a picture."));};im.src=u;});}
 async function walk(){title("Facility Walkthrough");
   const rows=(await api("/api/reg/walkchecks")).rows.filter(r=>r.active!=="No");
   const o=await api("/api/phone/options");
-  let d=wdraft();if(!d||d.v!==1)d={v:1,svc:new Date().getHours()<11?"Breakfast/Lunch":"Dinner",st:{},fd:{},pr:{},ow:{},extra:[],f:{},started:Date.now()};
+  let d=wdraft();if(d&&!d.ph)d.ph={};if(!d||d.v!==1)d={v:1,ph:{},svc:new Date().getHours()<11?"Breakfast/Lunch":"Dinner",st:{},fd:{},pr:{},ow:{},extra:[],f:{},started:Date.now()};
   const pr=["P1 - Critical","P2 - Urgent","P3 - Routine"];
   const areas=[...new Set([...rows.map(r=>r.area),...(o.areas||[])])];
   const chk=r=>{const n=+r.id.replace(/\D/g,""),s=d.st[n]||"";
     return `<div class="card" data-n="${n}"><b>${n}. ${esc(r.area)}</b><div class="mute">${esc(r.check)}</div>
     <div class="seg">${WST.map(x=>`<button type="button" data-s="${esc(x)}" class="${s===x?"on s"+WST.indexOf(x):""}">${esc(x==="Needs Attention"?"Needs Attention":x)}</button>`).join("")}</div>
-    ${s==="Needs Attention"||s==="Corrected"?`<input class="fd" placeholder="What is wrong" value="${esc(d.fd[n]||"")}"><div class="row" style="margin-top:8px"><select class="pr">${pr.map(x=>`<option ${(d.pr[n]||pr[2])===x?"selected":""}>${x}</option>`).join("")}</select><input class="ow" placeholder="Who will fix it" value="${esc(d.ow[n]||"")}"></div>`:""}</div>`;};
-  const ex=(e,i)=>`<div class="card" data-e="${i}"><div class="row"><b>Extra item ${i+1}</b><button type="button" class="btn alt sm fix" data-rm="${i}">Remove</button></div>
+    ${s==="Needs Attention"||s==="Corrected"?`<input class="fd" placeholder="What is wrong" value="${esc(d.fd[n]||"")}"><div class="row" style="margin-top:8px"><select class="pr">${pr.map(x=>`<option ${(d.pr[n]||pr[2])===x?"selected":""}>${x}</option>`).join("")}</select><input class="ow" placeholder="Who will fix it" value="${esc(d.ow[n]||"")}"></div><div class="ph">${phHtml(d.ph[n])}</div><button type="button" class="btn alt sm" style="margin-top:8px" data-ph="c${n}">📷 Add photo</button>`:""}</div>`;};
+  const ex=(e,i)=>`<div class="card" data-e="${i}" data-photos="${esc(JSON.stringify(e.photos||[]))}"><div class="row"><b>Extra item ${i+1}</b><button type="button" class="btn alt sm fix" data-rm="${i}">Remove</button></div>
     <label>Area</label><input class="ea" list="walkareas" value="${esc(e.area)}"><label>What is wrong</label><input class="ew" value="${esc(e.what)}">
-    <div class="row" style="margin-top:8px"><select class="ep">${pr.map(x=>`<option ${e.pri===x?"selected":""}>${x}</option>`).join("")}</select><input class="eo" placeholder="Who will fix it" value="${esc(e.owner)}"></div></div>`;
+    <div class="row" style="margin-top:8px"><select class="ep">${pr.map(x=>`<option ${e.pri===x?"selected":""}>${x}</option>`).join("")}</select><input class="eo" placeholder="Who will fix it" value="${esc(e.owner)}"></div><div class="ph">${phHtml(e.photos)}</div><button type="button" class="btn alt sm" style="margin-top:8px" data-ph="e">📷 Add photo</button></div>`;
   const yn=(k,df)=>`<select data-f="${k}">${["No","Yes"].map(x=>`<option ${(d.f[k]||df||"No")===x?"selected":""}>${x}</option>`).join("")}</select>`;
   const done=rows.filter(r=>d.st[+r.id.replace(/\D/g,"")]).length;
   V.innerHTML=`<style>.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.seg button{border:1px solid #6b6f78;background:#24262a;color:var(--text);border-radius:8px;padding:12px 4px;font:600 15px inherit}.seg .on.s0{background:var(--green);border-color:#3aa24e}.seg .on.s1{background:var(--red);border-color:#e0525e}.seg .on.s2{background:#a77f12}.seg .on.s3{background:#5a5e66}.card input.fd,.card input.ow{margin-top:8px}</style>
   <datalist id="walkareas">${areas.map(a=>`<option value="${esc(a)}">`).join("")}</datalist>`+whoField()+`<label>Service</label><select id="w-svc">${["Breakfast/Lunch","Dinner","Both","Prep"].map(x=>`<option ${d.svc===x?"selected":""}>${x}</option>`).join("")}</select>
   <p class="mute" style="margin-top:12px"><b id="w-prog">${done} of ${rows.length}</b> checked${d.extra.length?" · "+d.extra.length+" extra":""}. Your walk is saved on this phone until you submit it.</p>
-  ${rows.map(chk).join("")}<h2>Anything else you see</h2>${d.extra.map(ex).join("")}<button class="btn alt" id="w-add">+ Add another item</button>
+  ${rows.map(chk).join("")}<input type="file" id="w-file" accept="image/*" capture="environment" style="display:none"><h2>Anything else you see</h2>${d.extra.map(ex).join("")}<button class="btn alt" id="w-add">+ Add another item</button>
   <h2>Release for service</h2><div class="card"><label>Overall ready for service?</label>${yn("overall",done&&rows.some(r=>d.st[+r.id.replace(/\D/g,"")]==="Needs Attention")||d.extra.length?"No":"Yes")}<label>P1 (critical) issue found?</label>${yn("p1")}<label>Equipment taken out of service?</label>${yn("oos")}
   <input data-f="oosAsset" placeholder="Equipment and work order number" value="${esc(d.f.oosAsset||"")}" style="margin-top:8px"><label>Sanitation follow-up needed?</label>${yn("sanit")}<label>Supply shortage?</label>${yn("supply")}<label>Released by</label><input data-f="release" value="${esc(d.f.release||"")}"><label>Notes</label><textarea data-f="notes">${esc(d.f.notes||"")}</textarea></div>
   <button class="btn alt" id="w-reset">Start Over</button><div class="bar"><button class="btn" id="w-go">Submit Walkthrough</button></div>`;
   const keep=ev=>{ // read the screen into the draft so nothing is lost if the app closes
     if($("#by").value.trim())setMe($("#by").value);d.svc=$("#w-svc").value;V.querySelectorAll("[data-n]").forEach(c=>{const n=+c.dataset.n;const f=c.querySelector(".fd");if(f)d.fd[n]=f.value;const p=c.querySelector(".pr");if(p)d.pr[n]=p.value;const o=c.querySelector(".ow");if(o)d.ow[n]=o.value;});
-    d.extra=[...V.querySelectorAll("[data-e]")].map(c=>({area:c.querySelector(".ea").value,what:c.querySelector(".ew").value,pri:c.querySelector(".ep").value,owner:c.querySelector(".eo").value}));
+    d.extra=[...V.querySelectorAll("[data-e]")].map(c=>({area:c.querySelector(".ea").value,what:c.querySelector(".ew").value,pri:c.querySelector(".ep").value,owner:c.querySelector(".eo").value,photos:JSON.parse(c.dataset.photos||"[]")}));
     V.querySelectorAll("[data-f]").forEach(x=>{if(x.dataset.f==="overall"){if(ev&&ev.target===x){d.f.overall=x.value;d.f.overallSet=1;}return;}d.f[x.dataset.f]=x.value;});wsave(d);};
   V.oninput=e=>{keep(e);if(e.target.classList.contains("ea")||e.target.classList.contains("ew"))prog();};V.onchange=e=>{keep(e);prog();};
+  $("#w-file").onchange=async ev=>{const f=ev.target.files[0];if(!f||!phTarget)return;const btn=phTarget,card=btn.closest("[data-n],[data-e]");btn.disabled=true;btn.textContent="Sending photo...";
+    try{const data=await shrink(f);const r=await api("/api/photo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});
+      if(card.dataset.e!==undefined){const l=JSON.parse(card.dataset.photos||"[]");l.push(r.name);card.dataset.photos=JSON.stringify(l);card.querySelector(".ph").innerHTML=phHtml(l);}
+      else{const n=+card.dataset.n;(d.ph[n]=d.ph[n]||[]).push(r.name);card.querySelector(".ph").innerHTML=phHtml(d.ph[n]);}
+      keep();}catch(e){toast("The photo did not go through: "+e.message+" Check the Wi-Fi and take it again.",true);}
+    btn.disabled=false;btn.textContent="📷 Add photo";};
   const byN={};rows.forEach(r=>byN[+r.id.replace(/\D/g,"")]=r);
   const bad=()=>d.extra.some(e=>e.what||e.area)||Object.keys(d.st).some(n=>byN[n]&&d.st[n]==="Needs Attention");
   const prog=()=>{if(!d.f.overallSet)$("[data-f=overall]").value=bad()?"No":"Yes";$("#w-prog").textContent=Object.keys(d.st).filter(n=>byN[n]&&d.st[n]).length+" of "+rows.length;};
-  V.onclick=e=>{const sb=e.target.closest(".seg button");if(sb){keep();const card=sb.closest("[data-n]"),n=+card.dataset.n;d.st[n]=sb.dataset.s;wsave(d);card.outerHTML=chk(byN[n]);prog();return;}
+  V.onclick=e=>{const pb=e.target.closest("[data-ph]");if(pb){keep();phTarget=pb;$("#w-file").value="";$("#w-file").click();return;}
+    const sb=e.target.closest(".seg button");if(sb){keep();const card=sb.closest("[data-n]"),n=+card.dataset.n;d.st[n]=sb.dataset.s;wsave(d);card.outerHTML=chk(byN[n]);prog();return;}
     const rm=e.target.closest("[data-rm]");if(rm){rm.closest("[data-e]").remove();keep();prog();return;}
-    if(e.target.id==="w-add"){keep();const i=V.querySelectorAll("[data-e]").length;d.extra.push({area:"",what:"",pri:pr[2],owner:""});wsave(d);e.target.insertAdjacentHTML("beforebegin",ex(d.extra[i],i));prog();const l=[...V.querySelectorAll(".ea")].pop();if(l)l.focus();return;}
+    if(e.target.id==="w-add"){keep();const i=V.querySelectorAll("[data-e]").length;d.extra.push({area:"",what:"",pri:pr[2],owner:"",photos:[]});wsave(d);e.target.insertAdjacentHTML("beforebegin",ex(d.extra[i],i));prog();const l=[...V.querySelectorAll(".ea")].pop();if(l)l.focus();return;}
     if(e.target.id==="w-reset"){if(confirm("Throw away this walkthrough and start a new one?")){try{localStorage.removeItem("walkdraft")}catch(x){}walk();}}};
   $("#w-go").onclick=async()=>{const b=$("#w-go");if(b.disabled)return;keep();const by=needBy();if(!by)return;
     const miss=rows.filter(r=>!d.st[+r.id.replace(/\D/g,"")]);
     if(miss.length&&!confirm(miss.length+" check"+(miss.length>1?"s are":" is")+" not marked yet. Mark them Ready and submit?\n\nOK = mark Ready and submit, Cancel = go back."))return;
     const items=[];for(const r of rows){const n=+r.id.replace(/\D/g,""),s=d.st[n]||"Ready";
       if(s==="Needs Attention"&&!(d.fd[n]||"").trim()){toast("Check "+n+" ("+r.area+") needs attention. Write what is wrong.",true);return;}
-      items.push({n,area:r.area,check:r.check,status:s,finding:d.fd[n]||"",priority:d.pr[n]||pr[2],owner:d.ow[n]||"",corrected:s==="Corrected"?"Yes":"No"});}
+      items.push({n,area:r.area,check:r.check,status:s,finding:d.fd[n]||"",priority:d.pr[n]||pr[2],owner:d.ow[n]||"",corrected:s==="Corrected"?"Yes":"No",photos:s==="Needs Attention"||s==="Corrected"?(d.ph[n]||[]):[]});}
     let n2=100;for(const e of d.extra){if(!e.area.trim()&&!e.what.trim())continue;if(!e.what.trim()||!e.area.trim()){toast("Each extra item needs an area and what is wrong.",true);return;}
-      items.push({n:++n2,area:e.area.trim(),check:"Extra item",status:"Needs Attention",finding:e.what.trim(),priority:e.pri,owner:e.owner,corrected:"No"});}
+      items.push({n:++n2,area:e.area.trim(),check:"Extra item",status:"Needs Attention",finding:e.what.trim(),priority:e.pri,owner:e.owner,corrected:"No",photos:e.photos||[]});}
     const anyBad=items.some(i=>i.status==="Needs Attention");const overall=d.f.overallSet?d.f.overall:(anyBad?"No":"Yes");
     b.disabled=true;b.textContent="Sending...";
     try{const r=await post("/api/walk",{service:d.svc,by,notes:d.f.notes||"",overall,p1:d.f.p1||"No",oos:d.f.oos||"No",oosAsset:d.f.oosAsset||"",sanit:d.f.sanit||"No",supply:d.f.supply||"No",release:d.f.release||"",inspection:true,items});
       try{localStorage.removeItem("walkdraft")}catch(x){}
-      V.innerHTML=`<div class="card" style="border-color:var(--green)"><b class="ok">Walkthrough submitted (${esc(r.id)}).</b><br>${r.need.length?`${r.need.length} item${r.need.length>1?"s":""} need attention. ${r.findings?"They were added to Inspection Items and the To-Do List.":""}`:"Everything was ready."}</div><a class="btn" href="#home" style="text-align:center;text-decoration:none">Done</a>`;window.scrollTo(0,0);}
+      V.innerHTML=r.queued?`<div class="card" style="border-color:var(--gold)"><b>No Wi-Fi: the walkthrough is saved on this phone.</b><br>It will send by itself when the connection is back. The number at the top shows what is waiting.</div><a class="btn" href="#home" style="text-align:center;text-decoration:none">Done</a>`:`<div class="card" style="border-color:var(--green)"><b class="ok">Walkthrough submitted (${esc(r.id)}).</b><br>${r.need.length?`${r.need.length} item${r.need.length>1?"s":""} need attention. ${r.findings?"They were added to Inspection Items and the To-Do List.":""}`:"Everything was ready."}</div><a class="btn" href="#home" style="text-align:center;text-decoration:none">Done</a>`;window.scrollTo(0,0);}
     catch(e){toast(e.message,true);b.disabled=false;b.textContent="Submit Walkthrough";}};}
 
-function note(){title("Handoff Note");V.innerHTML=whoField()+`<label>Note for the next shift</label><textarea id="nt" style="min-height:160px" maxlength="2000"></textarea><div class="bar"><button class="btn" id="go">Leave Note</button></div>`;
-  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const text=$("#nt").value.trim();if(!text){toast("Write the note first.",true);return;}
+async function note(){title("Handoff Notes");V.innerHTML=`<div id="nl"><p class="mute">Loading notes...</p></div>`+whoField()+`<label>Leave a note for the next shift</label><textarea id="nt" style="min-height:130px" maxlength="2000"></textarea><div class="bar"><button class="btn" id="go">Leave Note</button></div>`;
+  const draw=async()=>{let d;try{d=await api("/api/phone/notes");}catch(e){$("#nl").innerHTML='<p class="mute">Could not load the notes. You can still leave one below.</p>';return;}
+    $("#nl").innerHTML=d.notes.length?`<h2 style="margin-top:0">Open notes</h2>`+d.notes.map(n=>`<div class="card"><div class="mute">${esc((n.at||"").replace("T"," ").slice(5,16))}${n.by?" · "+esc(n.by):""}</div><div style="white-space:pre-wrap;margin:4px 0 8px">${esc(n.text)}</div><button class="btn alt sm" data-nd="${esc(n.id)}">Mark Done</button></div>`).join(""):'<p class="mute">No open notes.</p>';};
+  draw();
+  V.onclick=async e=>{const b=e.target.closest("[data-nd]");if(!b)return;const by=needBy();if(!by)return;try{await post("/api/notes/"+encodeURIComponent(b.dataset.nd)+"/done",{by});toast("Note marked done.");draw();}catch(err){toast(err.message,true);}};
+  $("#go").onclick=async()=>{if(!$("#nt"))return;const by=needBy();if(!by)return;const text=$("#nt").value.trim();if(!text){toast("Write the note first.",true);return;}
     try{await post("/api/notes",{by,text});toast("Note left.");location.hash="home";}catch(e){toast(e.message,true);}};}
+
+async function attn(){title("Needs Attention");const d=await api("/api/phone/attention");
+  const al=(d.alerts||[]).map(a=>`<div class="card" style="border-color:${a.level==="bad"?"var(--red)":"var(--gold)"}"><b>${esc(a.text)}</b>${a.sub?`<div class="mute">${esc(a.sub)}</div>`:""}</div>`).join("");
+  const it=(d.items||[]).map(x=>`<div class="card"><b class="${x.state==="Overdue"?"bad":""}">${esc(x.state)}</b> · ${esc(x.group)}<div>${esc(x.title)}</div>${x.detail?`<div class="mute">${esc(x.detail)}</div>`:""}${x.due?`<div class="mute">Due ${esc(x.due)}</div>`:""}</div>`).join("");
+  const nt=(d.notes||[]).length?`<a class="tile" href="#note" style="min-height:0;padding:14px">📝<span>${d.notes.length} open handoff note${d.notes.length>1?"s":""}</span></a>`:"";
+  V.innerHTML=(al||it||nt)?(al?`<h2 style="margin-top:0">Alerts</h2>${al}`:"")+(it?`<h2>Overdue and due today</h2>${it}`:"")+(nt?`<div style="margin-top:12px">${nt}</div>`:""):'<div class="card" style="border-color:var(--green)"><b class="ok">All clear.</b><br>Nothing is overdue or due today.</div>';}
+
+async function chk(id){title("Station Checklists");const d=await api("/api/stchecklists");
+  if(!id){V.innerHTML=d.lists.length?d.lists.map(c=>`<a class="card" style="display:block;text-decoration:none;color:inherit" href="#chk/${encodeURIComponent(c.id)}"><b>${esc(c.station)} · ${esc(c.kind)}</b><div class="mute">${esc(c.title||"")}</div>${c.finished?`<div class="ok">Finished ${esc(c.finished.time)} by ${esc(c.finished.by)} (${esc(c.finished.done)})</div>`:""}</a>`).join(""):'<p class="mute">No station checklists yet. Add them on the computer under Station Guides.</p>';return;}
+  const c=d.lists.find(x=>x.id===id);if(!c){V.innerHTML='<div class="card bad">That checklist was not found.</div>';return;}title(c.station+" "+c.kind);
+  V.innerHTML=whoField()+`<h2>${esc(c.title||c.kind)}</h2>`+(c.lines||[]).map(l=>l.kind==="item"?`<label class="tick" style="color:var(--text);font-size:17px;margin:0"><input type="checkbox" data-n="${l.n}"><span>${esc(l.text)}</span></label>`:l.kind==="note"?`<div class="mute">${esc(l.text)}</div>`:`<h2>${esc(l.text)}</h2>`).join("")+`<label>Notes (optional)</label><textarea id="cn"></textarea><div class="bar"><button class="btn" id="go">Finish Checklist</button></div>`;
+  $("#go").onclick=async()=>{if(!$("#cn"))return;const by=needBy();if(!by)return;const done=[...V.querySelectorAll("[data-n]:checked")].map(x=>+x.dataset.n),total=V.querySelectorAll("[data-n]").length;
+    if(done.length<total&&!confirm((total-done.length)+" item(s) not ticked. They will be recorded as missed. Finish anyway?"))return;
+    try{await post("/api/stchecklog/finish",{id:c.id,by,notes:$("#cn").value.trim(),done});toast("Checklist saved.");location.hash="chk";}catch(e){toast(e.message,true);}};}
+
+async function guide(id){title("Station Guides");
+  if(id){const d=await api("/api/guides/"+encodeURIComponent(id));title(d.guide.title);V.innerHTML=`<style>.gd h1,.gd h2,.gd h3{font:700 18px Georgia,serif;color:var(--gold)}.gd table{border-collapse:collapse;width:100%}.gd td,.gd th{border:1px solid var(--line);padding:6px;text-align:left}.gd img{max-width:100%}</style><div class="mute">${esc(d.guide.station||"")} · ${esc(d.guide.kind||"")}</div><div class="gd card">${d.html}</div>`;return;}
+  V.innerHTML=`<input id="gq" placeholder="Search guides" autocomplete="off"><div id="gl"></div>`;
+  const draw=async()=>{const d=await api("/api/guides?q="+encodeURIComponent($("#gq").value.trim()));
+    $("#gl").innerHTML=d.guides.length?d.guides.map(g=>`<a class="card" style="display:block;text-decoration:none;color:inherit" href="#guide/${encodeURIComponent(g.id)}"><b>${esc(g.title)}</b><div class="mute">${esc(g.station||"")} · ${esc(g.kind||"")}</div>${g.snip?`<div class="mute">${esc(g.snip)}</div>`:""}</a>`).join(""):'<p class="mute">No guides found.</p>';};
+  let tm;$("#gq").oninput=()=>{clearTimeout(tm);tm=setTimeout(draw,250);};draw();}
+
+async function sds(){title("SDS Lookup");V.innerHTML=`<input id="sq" placeholder="Type a product name" autocomplete="off"><div id="sl"></div>`;
+  const draw=async()=>{const d=await api("/api/phone/sds?q="+encodeURIComponent($("#sq").value.trim()));
+    $("#sl").innerHTML=d.products.length?d.products.map(p=>`<div class="card"><b>${esc(p.name)}</b> ${p.signalWord?`<b class="${p.signalWord==="Danger"?"bad":""}">${esc(p.signalWord)}</b>`:""}<div class="mute">${esc([p.manufacturer,p.category,p.location].filter(Boolean).join(" · "))}</div>
+      <details style="margin-top:6px"><summary>Emergency summary</summary>${[["Hazards",p.hazards],["Eyes",p.eyes],["Skin",p.skin],["Breathed in",p.inhalation],["Swallowed",p.swallowed],["Protective gear",p.ppe]].filter(x=>x[1]).map(x=>`<p style="margin:6px 0"><b>${x[0]}:</b> ${esc(x[1])}</p>`).join("")||'<p class="mute">No summary entered. Open the sheet.</p>'}</details>
+      ${p.missing?'<div class="bad">The PDF is missing from the folder.</div>':`<a class="btn sm" style="text-decoration:none;margin-top:8px" href="/api/phone/sds/${encodeURIComponent(p.id)}/pdf" target="_blank">Open Full Sheet (PDF)</a>`}</div>`).join(""):'<p class="mute">Nothing matches that.</p>';};
+  let tm;$("#sq").oninput=()=>{clearTimeout(tm);tm=setTimeout(draw,250);};draw();}
+
+$("#qbtn").onclick=qpanel;showQ();flushQ();setInterval(flushQ,15000);window.addEventListener("online",flushQ);document.addEventListener("visibilitychange",()=>{if(!document.hidden)flushQ();});
 route();
 </script></body></html>

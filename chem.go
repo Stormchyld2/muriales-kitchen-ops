@@ -58,7 +58,7 @@ func (s *store) chemIncidents() []*ChemIncident {
 }
 
 func (s *store) chemReport(id string) (*report, bool) {
-	today := time.Now().Format("January 2, 2006")
+	today := nowT().Format("January 2, 2006")
 	switch id {
 	case "chem-response":
 		var steps [][]string
@@ -195,7 +195,7 @@ func (s *store) chemRoutes(mux *http.ServeMux) {
 				}
 			}
 			in2.ID = fmt.Sprintf("CHEM-%04d", max+1)
-			in2.Created = time.Now().Format("2006-01-02 15:04")
+			in2.Created = nowT().Format("2006-01-02 15:04")
 			list = append(list, &in2)
 		}
 		if err := s.writeMaint("chemical-incidents.json", list); err != nil {

@@ -150,13 +150,13 @@ func main() {
 	mux := http.NewServeMux()
 	s.routes(mux)
 	mux.HandleFunc("GET /api/ping", func(w http.ResponseWriter, r *http.Request) {
-		lastPing.Store(time.Now().UnixNano())
+		lastPing.Store(nowT().UnixNano())
 		fmt.Fprint(w, appID)
 	})
 	// The window says so as it closes. If no page checks in again within a
 	// few seconds (a reload does), the program ends.
 	mux.HandleFunc("GET /api/closing", func(w http.ResponseWriter, r *http.Request) {
-		asked := time.Now().UnixNano()
+		asked := nowT().UnixNano()
 		go func() {
 			time.Sleep(12 * time.Second)
 			if lastPing.Load() < asked {
@@ -183,7 +183,7 @@ func main() {
 
 	url := fmt.Sprintf("http://127.0.0.1:%d/", port)
 	log.Printf("Muriale's SDS Book running at %s, data in %s", url, s.dir)
-	started := time.Now()
+	started := nowT()
 
 	if win, err := openWindow(url); err != nil {
 		log.Printf("could not open a window: %v", err)

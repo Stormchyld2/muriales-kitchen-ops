@@ -179,7 +179,7 @@ func (s *store) regAdd(c *collDef, r rec) (rec, error) {
 		n[f.Key] = strings.TrimSpace(r[f.Key])
 	}
 	n["id"] = c.nextID(rows)
-	n["created"] = time.Now().Format("2006-01-02 15:04")
+	n["created"] = nowT().Format("2006-01-02 15:04")
 	return n, s.regSave(c, append(rows, n))
 }
 
@@ -214,7 +214,7 @@ func (s *store) regReport(c *collDef, title, note string, filter func(rec) bool)
 		}
 		rows = append(rows, row)
 	}
-	return &report{Title: title, Subtitle: time.Now().Format("January 2, 2006"), Sections: []reportSection{{Note: note, Cols: cols, Rows: rows}}}
+	return &report{Title: title, Subtitle: nowT().Format("January 2, 2006"), Sections: []reportSection{{Note: note, Cols: cols, Rows: rows}}}
 }
 
 func (s *store) registryRoutes(mux *http.ServeMux) {

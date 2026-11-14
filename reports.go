@@ -202,7 +202,7 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 		return v
 	}
 	money := func(f float64) string { return fmt.Sprintf("$%.2f", f) }
-	today := time.Now().Format("January 2, 2006")
+	today := nowT().Format("January 2, 2006")
 	pmRows := func(group string) [][]string {
 		rows := [][]string{}
 		list := s.pmList()
@@ -293,7 +293,7 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 		return &report{Title: "Open Inspection Items", Subtitle: today, Sections: []reportSection{{Cols: []string{"#", "What Needs Doing", "Where", "Category", "Priority", "Assigned To", "Due", "Status"}, Rows: rows}}}, true
 	case "summary":
 		if _, err := time.Parse("2006-01", month); err != nil {
-			month = time.Now().Format("2006-01")
+			month = nowT().Format("2006-01")
 		}
 		m := s.monthSummary(month)
 		num := func(k string) string { return fmt.Sprint(m[k]) }
@@ -346,7 +346,7 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 			days, title = 30, "Out-of-Range Temperatures"
 		}
 		rows := [][]string{}
-		for _, v := range s.tempViews(time.Now().AddDate(0, 0, -days).Format(dayFmt), "") {
+		for _, v := range s.tempViews(nowT().AddDate(0, 0, -days).Format(dayFmt), "") {
 			bad := v.Status == "Too Warm" || v.Status == "Too Cold"
 			if id == "temps-bad" && !bad {
 				continue
@@ -375,7 +375,7 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 		}
 		return &report{Title: "Overdue Jobs", Subtitle: today, Sections: []reportSection{{Cols: []string{"Group", "Job", "Equipment / Area", "Last Done", "Was Due", "Overdue By", "Done By"}, Rows: rows}}}, true
 	case "todo-today", "todo-week":
-		from, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+		from, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 		to, title := from, "To-Do List: Today"
 		if id == "todo-week" {
 			to, title = from.AddDate(0, 0, 6), "To-Do List: This Week"
@@ -480,7 +480,7 @@ h2.grp{font-size:19px;background:#7a1f2b;color:#fff;padding:8px 12px;border:0;ma
 		}
 		b.WriteString("</tbody></table>")
 	}
-	b.WriteString(`<div class="sub" style="margin-top:18px">Printed ` + time.Now().Format("1/2/2006 3:04 PM") + `</div></body></html>`)
+	b.WriteString(`<div class="sub" style="margin-top:18px">Printed ` + nowT().Format("1/2/2006 3:04 PM") + `</div></body></html>`)
 	return b.String()
 }
 

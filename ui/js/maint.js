@@ -338,11 +338,13 @@ function findForm() {
     <div class="foot"><button class="btn green big" data-act="find-save">${icon("save")}Save Item</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
 
+function photoThumbs(l) { return (l || []).length ? `<div>${l.map(n => `<a href="/api/photo/${encodeURIComponent(n)}" target="_blank"><img src="/api/photo/${encodeURIComponent(n)}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;margin:4px 6px 4px 0;border:1px solid #bbb"></a>`).join("")}</div>` : ""; }
+
 async function findDetail(id) {
   if (!state.finds) await loadFinds();
   const f = state.finds.findings.find(x => x.id === id); if (!f) return;
   showModal(`<h2>${icon("list")}#${f.number} ${esc(f.what.length > 60 ? f.what.slice(0, 60) + "..." : f.what)}</h2><div class="body" id="fdbody" data-id="${f.id}">
-    <p>${esc(f.what).replace(/\n/g, "<br>")}</p>
+    <p>${esc(f.what).replace(/\n/g, "<br>")}</p>${photoThumbs(f.photos)}
     <p class="hint">${esc([f.area, f.equipmentId ? eqName(f.equipmentId) : "", f.category].filter(Boolean).join(" · "))}<br>Found ${fmtDate(f.date)} by ${esc(f.foundBy)}</p>
     <div class="fields"><label>Status:</label><select class="field" data-fd="status">${state.finds.statuses.map(x => `<option ${x === f.status ? "selected" : ""}>${x}</option>`).join("")}</select>
       <label>Priority:</label><select class="field" data-fd="priority">${state.maint.priorities.map(x => `<option ${x === f.priority ? "selected" : ""}>${x}</option>`).join("")}</select>

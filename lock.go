@@ -81,7 +81,7 @@ func me() (user, host string) {
 }
 
 func (s *store) writeLock(dir string) error {
-	return s.writeLockAt(dir, time.Now().UTC().Format(time.RFC3339))
+	return s.writeLockAt(dir, nowT().UTC().Format(time.RFC3339))
 }
 
 func (s *store) writeLockAt(dir, beat string) error {

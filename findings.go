@@ -18,22 +18,23 @@ var (
 )
 
 type Finding struct {
-	ID          string  `json:"id"`
-	Number      int     `json:"number"`
-	Date        string  `json:"date"` // day it was found
-	Area        string  `json:"area"`
-	EquipmentID string  `json:"equipmentId"`
-	Category    string  `json:"category"`
-	What        string  `json:"what"` // what needs to be done
-	Priority    string  `json:"priority"`
-	FoundBy     string  `json:"foundBy"`
-	AssignedTo  string  `json:"assignedTo"`
-	Due         string  `json:"due"`
-	Status      string  `json:"status"`
-	WorkOrder   string  `json:"workOrder"`
-	DoneAt      string  `json:"doneAt"`
-	DoneBy      string  `json:"doneBy"`
-	History     []Entry `json:"history"`
+	ID          string   `json:"id"`
+	Number      int      `json:"number"`
+	Date        string   `json:"date"` // day it was found
+	Area        string   `json:"area"`
+	EquipmentID string   `json:"equipmentId"`
+	Category    string   `json:"category"`
+	What        string   `json:"what"` // what needs to be done
+	Priority    string   `json:"priority"`
+	FoundBy     string   `json:"foundBy"`
+	AssignedTo  string   `json:"assignedTo"`
+	Due         string   `json:"due"`
+	Status      string   `json:"status"`
+	WorkOrder   string   `json:"workOrder"`
+	DoneAt      string   `json:"doneAt"`
+	DoneBy      string   `json:"doneBy"`
+	History     []Entry  `json:"history"`
+	Photos      []string `json:"photos,omitempty"` // pictures taken on a phone, kept in the Walk Photos folder
 }
 
 func (s *store) findingList() []*Finding {
@@ -70,7 +71,7 @@ func (s *store) findingRoutes(mux *http.ServeMux) {
 		f.ID, f.Status = newID(), "Open"
 		f.What, f.FoundBy, f.Area = strings.TrimSpace(f.What), strings.TrimSpace(f.FoundBy), strings.TrimSpace(f.Area)
 		if f.Date == "" {
-			f.Date = time.Now().Format(dayFmt)
+			f.Date = nowT().Format(dayFmt)
 		}
 		if f.Priority = fixPriority(f.Priority); !oneOf(priorities, f.Priority) {
 			f.Priority = priorities[2]

@@ -141,7 +141,7 @@ func (s *store) tempViews(from, to string) []tempView {
 
 // tempsNeedingAction lists out-of-range readings from the last 14 days with no corrective action.
 func (s *store) tempsNeedingAction() []tempView {
-	from := time.Now().AddDate(0, 0, -14).Format(dayFmt)
+	from := nowT().AddDate(0, 0, -14).Format(dayFmt)
 	out := []tempView{}
 	for _, v := range s.tempViews(from, "") {
 		if (v.Status == "Too Warm" || v.Status == "Too Cold") && strings.TrimSpace(v.Action) == "" {
@@ -464,7 +464,7 @@ func (s *store) fixTempLimits() {
 	}
 	if s.writeMaint("temp-points.json", pts) == nil {
 		_ = os.MkdirAll(s.maintDir(), 0o755)
-		_ = os.WriteFile(flag, []byte(time.Now().Format(time.RFC3339)), 0o644)
+		_ = os.WriteFile(flag, []byte(nowT().Format(time.RFC3339)), 0o644)
 	}
 }
 
@@ -486,7 +486,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/temps", func(w http.ResponseWriter, r *http.Request) {
 		from := r.URL.Query().Get("from")
 		if from == "" {
-			from = time.Now().AddDate(0, 0, -30).Format(dayFmt)
+			from = nowT().AddDate(0, 0, -30).Format(dayFmt)
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -566,7 +566,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 		}
 		var all []*TempReading
 		s.readMaint("temps.json", &all)
-		now := time.Now().Format("2006-01-02 15:04")
+		now := nowT().Format("2006-01-02 15:04")
 		batch := newID()
 		for _, x := range in2.Readings {
 			p := pts[x.PointID]
@@ -588,7 +588,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			s.maintFail(w, err)
 			return
 		}
-		writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
+		writeJSON(w, 200, payload(nowT().AddDate(0, 0, -30).Format(dayFmt), ""))
 	})
 	// Correct a reading, including one pulled in from the form. The import key
 	// stays, so a later sync does not bring the original value back.
@@ -630,12 +630,12 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			}
 			x.At, x.PointID, x.Point, x.Temp = at.Format("2006-01-02 15:04"), p.ID, p.Name, in2.Temp
 			x.By, x.Notes, x.Action = strings.TrimSpace(in2.By), strings.TrimSpace(in2.Notes), strings.TrimSpace(in2.Action)
-			x.Edited = strings.TrimSpace(in2.EditedBy) + ", " + time.Now().Format("1/2/2006")
+			x.Edited = strings.TrimSpace(in2.EditedBy) + ", " + nowT().Format("1/2/2006")
 			if err := s.writeMaint("temps.json", all); err != nil {
 				s.maintFail(w, err)
 				return
 			}
-			writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
+			writeJSON(w, 200, payload(nowT().AddDate(0, 0, -30).Format(dayFmt), ""))
 			return
 		}
 		fail(w, 404, "That reading was not found.")
@@ -672,7 +672,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			s.maintFail(w, err)
 			return
 		}
-		out := payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), "")
+		out := payload(nowT().AddDate(0, 0, -30).Format(dayFmt), "")
 		out["deleted"] = n
 		writeJSON(w, 200, out)
 	}
@@ -700,12 +700,12 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 		s.readMaint("temps.json", &all)
 		for _, x := range all {
 			if x.ID == r.PathValue("id") {
-				x.Action = strings.TrimSpace(in2.Action) + " (" + strings.TrimSpace(in2.By) + ", " + time.Now().Format("1/2/2006") + ")"
+				x.Action = strings.TrimSpace(in2.Action) + " (" + strings.TrimSpace(in2.By) + ", " + nowT().Format("1/2/2006") + ")"
 				if err := s.writeMaint("temps.json", all); err != nil {
 					s.maintFail(w, err)
 					return
 				}
-				writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
+				writeJSON(w, 200, payload(nowT().AddDate(0, 0, -30).Format(dayFmt), ""))
 				return
 			}
 		}
@@ -745,7 +745,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			fail(w, 500, err.Error())
 			return
 		}
-		writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
+		writeJSON(w, 200, payload(nowT().AddDate(0, 0, -30).Format(dayFmt), ""))
 	})
 	mux.HandleFunc("POST /api/temps/import/preview", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct{ CSV string }
@@ -791,7 +791,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			st.TempMap = &in2.Map
 			_ = s.writeMaint("settings.json", st)
 		}
-		writeJSON(w, 200, map[string]any{"result": res, "data": payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), "")})
+		writeJSON(w, 200, map[string]any{"result": res, "data": payload(nowT().AddDate(0, 0, -30).Format(dayFmt), "")})
 	})
 	mux.HandleFunc("POST /api/temps/settings", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct {
@@ -820,7 +820,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			s.maintFail(w, err)
 			return
 		}
-		writeJSON(w, 200, payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), ""))
+		writeJSON(w, 200, payload(nowT().AddDate(0, 0, -30).Format(dayFmt), ""))
 	})
 	// Reads the published sheet's columns so the mapping can be checked.
 	mux.HandleFunc("POST /api/temps/sheet-preview", func(w http.ResponseWriter, r *http.Request) {
@@ -882,8 +882,8 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			return
 		}
 		_, _, st = s.loadMaint()
-		st.TempsSyncedAt = time.Now().Format("2006-01-02 15:04")
+		st.TempsSyncedAt = nowT().Format("2006-01-02 15:04")
 		_ = s.writeMaint("settings.json", st)
-		writeJSON(w, 200, map[string]any{"result": res, "data": payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), "")})
+		writeJSON(w, 200, map[string]any{"result": res, "data": payload(nowT().AddDate(0, 0, -30).Format(dayFmt), "")})
 	})
 }

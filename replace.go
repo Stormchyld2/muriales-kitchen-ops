@@ -93,7 +93,7 @@ func (s *store) replPrefill(equipmentID string) *ReplRequest {
 		year = year[:4]
 	}
 	p := &ReplRequest{EquipmentID: e.ID, Equipment: e.Name, Area: e.Area, MakeModel: strings.TrimSpace(e.Make + " " + e.Model), Age: year, OriginalCost: e.PurchaseCost, ReplaceCost: e.ReplaceCost, Vendor: e.Vendor, MaintainXRef: e.MaintainXID, History: []ReplHist{}}
-	cut := time.Now().AddDate(-1, 0, 0).Format(dayFmt)
+	cut := nowT().AddDate(-1, 0, 0).Format(dayFmt)
 	var mine []*Issue
 	for _, is := range issues {
 		if is.EquipmentID == equipmentID {
@@ -133,7 +133,7 @@ func (s *store) replPrefill(equipmentID string) *ReplRequest {
 }
 
 func (s *store) replReport(id string) (*report, bool) {
-	today := time.Now().Format("January 2, 2006")
+	today := nowT().Format("January 2, 2006")
 	money := func(v float64) string {
 		if v == 0 {
 			return ""
@@ -264,7 +264,7 @@ func (s *store) replRoutes(mux *http.ServeMux) {
 				}
 			}
 			in2.ID = fmt.Sprintf("ER-%04d", max+1)
-			in2.Created = time.Now().Format("2006-01-02 15:04")
+			in2.Created = nowT().Format("2006-01-02 15:04")
 			list = append(list, &in2)
 		}
 		if err := s.writeMaint("replacements.json", list); err != nil {

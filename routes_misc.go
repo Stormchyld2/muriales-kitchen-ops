@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 )
 
 func (s *store) moreRoutes(mux *http.ServeMux) {
@@ -136,7 +135,7 @@ func (s *store) moreRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/export/products.csv", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		download(w, "text/csv; charset=utf-8", "Muriales SDS Products "+time.Now().Format("2006-01-02")+".csv")
+		download(w, "text/csv; charset=utf-8", "Muriales SDS Products "+nowT().Format("2006-01-02")+".csv")
 		_, _ = io.WriteString(w, "\xEF\xBB\xBF") // so Excel reads accents correctly
 		cw := csv.NewWriter(w)
 		_ = cw.Write([]string{"Product Name", "Also Known As", "Manufacturer", "Supplier", "Category", "Also Used For", "Storage Location",
@@ -151,7 +150,7 @@ func (s *store) moreRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/export/library.zip", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		download(w, "application/zip", "Muriales SDS Library "+time.Now().Format("2006-01-02")+".zip")
+		download(w, "application/zip", "Muriales SDS Library "+nowT().Format("2006-01-02")+".zip")
 		if err := zipTo(w, s.dir); err != nil {
 			s.logf("library export failed: %v", err)
 		}
@@ -279,7 +278,7 @@ func (s *store) moreRoutes(mux *http.ServeMux) {
 		if len(base) > 60 {
 			base = base[:60]
 		}
-		name := "Imported " + time.Now().Format("2006-01-02 150405") + " " + strings.TrimSpace(base) + ".zip"
+		name := "Imported " + nowT().Format("2006-01-02 150405") + " " + strings.TrimSpace(base) + ".zip"
 		path := filepath.Join(s.backupDir(), name)
 		out, err := os.Create(path)
 		if err == nil {

@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-	"time"
 )
 
 type gauge struct {
@@ -43,7 +42,7 @@ func plural(n int, one, many string) string {
 
 // dashboard callers hold s.mu.
 func (s *store) dashboard() map[string]any {
-	now := time.Now()
+	now := nowT()
 	today := now.Format(dayFmt)
 	g := []gauge{}
 	t := []tile{}
@@ -117,7 +116,7 @@ func (s *store) dashboard() map[string]any {
 	// 6. station checklists finished today (Closing counts from 2 PM)
 	var stOk, stDue int
 	func() {
-		today, late := time.Now().Format(dayFmt), time.Now().Hour() >= 14
+		today, late := nowT().Format(dayFmt), nowT().Hour() >= 14
 		fin := map[string]bool{}
 		for _, l := range s.regLoad(regDefs["stchecklog"]) {
 			if l["date"] == today {

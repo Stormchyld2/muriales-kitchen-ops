@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 func exists(path string) bool {
@@ -59,7 +58,7 @@ func fail(w http.ResponseWriter, code int, msg string) {
 	writeJSON(w, code, map[string]string{"error": msg})
 }
 
-func now() string { return time.Now().Format("2006-01-02T15:04:05") }
+func now() string { return nowT().Format("2006-01-02T15:04:05") }
 
 var titleCleaner = strings.NewReplacer("_", " ", "-", " ")
 

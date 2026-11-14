@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 func init() {
@@ -37,10 +36,10 @@ func init() {
 }
 
 func (s *store) decorateOps(c *collDef, rows []rec) bool {
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	switch c.Name {
 	case "vendors":
-		soon := time.Now().AddDate(0, 0, 60).Format(dayFmt)
+		soon := nowT().AddDate(0, 0, 60).Format(dayFmt)
 		for _, r := range rows {
 			r["state"] = ""
 			switch {

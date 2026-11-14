@@ -61,7 +61,7 @@ func (s *store) caForms() []*CAForm {
 func (s *store) caDir() string { return filepath.Join(filepath.Dir(s.dir), "Corrective Action Forms") }
 
 func (f *CAForm) overdue() bool {
-	return f.Status != "Closed" && f.Target != "" && f.Target < time.Now().Format(dayFmt)
+	return f.Status != "Closed" && f.Target != "" && f.Target < nowT().Format(dayFmt)
 }
 
 func (f *CAForm) page(autoPrint bool) string {
@@ -93,7 +93,7 @@ h2{font-size:13px;background:#7a1f2b;color:#fff;margin:12px 0 0;padding:3px 8px}
 <h2>Closure</h2><table><tr>` + cell("Status", f.Status) + cell("Closed Date", d(f.ClosedDate)) + cell("Closed By", f.ClosedBy) + cell("Repeat Issue?", f.Repeat) + `</tr><tr>` + cell("Follow-Up Date", d(f.FollowUpDate)) + `<td colspan="3">` + `<div class="l">Follow-Up Result</div><div class="v">` + e(f.FollowUpRes) + `&nbsp;</div></td></tr>` +
 		block("Management Notes", f.Notes) + block("Related Records", f.Related) + `</table>
 <p style="margin-top:14px">Manager signature: ______________________________ &nbsp;&nbsp; Date: ______________</p>
-<div style="color:#666;font-size:10px">Printed ` + time.Now().Format("1/2/2006 3:04 PM") + `</div>`)
+<div style="color:#666;font-size:10px">Printed ` + nowT().Format("1/2/2006 3:04 PM") + `</div>`)
 	if autoPrint {
 		b.WriteString(`<script>onload=function(){setTimeout(function(){print()},300)}</script>`)
 	}
@@ -125,7 +125,7 @@ func (s *store) caReport(openOnly bool) *report {
 	if openOnly {
 		title = "Open Corrective Actions"
 	}
-	return &report{Title: title, Subtitle: time.Now().Format("January 2, 2006"), Sections: []reportSection{{Cols: []string{"ID", "Date", "Area", "Priority", "Issue", "Owner", "Target", "Status", "Closed"}, Rows: rows}}}
+	return &report{Title: title, Subtitle: nowT().Format("January 2, 2006"), Sections: []reportSection{{Cols: []string{"ID", "Date", "Area", "Priority", "Issue", "Owner", "Target", "Status", "Closed"}, Rows: rows}}}
 }
 
 func (s *store) caTodo() []todoItem {
@@ -137,7 +137,7 @@ func (s *store) caTodo() []todoItem {
 		state := "Open"
 		if f.overdue() {
 			state = "Overdue"
-		} else if f.Target == time.Now().Format(dayFmt) {
+		} else if f.Target == nowT().Format(dayFmt) {
 			state = "Due Today"
 		}
 		due := f.Target
@@ -200,18 +200,18 @@ func (s *store) correctiveRoutes(mux *http.ServeMux) {
 				return
 			}
 			if in2.ClosedDate == "" {
-				in2.ClosedDate = time.Now().Format(dayFmt)
+				in2.ClosedDate = nowT().Format(dayFmt)
 			}
 		} else {
 			in2.ClosedDate, in2.ClosedBy = "", ""
 		}
 		if in2.Date == "" {
-			in2.Date = time.Now().Format(dayFmt)
+			in2.Date = nowT().Format(dayFmt)
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		forms := s.caForms()
-		now := time.Now().Format("2006-01-02 15:04")
+		now := nowT().Format("2006-01-02 15:04")
 		var saved *CAForm
 		for i, f := range forms {
 			if in2.ID != "" && f.ID == in2.ID {

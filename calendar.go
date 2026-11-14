@@ -66,7 +66,7 @@ func stepRepeat(d time.Time, r string) time.Time {
 const maxCalendarDays = 400
 
 func (s *store) calendarEvents(from, to time.Time) []calEvent {
-	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	today, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	eq, issues, _ := s.loadMaint()
 	names := map[string]string{}
 	for _, e := range eq {

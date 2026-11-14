@@ -83,7 +83,7 @@ func (s *store) dailySummaryReport() *report {
 			line("- %s (%s)", a.Title, a.State)
 		}
 	}
-	return &report{Title: "Muriale's Daily Summary", Subtitle: time.Now().Format("Monday, January 2, 2006 3:04 PM"), Sections: []reportSection{{Text: strings.TrimSpace(b.String())}}}
+	return &report{Title: "Muriale's Daily Summary", Subtitle: nowT().Format("Monday, January 2, 2006 3:04 PM"), Sections: []reportSection{{Text: strings.TrimSpace(b.String())}}}
 }
 
 func (s *store) dailySummaryRoutes(mux *http.ServeMux) {
@@ -153,7 +153,7 @@ func (s *store) dailySummaryRoutes(mux *http.ServeMux) {
 			fail(w, 400, "No one is on the daily summary list yet. Add addresses in Settings, Daily Summary & Backup Copy.")
 			return
 		}
-		method, detail, cut := composeEmail(addrs, "Daily Summary - "+time.Now().Format("Jan 2"), rep.text())
+		method, detail, cut := composeEmail(addrs, "Daily Summary - "+nowT().Format("Jan 2"), rep.text())
 		writeJSON(w, 200, map[string]any{"method": method, "detail": detail, "cut": cut, "to": addrs})
 	})
 }
@@ -194,7 +194,7 @@ func (s *store) sendSummary(send func(to []string, subject, body string) error) 
 	if len(addrs) == 0 {
 		return fmt.Errorf("no one is on the daily summary list")
 	}
-	return send(addrs, "Daily Summary - "+time.Now().Format("Jan 2"), rep.text())
+	return send(addrs, "Daily Summary - "+nowT().Format("Jan 2"), rep.text())
 }
 
 // autoSendTick sends the summary once a day at the set time, from the one
@@ -235,6 +235,6 @@ func (s *store) autoSendTick(now time.Time, send func(to []string, subject, body
 
 func (s *store) autoSendLoop() {
 	for range time.Tick(time.Minute) {
-		s.autoSendTick(time.Now(), sendOutlookMail)
+		s.autoSendTick(nowT(), sendOutlookMail)
 	}
 }

@@ -86,7 +86,7 @@ func (s *store) decorateTraining(rows []rec) {
 	for _, t := range s.regLoad(regDefs["trainingtypes"]) {
 		typ[t["id"]] = t["name"]
 	}
-	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	today, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	for _, r := range rows {
 		r["employeeName"], r["typeName"] = firstNonEmpty(emp[r["employeeId"]], "(removed)"), firstNonEmpty(typ[r["typeId"]], "(removed)")
 		r["state"] = trainState(r["expires"], today)
@@ -159,7 +159,7 @@ type trainMatrix struct {
 // trainingMatrix works out every active employee against every active
 // training that applies to them. Callers hold s.mu.
 func (s *store) trainingMatrix() trainMatrix {
-	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	today, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	m := trainMatrix{Types: []map[string]string{}, Rows: []trainRow{}, Count: map[string]int{"Current": 0, "Due Soon": 0, "Expired": 0, "Missing": 0}}
 	var types []rec
 	for _, t := range s.regSorted(regDefs["trainingtypes"]) {
@@ -211,7 +211,7 @@ func (s *store) trainingRoutes(mux *http.ServeMux) {
 
 // trainingReport builds the printable training reports. Callers hold s.mu.
 func (s *store) trainingReport(id string) (*report, bool) {
-	today := time.Now().Format("January 2, 2006")
+	today := nowT().Format("January 2, 2006")
 	switch id {
 	case "training-matrix":
 		m := s.trainingMatrix()

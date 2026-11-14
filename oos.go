@@ -243,7 +243,7 @@ func daysOut(r *OOSRecord) string {
 	if err != nil {
 		return ""
 	}
-	to := time.Now()
+	to := nowT()
 	if r.ClearedAt != "" {
 		if t, err := time.Parse(dayFmt, r.ClearedAt[:10]); err == nil {
 			to = t
@@ -311,7 +311,7 @@ func (s *store) tagRoutes(mux *http.ServeMux) {
 			fail(w, 500, "The tags folder could not be made: "+err.Error())
 			return
 		}
-		file := strings.TrimSpace(safeName.ReplaceAllString("Out of Service Tag - "+name+" - "+time.Now().Format("2006-01-02 1504"), "")) + ".png"
+		file := strings.TrimSpace(safeName.ReplaceAllString("Out of Service Tag - "+name+" - "+nowT().Format("2006-01-02 1504"), "")) + ".png"
 		if err := os.WriteFile(filepath.Join(s.tagsDir(), file), b, 0o644); err != nil {
 			fail(w, 500, "The tag could not be saved: "+err.Error())
 			return

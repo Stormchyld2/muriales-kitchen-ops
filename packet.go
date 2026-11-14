@@ -138,7 +138,7 @@ func (s *store) packetReport(id string) (*report, bool) {
 			want[k] = true
 		}
 	}
-	rep := &report{Title: "Health Inspection Packet", Subtitle: "Records from " + from + " to " + to + " · prepared " + time.Now().Format("January 2, 2006")}
+	rep := &report{Title: "Health Inspection Packet", Subtitle: "Records from " + from + " to " + to + " · prepared " + nowT().Format("January 2, 2006")}
 	// the contents page lists what is inside, by part
 	groups, order := map[string][]string{}, []string{}
 	for _, p := range packetParts {

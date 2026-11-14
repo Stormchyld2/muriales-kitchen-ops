@@ -112,7 +112,7 @@ func (s *store) readinessList() []*Readiness {
 }
 
 func (s *store) readinessReport(id string) (*report, bool) {
-	today := time.Now().Format("January 2, 2006")
+	today := nowT().Format("January 2, 2006")
 	switch id {
 	case "readiness-blank":
 		var rows [][]string
@@ -239,7 +239,7 @@ func (s *store) readinessRoutes(mux *http.ServeMux) {
 				}
 			}
 			in2.ID = fmt.Sprintf("IR-%04d", max+1)
-			in2.Created = time.Now().Format("2006-01-02 15:04")
+			in2.Created = nowT().Format("2006-01-02 15:04")
 			list = append(list, &in2)
 		}
 		if err := s.writeMaint("readiness.json", list); err != nil {
@@ -275,7 +275,7 @@ func (s *store) readinessRoutes(mux *http.ServeMux) {
 				max = n
 			}
 		}
-		now := time.Now().Format("2006-01-02 15:04")
+		now := nowT().Format("2006-01-02 15:04")
 		var made []*CAForm
 		for i := range rv.Items {
 			it := &rv.Items[i]

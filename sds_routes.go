@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 )
 
 func (s *store) routes(mux *http.ServeMux) {
@@ -171,7 +170,7 @@ func (s *store) routes(mux *http.ServeMux) {
 				fail(w, 500, "the PDF could not be moved to the removed folder, so nothing was changed: "+err.Error())
 				return
 			}
-			_ = os.Chtimes(filepath.Join(s.goneDir(), archived), time.Now(), time.Now()) // the 30 days count from today
+			_ = os.Chtimes(filepath.Join(s.goneDir(), archived), nowT(), nowT()) // the 30 days count from today
 		}
 		oldProducts, oldRemoved, before := s.lib.Products, s.lib.Removed, *p
 		kept := make([]*Product, 0, len(oldProducts))
@@ -483,7 +482,7 @@ func (s *store) routes(mux *http.ServeMux) {
 			fail(w, 500, "the backup folder could not be created")
 			return
 		}
-		name := filepath.Join(dir, "Kitchen Backup "+time.Now().Format("2006-01-02 150405")+".zip")
+		name := filepath.Join(dir, "Kitchen Backup "+nowT().Format("2006-01-02 150405")+".zip")
 		if err := zipDir(s.dir, name); err != nil {
 			os.Remove(name)
 			fail(w, 500, "the backup could not be written: "+err.Error())
@@ -491,7 +490,7 @@ func (s *store) routes(mux *http.ServeMux) {
 		}
 		if exists(s.maintDir()) {
 			// The maintenance files are small; keep a copy of them with every backup.
-			mname := filepath.Join(dir, "Maintenance Backup "+time.Now().Format("2006-01-02 150405")+".zip")
+			mname := filepath.Join(dir, "Maintenance Backup "+nowT().Format("2006-01-02 150405")+".zip")
 			if err := zipDir(s.maintDir(), mname); err != nil {
 				os.Remove(mname)
 				log.Printf("maintenance backup failed: %v", err)

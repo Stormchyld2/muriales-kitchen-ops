@@ -122,7 +122,7 @@ func (s *store) seedOnce(tag, coll, file string) {
 	}
 	if s.regSave(c, rows) == nil {
 		_ = os.MkdirAll(s.maintDir(), 0o755)
-		_ = os.WriteFile(flag, []byte(time.Now().Format(time.RFC3339)), 0o644)
+		_ = os.WriteFile(flag, []byte(nowT().Format(time.RFC3339)), 0o644)
 	}
 }
 
@@ -145,6 +145,7 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 			Items                                                                                []struct {
 				N                                                        int
 				Area, Check, Status, Finding, Corrected, Priority, Owner string
+				Photos                                                   []string
 			}
 		}
 		if jsonDecode(r, &in) != nil || strings.TrimSpace(in.By) == "" {
@@ -166,10 +167,10 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 				need = append(need, it.Area+": "+strings.TrimSpace(it.Finding))
 			}
 		}
-		now := time.Now()
+		now := nowT()
 		all := []map[string]any{}
 		for _, it := range in.Items {
-			all = append(all, map[string]any{"n": it.N, "area": it.Area, "check": it.Check, "status": it.Status, "finding": it.Finding, "corrected": it.Corrected, "priority": it.Priority, "owner": it.Owner})
+			all = append(all, map[string]any{"n": it.N, "area": it.Area, "check": it.Check, "status": it.Status, "finding": it.Finding, "corrected": it.Corrected, "priority": it.Priority, "owner": it.Owner, "photos": s.cleanPhotos(it.Photos)})
 		}
 		itemsJSON, _ := json.Marshal(all)
 		s.mu.Lock()
@@ -193,7 +194,7 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 					continue
 				}
 				fs = append(fs, &Finding{Date: now.Format(dayFmt), Area: it.Area, Category: walkCategory(it.Area), What: it.Area + ": " + strings.TrimSpace(it.Finding),
-					Priority: fixPriority(it.Priority), FoundBy: strings.TrimSpace(in.By), AssignedTo: strings.TrimSpace(it.Owner), Status: "Open",
+					Photos: s.cleanPhotos(it.Photos), Priority: fixPriority(it.Priority), FoundBy: strings.TrimSpace(in.By), AssignedTo: strings.TrimSpace(it.Owner), Status: "Open",
 					History: []Entry{{stamp(), strings.TrimSpace(in.By), "Found on readiness walk " + n["id"] + "."}}})
 			}
 			made = s.addFindings(fs)
@@ -250,12 +251,12 @@ func (s *store) recReport(c *collDef, r rec) *report {
 			rows = append(rows, []string{f.Label, r[f.Key]})
 		}
 	}
-	return &report{Title: c.Title + " " + r["id"], Subtitle: time.Now().Format("January 2, 2006"), Sections: []reportSection{{Cols: []string{"Field", "Entry"}, Rows: rows}}}
+	return &report{Title: c.Title + " " + r["id"], Subtitle: nowT().Format("January 2, 2006"), Sections: []reportSection{{Cols: []string{"Field", "Entry"}, Rows: rows}}}
 }
 
 func (s *store) safetyReport(id string) (*report, bool) {
 	if id == "binder-all" {
-		rep := &report{Title: "Emergency Response Binder", Subtitle: time.Now().Format("January 2, 2006")}
+		rep := &report{Title: "Emergency Response Binder", Subtitle: nowT().Format("January 2, 2006")}
 		for _, n := range []string{"binder", "econtacts", "eqplan", "eqvendors"} {
 			c := regDefs[n]
 			sub := s.regReport(c, c.Title, "", nil)
@@ -332,7 +333,7 @@ func energyTypes(energy string) string {
 
 // lotoStart adds a LOTO Log line for a new out-of-service hold. The caller holds s.mu.
 func (s *store) lotoStart(e *Equipment, o *OOSRecord) {
-	proc, now := s.lotoProcFor(e), time.Now()
+	proc, now := s.lotoProcFor(e), nowT()
 	r := rec{"date": now.Format(dayFmt), "time": now.Format("3:04 PM"), "equipment": e.Name, "assetId": e.AssetCode, "area": e.Area, "reason": o.Reason, "authorized": o.RemovedBy, "oosId": o.ID,
 		"notes": "Added automatically when the equipment was taken out of service."}
 	if proc != nil {
@@ -380,7 +381,7 @@ func (s *store) lotoRefine(o *OOSRecord) {
 // lotoEnd marks the lock removed when the equipment is cleared for service.
 func (s *store) lotoEnd(o *OOSRecord) {
 	s.lotoUpdate(o.ID, func(r rec) {
-		r["removed"] = time.Now().Format(dayFmt + " 3:04 PM")
+		r["removed"] = nowT().Format(dayFmt + " 3:04 PM")
 		r["notes"] += " Cleared for service by " + o.ClearedBy + ": " + o.ClearNote
 	})
 }
@@ -410,7 +411,7 @@ func (s *store) safetyAttention(today string) []todoItem {
 		}
 	}
 	if len(s.regLoad(regDefs["binder"])) > 0 {
-		cut := time.Now().AddDate(0, 0, -92).Format(dayFmt)
+		cut := nowT().AddDate(0, 0, -92).Format(dayFmt)
 		if last == "" || last < cut {
 			d := "never reviewed"
 			if last != "" {

@@ -113,7 +113,7 @@ func (t *PMTask) bucket() string {
 func (s *store) pmList() []pmView {
 	var tasks []*PMTask
 	s.readMaint("pm.json", &tasks)
-	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	today, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	out := []pmView{}
 	for _, t := range tasks {
 		if t.Group == "" {
@@ -228,10 +228,10 @@ func (s *store) pmRoutes(mux *http.ServeMux, reply func(http.ResponseWriter)) {
 			return
 		}
 		if in2.Date == "" {
-			in2.Date = time.Now().Format(dayFmt)
+			in2.Date = nowT().Format(dayFmt)
 		}
 		d, err := time.Parse(dayFmt, in2.Date)
-		if err != nil || d.After(time.Now().AddDate(0, 0, 1)) {
+		if err != nil || d.After(nowT().AddDate(0, 0, 1)) {
 			fail(w, 400, "Enter the date it was done (today or earlier).")
 			return
 		}
@@ -295,7 +295,7 @@ func (s *store) importRoutes(mux *http.ServeMux) {
 				known[t.Code] = true
 			}
 		}
-		today := time.Now().Format(dayFmt)
+		today := nowT().Format(dayFmt)
 		added, skipped := 0, 0
 		for i := range src.Tasks {
 			t := src.Tasks[i]
@@ -318,7 +318,7 @@ func (s *store) importRoutes(mux *http.ServeMux) {
 					d = t.step(d)
 				}
 				if err != nil {
-					d = time.Now()
+					d = nowT()
 				}
 				t.FirstDue = d.Format(dayFmt)
 			}

@@ -42,7 +42,7 @@ type todoItem struct {
 var todoSources = []string{"Cleaning", "Equipment PM", "Grounds / Facility", "Issue", "Inspection", "Temperature", "Corrective Action", "Manager Check", "SDS", "Equipment", "Other"}
 
 func (s *store) todoItems(from, to time.Time, want map[string]bool) []todoItem {
-	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	today, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	out := []todoItem{}
 	eq, issues, st := s.loadMaint()
 	name := map[string]string{}
@@ -223,10 +223,10 @@ func (s *store) todoRoutes(mux *http.ServeMux) {
 		defer s.mu.Unlock()
 		dept := strings.TrimSpace(r.URL.Query().Get("dept"))
 		if len(freqs) > 0 {
-			writeJSON(w, 200, map[string]any{"items": s.byDept(s.withFrequencies(freqs, want), dept), "generated": time.Now().Format("2006-01-02T15:04:05")})
+			writeJSON(w, 200, map[string]any{"items": s.byDept(s.withFrequencies(freqs, want), dept), "generated": nowT().Format("2006-01-02T15:04:05")})
 			return
 		}
-		writeJSON(w, 200, map[string]any{"items": s.byDept(s.todoItems(from, to, want), dept), "generated": time.Now().Format("2006-01-02T15:04:05")})
+		writeJSON(w, 200, map[string]any{"items": s.byDept(s.todoItems(from, to, want), dept), "generated": nowT().Format("2006-01-02T15:04:05")})
 	})
 
 	mux.HandleFunc("POST /api/maint/todos", func(w http.ResponseWriter, r *http.Request) {
@@ -266,7 +266,7 @@ func (s *store) todoRoutes(mux *http.ServeMux) {
 		s.readMaint("todos.json", &all)
 		for _, t := range all {
 			if t.ID == r.PathValue("id") {
-				t.Done, t.DoneBy, t.DoneAt = true, strings.TrimSpace(in2.By), time.Now().Format("2006-01-02T15:04:05")
+				t.Done, t.DoneBy, t.DoneAt = true, strings.TrimSpace(in2.By), nowT().Format("2006-01-02T15:04:05")
 				if err := s.writeMaint("todos.json", all); err != nil {
 					s.maintFail(w, err)
 					return

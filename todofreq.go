@@ -62,7 +62,7 @@ func stateOf(due, today string) string {
 // it is due yet, so a whole schedule can be printed and handed out.
 // Callers hold s.mu.
 func (s *store) freqItems(freqs, want map[string]bool) []todoItem {
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	tt, _ := time.Parse(dayFmt, today)
 	out := []todoItem{}
 	for _, v := range s.pmList() {
@@ -111,7 +111,7 @@ func (s *store) freqItems(freqs, want map[string]bool) []todoItem {
 // withFrequencies builds the full handout: the chosen recurring jobs plus
 // everything else that is open right now.
 func (s *store) withFrequencies(freqs, want map[string]bool) []todoItem {
-	t0, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	t0, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	out := []todoItem{}
 	for _, it := range s.todoItems(t0, t0.AddDate(0, 0, 364), want) {
 		switch it.Kind {

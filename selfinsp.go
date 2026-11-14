@@ -221,7 +221,7 @@ func (s *store) selfAttention(now time.Time) []todoItem {
 }
 
 func (s *store) selfReport(id string) (*report, bool) {
-	today := time.Now().Format("January 2, 2006")
+	today := nowT().Format("January 2, 2006")
 	areas := s.regSorted(regDefs["selfareas"])
 	switch {
 	case id == "selfinsp-blank":
@@ -250,9 +250,9 @@ func (s *store) selfReport(id string) (*report, bool) {
 		}
 		return nil, false
 	case id == "selfinsp-month":
-		m := s.selfMonth(time.Now().Format("2006-01"))
+		m := s.selfMonth(nowT().Format("2006-01"))
 		top := strings.Join(m["top"].([]string), "; ")
-		rows := [][]string{{"Month", time.Now().Format("January 2006")}, {"Weekly inspections done", fmt.Sprint(m["count"])}, {"Average internal inspection score", fmt.Sprint(m["avg"])}, {"Lowest weekly score", fmt.Sprint(m["low"])}, {"Number of critical findings", fmt.Sprint(m["criticals"])}, {"Number of major findings", fmt.Sprint(m["majors"])}, {"Top repeat findings", top}, {"Overdue corrective actions", fmt.Sprint(m["overdueCA"])},
+		rows := [][]string{{"Month", nowT().Format("January 2006")}, {"Weekly inspections done", fmt.Sprint(m["count"])}, {"Average internal inspection score", fmt.Sprint(m["avg"])}, {"Lowest weekly score", fmt.Sprint(m["low"])}, {"Number of critical findings", fmt.Sprint(m["criticals"])}, {"Number of major findings", fmt.Sprint(m["majors"])}, {"Top repeat findings", top}, {"Overdue corrective actions", fmt.Sprint(m["overdueCA"])},
 			{"Station / shift of concern", ""}, {"Maintenance / facility risk", ""}, {"Training completed", ""}, {"Retraining needed", ""}, {"Program / SOP change needed", ""}, {"Priority #1 for next month", ""}, {"Priority #2 for next month", ""}, {"Priority #3 for next month", ""}, {"Reviewed by / date", ""}}
 		return &report{Title: "Monthly Inspection Performance Review", Subtitle: today, Sections: []reportSection{{Cols: []string{"Item", "Result"}, Rows: rows}}}, true
 	}
@@ -269,14 +269,14 @@ func (s *store) selfRoutes(mux *http.ServeMux) {
 				areas = append(areas, a)
 			}
 		}
-		writeJSON(w, 200, map[string]any{"areas": areas, "rows": s.decorateSelfList(), "month": s.selfMonth(time.Now().Format("2006-01"))})
+		writeJSON(w, 200, map[string]any{"areas": areas, "rows": s.decorateSelfList(), "month": s.selfMonth(nowT().Format("2006-01"))})
 	})
 	mux.HandleFunc("GET /api/selfinsp/month", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		m := r.URL.Query().Get("month")
 		if _, err := time.Parse("2006-01", m); err != nil {
-			m = time.Now().Format("2006-01")
+			m = nowT().Format("2006-01")
 		}
 		writeJSON(w, 200, s.selfMonth(m))
 	})
@@ -295,7 +295,7 @@ func (s *store) selfRoutes(mux *http.ServeMux) {
 			return
 		}
 		if _, err := time.Parse(dayFmt, in.Date); err != nil {
-			in.Date = time.Now().Format(dayFmt)
+			in.Date = nowT().Format(dayFmt)
 		}
 		lines := parseSelf(in.Results)
 		for _, l := range lines {
@@ -356,7 +356,7 @@ func (s *store) selfRoutes(mux *http.ServeMux) {
 					next = n
 				}
 			}
-			now := time.Now().Format("2006-01-02 15:04")
+			now := nowT().Format("2006-01-02 15:04")
 			for _, l := range lines {
 				if l.Rating != "M" && l.Rating != "CR" {
 					continue

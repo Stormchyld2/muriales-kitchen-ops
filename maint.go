@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 )
 
 type Equipment struct {
@@ -226,7 +225,7 @@ func oneOf(list []string, v string) bool {
 	return false
 }
 
-func stamp() string { return time.Now().Format("2006-01-02T15:04:05") }
+func stamp() string { return nowT().Format("2006-01-02T15:04:05") }
 
 // writeLog keeps a readable copy of the issues next to the data.
 func (s *store) writeLog(eq []*Equipment, is []*Issue) {
@@ -235,7 +234,7 @@ func (s *store) writeLog(eq []*Equipment, is []*Issue) {
 		name[e.ID] = e.Name
 	}
 	var b strings.Builder
-	b.WriteString("# Maintenance Log\n\nUpdated " + time.Now().Format("January 2, 2006 3:04 PM") + ". This file is rewritten by the program; edit issues in the program.\n")
+	b.WriteString("# Maintenance Log\n\nUpdated " + nowT().Format("January 2, 2006 3:04 PM") + ". This file is rewritten by the program; edit issues in the program.\n")
 	section := func(title string, keep func(*Issue) bool) {
 		b.WriteString("\n## " + title + "\n\n")
 		n := 0
@@ -324,6 +323,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.parsRoutes(mux)
 	s.menuRoutes(mux)
 	s.phoneRoutes(mux)
+	s.photoRoutes(mux)
 	s.referenceRoutes(mux)
 	s.workflowRoutes(mux)
 	s.g90Routes(mux)

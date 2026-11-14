@@ -82,7 +82,7 @@ type roleRowOut struct {
 // roleMatrix lays the roles against the trainings, with how many of the people
 // in each role are current. Callers hold s.mu.
 func (s *store) roleMatrix() map[string]any {
-	today, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	today, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	var types []rec
 	out := []map[string]string{}
 	for _, t := range s.regSorted(regDefs["trainingtypes"]) {
@@ -198,5 +198,5 @@ func (s *store) roleReport() *report {
 		}
 		rows = append(rows, row)
 	}
-	return &report{Title: "Required Training by Position", Subtitle: time.Now().Format("January 2, 2006"), Sections: []reportSection{{Note: "Blank means not required for that position. All Staff requirements apply to everyone.", Cols: cols, Rows: rows}}}
+	return &report{Title: "Required Training by Position", Subtitle: nowT().Format("January 2, 2006"), Sections: []reportSection{{Note: "Blank means not required for that position. All Staff requirements apply to everyone.", Cols: cols, Rows: rows}}}
 }

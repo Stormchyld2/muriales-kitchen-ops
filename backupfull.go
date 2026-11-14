@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 // Full backups hold both data folders in one zip: "SDS Data/..." and
@@ -49,7 +48,7 @@ func zipTree(zw *zip.Writer, src, prefix string) error {
 }
 
 func (s *store) fullBackup() (string, error) {
-	return s.fullBackupAs("Full Backup " + time.Now().Format("2006-01-02 150405") + ".zip")
+	return s.fullBackupAs("Full Backup " + nowT().Format("2006-01-02 150405") + ".zip")
 }
 
 func (s *store) fullBackupAs(file string) (string, error) {
@@ -111,7 +110,7 @@ func (s *store) restoreMaint(zipPath string) (string, error) {
 	}
 	keep := ""
 	if exists(s.maintDir()) {
-		keep = filepath.Join(s.backupDir(), "Maintenance Before Restore "+time.Now().Format("2006-01-02 150405")+".zip")
+		keep = filepath.Join(s.backupDir(), "Maintenance Before Restore "+nowT().Format("2006-01-02 150405")+".zip")
 		_ = os.MkdirAll(s.backupDir(), 0o755)
 		if err := zipDir(s.maintDir(), keep); err != nil {
 			return "", fmt.Errorf("the current files could not be saved first: %v", err)

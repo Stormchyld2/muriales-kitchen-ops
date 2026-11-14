@@ -159,7 +159,7 @@ func (s *store) parsRoutes(mux *http.ServeMux) {
 			return
 		}
 		items, notes := s.parItems(st)
-		day := time.Now().Format(dayFmt)
+		day := nowT().Format(dayFmt)
 		c := s.parChecks()[day+"|"+st]
 		writeJSON(w, 200, map[string]any{"station": st, "date": day, "items": items, "notes": notes, "check": c, "stations": s.parStations()})
 	})
@@ -174,7 +174,7 @@ func (s *store) parsRoutes(mux *http.ServeMux) {
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		c := parCheck{By: strings.TrimSpace(in.By), Time: time.Now().Format("3:04 PM"), On: map[string]string{}, Make: map[string]string{}, Init: map[string]string{}}
+		c := parCheck{By: strings.TrimSpace(in.By), Time: nowT().Format("3:04 PM"), On: map[string]string{}, Make: map[string]string{}, Init: map[string]string{}}
 		for _, x := range in.Rows {
 			if strings.TrimSpace(x.On) != "" {
 				c.On[x.ID] = strings.TrimSpace(x.On)
@@ -187,9 +187,9 @@ func (s *store) parsRoutes(mux *http.ServeMux) {
 			}
 		}
 		m := s.parChecks()
-		m[time.Now().Format(dayFmt)+"|"+in.Station] = c
+		m[nowT().Format(dayFmt)+"|"+in.Station] = c
 		// keep a year of checks
-		cut := time.Now().AddDate(-1, 0, 0).Format(dayFmt)
+		cut := nowT().AddDate(-1, 0, 0).Format(dayFmt)
 		for k := range m {
 			if len(k) >= 10 && k[:10] < cut {
 				delete(m, k)
@@ -210,7 +210,7 @@ func (s *store) parsReport(id, month string) (*report, bool) {
 		items, notes := s.parItems(st)
 		var c parCheck
 		if filled {
-			c = s.parChecks()[time.Now().Format(dayFmt)+"|"+st]
+			c = s.parChecks()[nowT().Format(dayFmt)+"|"+st]
 		}
 		rows := [][]string{}
 		for _, r := range items {
@@ -237,10 +237,10 @@ func (s *store) parsReport(id, month string) (*report, bool) {
 		if len(secs) == 0 {
 			secs = []reportSection{{Note: "No par sheets have been added yet."}}
 		}
-		return &report{Title: "Station Par Sheets", Subtitle: time.Now().Format("January 2, 2006"), Sections: secs}, true
+		return &report{Title: "Station Par Sheets", Subtitle: nowT().Format("January 2, 2006"), Sections: secs}, true
 	case strings.HasPrefix(id, "parsheet:"), strings.HasPrefix(id, "parcheck:"):
 		st := id[strings.Index(id, ":")+1:]
-		return &report{Title: st + " Station Par Sheet", Subtitle: time.Now().Format("January 2, 2006"), Sections: sheet(st, strings.HasPrefix(id, "parcheck:"))}, true
+		return &report{Title: st + " Station Par Sheet", Subtitle: nowT().Format("January 2, 2006"), Sections: sheet(st, strings.HasPrefix(id, "parcheck:"))}, true
 	case id == "orderpars-days":
 		rows := [][]string{}
 		for _, r := range s.regLoad(regDefs["orderdays"]) {
@@ -286,7 +286,7 @@ func (s *store) parsReport(id, month string) (*report, bool) {
 			secs = []reportSection{{Note: "No order guide items yet for this vendor."}}
 		}
 		t := "Order Guide Pars"
-		sub := time.Now().Format("January 2, 2006")
+		sub := nowT().Format("January 2, 2006")
 		if id != "orderpars-all" {
 			t = only + " Order Guide"
 			sub = "Count against busy or slow par. " + sub
@@ -294,7 +294,7 @@ func (s *store) parsReport(id, month string) (*report, bool) {
 		return &report{Title: t, Subtitle: sub, Sections: secs}, true
 	case id == "breakage-month":
 		if _, err := time.Parse("2006-01", month); err != nil {
-			month = time.Now().Format("2006-01")
+			month = nowT().Format("2006-01")
 		}
 		rows := s.regLoad(regDefs["breakage"])
 		s.decoratePars(regDefs["breakage"], rows)

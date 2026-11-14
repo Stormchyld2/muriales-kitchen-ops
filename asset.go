@@ -62,7 +62,7 @@ func (s *store) addService(r ServiceRecord) {
 
 func (s *store) assetSummaries(eq []*Equipment, pct int) map[string]assetSummary {
 	svc := s.serviceList()
-	today := time.Now()
+	today := nowT()
 	cutoff := today.AddDate(-1, 0, 0).Format(dayFmt)
 	out := map[string]assetSummary{}
 	for _, e := range eq {
@@ -137,7 +137,7 @@ func (s *store) serviceRoutes(mux *http.ServeMux, reply func(http.ResponseWriter
 			return
 		}
 		d, err := time.Parse(dayFmt, in2.Date)
-		if err != nil || d.After(time.Now().AddDate(0, 0, 1)) {
+		if err != nil || d.After(nowT().AddDate(0, 0, 1)) {
 			fail(w, 400, "Enter the date the work was done (today or earlier).")
 			return
 		}
@@ -165,7 +165,7 @@ func (s *store) serviceRoutes(mux *http.ServeMux, reply func(http.ResponseWriter
 			fail(w, 400, "Say what was done and enter your name.")
 			return
 		}
-		if d, err := time.Parse(dayFmt, in2.Date); err != nil || d.After(time.Now().AddDate(0, 0, 1)) {
+		if d, err := time.Parse(dayFmt, in2.Date); err != nil || d.After(nowT().AddDate(0, 0, 1)) {
 			fail(w, 400, "Enter the date the work was done (today or earlier).")
 			return
 		}
@@ -238,7 +238,7 @@ func (s *store) syncIssueService(p *Issue, by string) {
 	if p.EquipmentID != "" && (total > 0 || p.Downtime > 0) {
 		date := p.CompletedAt
 		if date == "" {
-			date = time.Now().Format(dayFmt)
+			date = nowT().Format(dayFmt)
 		}
 		kept = append(kept, ServiceRecord{
 			ID: newID(), EquipmentID: p.EquipmentID, Date: date, Type: "Repair",

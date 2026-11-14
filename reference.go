@@ -38,7 +38,7 @@ func (s *store) seedReference(tag string) {
 			_ = os.WriteFile(dst, b, 0o644)
 		}
 	}
-	_ = os.WriteFile(flag, []byte(time.Now().Format(time.RFC3339)), 0o644)
+	_ = os.WriteFile(flag, []byte(nowT().Format(time.RFC3339)), 0o644)
 }
 
 func (s *store) referenceRoutes(mux *http.ServeMux) {

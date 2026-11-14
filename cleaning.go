@@ -53,7 +53,7 @@ func isDaily(r rec) bool {
 
 func (s *store) cleanToday() map[string]any {
 	s.syncMissed()
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	view := func(c *collDef) []rec {
 		out := []rec{}
 		for _, r := range s.regLoad(c) {
@@ -81,7 +81,7 @@ func (s *store) cleanToday() map[string]any {
 }
 
 func (s *store) deepToday() []rec {
-	tt, _ := time.Parse(dayFmt, time.Now().Format(dayFmt))
+	tt, _ := time.Parse(dayFmt, nowT().Format(dayFmt))
 	out := []rec{}
 	for _, r := range s.regLoad(regDefs["deepclean"]) {
 		due, st := deepState(r, tt)
@@ -97,7 +97,7 @@ func (s *store) deepToday() []rec {
 }
 
 func (s *store) cleanTodo(from, to time.Time, want map[string]bool) []todoItem {
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	out := []todoItem{}
 	left := 0
 	if want["Cleaning"] {
@@ -150,7 +150,7 @@ func (s *store) cleanTodo(from, to time.Time, want map[string]bool) []todoItem {
 }
 
 func (s *store) cleanReport(id string) (*report, bool) {
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	switch id {
 	case "clean-schedule":
 		return s.regReport(regDefs["cleantasks"], "Cleaning Schedule", "", nil), true
@@ -161,7 +161,7 @@ func (s *store) cleanReport(id string) (*report, bool) {
 	case "mgr-schedule":
 		return s.regReport(regDefs["mgrchecks"], "Manager Inspection Schedule", "", nil), true
 	case "clean-log":
-		from := time.Now().AddDate(0, 0, -30).Format(dayFmt)
+		from := nowT().AddDate(0, 0, -30).Format(dayFmt)
 		return s.regReport(regDefs["cleanlog"], "Cleaning Completion Log (last 30 days)", "", func(r rec) bool { return r["date"] >= from }), true
 	case "clean-missed":
 		s.syncMissed()
@@ -169,7 +169,7 @@ func (s *store) cleanReport(id string) (*report, bool) {
 	case "clean-areas":
 		return s.regReport(regDefs["cleanareas"], "Area Cleaning Matrix", "", nil), true
 	case "mgr-log":
-		from := time.Now().AddDate(0, 0, -30).Format(dayFmt)
+		from := nowT().AddDate(0, 0, -30).Format(dayFmt)
 		return s.regReport(regDefs["mgrlog"], "Manager Inspection Log (last 30 days)", "", func(r rec) bool { return r["date"] >= from }), true
 	case "clean-weekly":
 		rows := [][]string{}
@@ -246,7 +246,7 @@ func (s *store) cleanRoutes(mux *http.ServeMux) {
 			fail(w, 404, "That task was not found.")
 			return
 		}
-		now := time.Now()
+		now := nowT()
 		vs := "Not required"
 		if task["verify"] == "Yes" {
 			vs = "Pending"
@@ -299,7 +299,7 @@ func (s *store) cleanRoutes(mux *http.ServeMux) {
 				continue
 			}
 			found = true
-			x["verifiedBy"], x["verifyTime"] = strings.TrimSpace(in2.By), time.Now().Format("3:04 PM")
+			x["verifiedBy"], x["verifyTime"] = strings.TrimSpace(in2.By), nowT().Format("3:04 PM")
 			x["verifyStatus"] = map[bool]string{true: "Verified", false: "Failed"}[in2.OK]
 			if in2.Notes != "" {
 				x["notes"] = strings.TrimSpace(x["notes"] + " " + in2.Notes)
@@ -309,7 +309,7 @@ func (s *store) cleanRoutes(mux *http.ServeMux) {
 				if reason == "" {
 					reason = "Failed verification."
 				}
-				if _, err := s.regAdd(regDefs["missed"], rec{"date": time.Now().Format(dayFmt), "taskId": x["taskId"], "area": x["area"], "task": x["task"], "reason": reason, "priority": "P2 - Urgent", "assignedTo": x["completedBy"], "status": "Open"}); err != nil {
+				if _, err := s.regAdd(regDefs["missed"], rec{"date": nowT().Format(dayFmt), "taskId": x["taskId"], "area": x["area"], "task": x["task"], "reason": reason, "priority": "P2 - Urgent", "assignedTo": x["completedBy"], "status": "Open"}); err != nil {
 					fail(w, 500, err.Error())
 					return
 				}
@@ -353,11 +353,11 @@ func (s *store) cleanRoutes(mux *http.ServeMux) {
 		if in2.Result == "Needs Attention" {
 			ca = "Yes"
 		}
-		if _, err := s.regAdd(regDefs["mgrlog"], rec{"date": time.Now().Format(dayFmt), "inspectionId": chk["id"], "area": chk["area"], "check": chk["check"], "result": in2.Result, "by": strings.TrimSpace(in2.By), "caNeeded": ca, "followUp": strings.TrimSpace(in2.FollowUp), "notes": in2.Notes}); err != nil {
+		if _, err := s.regAdd(regDefs["mgrlog"], rec{"date": nowT().Format(dayFmt), "inspectionId": chk["id"], "area": chk["area"], "check": chk["check"], "result": in2.Result, "by": strings.TrimSpace(in2.By), "caNeeded": ca, "followUp": strings.TrimSpace(in2.FollowUp), "notes": in2.Notes}); err != nil {
 			fail(w, 500, err.Error())
 			return
 		}
-		chk["lastDone"] = time.Now().Format(dayFmt)
+		chk["lastDone"] = nowT().Format(dayFmt)
 		if err := s.regSave(mc, rows); err != nil {
 			fail(w, 500, err.Error())
 			return

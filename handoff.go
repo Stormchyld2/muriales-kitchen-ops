@@ -1,13 +1,11 @@
 package main
 
-import (
-	"time"
-)
+import ()
 
 // handoffReport is the manager handoff: the notes left for the next manager
 // plus what is open in the kitchen right now. Callers hold s.mu.
 func (s *store) handoffReport() *report {
-	today := time.Now().Format("Monday, January 2, 2006")
+	today := nowT().Format("Monday, January 2, 2006")
 	short := func(v string) string {
 		if len(v) >= 10 {
 			return v[:10]

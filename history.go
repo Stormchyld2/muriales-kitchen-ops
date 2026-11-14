@@ -19,7 +19,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 type histRow struct {
@@ -46,7 +45,7 @@ func (s *store) addHistory(h histRow) {
 	}
 	path := s.historyFile()
 	if st, err := os.Stat(path); err == nil && st.Size() > histMaxBytes {
-		_ = os.Rename(path, filepath.Join(s.maintDir(), "Edit History "+time.Now().Format("2006-01-02")+".jsonl"))
+		_ = os.Rename(path, filepath.Join(s.maintDir(), "Edit History "+nowT().Format("2006-01-02")+".jsonl"))
 	}
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
@@ -168,7 +167,7 @@ func (s *store) history(next http.Handler) http.Handler {
 		if rw.code >= 400 {
 			return
 		}
-		h := histRow{At: time.Now().Format("2006-01-02T15:04:05")}
+		h := histRow{At: nowT().Format("2006-01-02T15:04:05")}
 		str := func(m map[string]any, keys []string) string {
 			for _, k := range keys {
 				if v, ok := m[k].(string); ok && strings.TrimSpace(v) != "" {

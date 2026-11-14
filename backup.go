@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 func (s *store) backupDir() string { return filepath.Join(filepath.Dir(s.dir), "Kitchen Backups") }
@@ -160,7 +159,7 @@ func (s *store) restore(zipPath string) (string, error) {
 	zr.Close()
 
 	// 2. Move the current library aside, then move the unpacked one in.
-	hold := filepath.Join(s.backupDir(), "Before restore "+time.Now().Format("2006-01-02 150405"))
+	hold := filepath.Join(s.backupDir(), "Before restore "+nowT().Format("2006-01-02 150405"))
 	if err := os.MkdirAll(hold, 0o755); err != nil {
 		return "", fmt.Errorf("the current library could not be set aside, so nothing was changed: %v", err)
 	}

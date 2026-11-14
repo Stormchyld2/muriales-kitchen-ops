@@ -141,7 +141,7 @@ func (s *store) mealWeek(n int, monday time.Time) []mealDay {
 		p := s.mealPer(r)
 		cell[r["day"]+"|"+slot] = &mealCell{ID: r["id"], Name: r["name"], Serves: r["serves"], Time: r["time"], PerPerson: money(p), PerNum: p}
 	}
-	today := time.Now().Format(dayFmt)
+	today := nowT().Format(dayFmt)
 	out := []mealDay{}
 	for i, d := range mealDays {
 		md := mealDay{Day: d, People: st.WeekdayPeople, BL: cell[d+"|bl"], Dinner: cell[d+"|dinner"]}
@@ -159,7 +159,7 @@ func (s *store) mealWeek(n int, monday time.Time) []mealDay {
 
 func (s *store) mealDash() map[string]any {
 	st := s.mealSettings()
-	mon := mondayOf(time.Now())
+	mon := mondayOf(nowT())
 	wk := rotationWeek(st.Anchor, mon)
 	next := wk%4 + 1
 	days := s.mealWeek(wk, mon)
@@ -302,7 +302,7 @@ func (s *store) mealAppendixLinks(r rec) []map[string]string {
 }
 
 func (s *store) mealsReport() *report {
-	rep := &report{Title: "Employee Meal Costs", Subtitle: time.Now().Format("January 2, 2006")}
+	rep := &report{Title: "Employee Meal Costs", Subtitle: nowT().Format("January 2, 2006")}
 	recipes := [][]string{}
 	per := map[string]float64{}
 	for _, r := range s.regSorted(regDefs["mealrecipes"]) {
@@ -310,7 +310,7 @@ func (s *store) mealsReport() *report {
 		recipes = append(recipes, []string{"Week " + r["week"] + " " + r["day"], r["meal"], r["name"], r["serves"], money(s.mealCostOf(r["ingredients"])), money(s.mealPer(r))})
 	}
 	rep.Sections = append(rep.Sections, reportSection{Heading: "Meal recipes", Note: "Costs show only where ingredient costs were entered.", Cols: []string{"When", "Meal", "Recipe", "Feeds", "Total cost", "Per person"}, Rows: recipes})
-	from := time.Now().AddDate(0, 0, -29).Format(dayFmt)
+	from := nowT().AddDate(0, 0, -29).Format(dayFmt)
 	plan := s.regLoad(regDefs["mealplan"])
 	sort.SliceStable(plan, func(i, j int) bool { return plan[i]["date"] > plan[j]["date"] })
 	rows, total, servings := [][]string{}, 0.0, 0.0
@@ -355,7 +355,7 @@ func (s *store) mealReports(id string) (*report, bool) {
 			rows = append(rows, []string{d.Day, fmt.Sprint(d.People), cell(d.BL), cell(d.Dinner)})
 		}
 		note := fmt.Sprintf("Each meal is planned to take about %d minutes. Breakfast and lunch cost target $%.2f a person, dinner $%.2f.", st.Minutes, st.BLTarget, st.DinnerTarget)
-		return &report{Title: "Employee Meals - Week " + n, Subtitle: time.Now().Format("January 2, 2006"), Sections: []reportSection{{Note: note, Cols: []string{"Day", "People", "Breakfast and Lunch", "Dinner"}, Rows: rows}}}, true
+		return &report{Title: "Employee Meals - Week " + n, Subtitle: nowT().Format("January 2, 2006"), Sections: []reportSection{{Note: note, Cols: []string{"Day", "People", "Breakfast and Lunch", "Dinner"}, Rows: rows}}}, true
 	}
 	for _, p := range []struct{ pre, coll string }{{"meal:", "mealrecipes"}, {"mealapp:", "mealappendix"}} {
 		if rid, ok := strings.CutPrefix(id, p.pre); ok {
@@ -384,7 +384,7 @@ func (s *store) mealRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/meals/coverage", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		writeJSON(w, 200, map[string]any{"weeks": s.mealCoverage(), "settings": s.mealSettings(), "current": rotationWeek(s.mealSettings().Anchor, mondayOf(time.Now()))})
+		writeJSON(w, 200, map[string]any{"weeks": s.mealCoverage(), "settings": s.mealSettings(), "current": rotationWeek(s.mealSettings().Anchor, mondayOf(nowT()))})
 	})
 	mux.HandleFunc("GET /api/meals/settings", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
@@ -535,5 +535,5 @@ func (s *store) mealBinderReport() *report {
 	} else {
 		secs = append(secs, reportSection{Cols: []string{"Recipe", "Yield", "Target time", "Production notes"}, Rows: prod})
 	}
-	return &report{Title: "Employee Meal System & Recipe Binder", Subtitle: time.Now().Format("January 2, 2006"), Sections: secs}
+	return &report{Title: "Employee Meal System & Recipe Binder", Subtitle: nowT().Format("January 2, 2006"), Sections: secs}
 }

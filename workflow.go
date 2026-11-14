@@ -88,7 +88,7 @@ func (s *store) dwDay(day time.Time) (blocks []dwBlock, done, total int) {
 }
 
 func (s *store) dwProgress() (done, total int) {
-	_, d, t := s.dwDay(time.Now())
+	_, d, t := s.dwDay(nowT())
 	return d, t
 }
 
@@ -116,7 +116,7 @@ func clipText(v string, n int) string {
 }
 
 func (s *store) workflowReport(id string) (*report, bool) {
-	day := time.Now()
+	day := nowT()
 	switch id {
 	case "dw-today", "dw-blank":
 		blocks, done, total := s.dwDay(day)
@@ -160,7 +160,7 @@ func (s *store) workflowReport(id string) (*report, bool) {
 
 func (s *store) workflowRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/dw/today", func(w http.ResponseWriter, r *http.Request) {
-		day := time.Now()
+		day := nowT()
 		if d, err := time.ParseInLocation(dayFmt, r.URL.Query().Get("date"), time.Local); err == nil {
 			day = d
 		}
@@ -186,7 +186,7 @@ func (s *store) workflowRoutes(mux *http.ServeMux) {
 		}
 		day, err := time.ParseInLocation(dayFmt, in.Date, time.Local)
 		if err != nil {
-			day = time.Now()
+			day = nowT()
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -219,7 +219,7 @@ func (s *store) workflowRoutes(mux *http.ServeMux) {
 			keep = append(keep, l)
 		}
 		if in.On && !found {
-			if _, err := s.regAdd(c, rec{"period": period, "itemId": in.ItemID, "by": strings.TrimSpace(in.By), "time": time.Now().Format("3:04 PM")}); err != nil {
+			if _, err := s.regAdd(c, rec{"period": period, "itemId": in.ItemID, "by": strings.TrimSpace(in.By), "time": nowT().Format("3:04 PM")}); err != nil {
 				fail(w, 500, err.Error())
 				return
 			}

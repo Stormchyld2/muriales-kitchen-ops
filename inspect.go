@@ -85,7 +85,7 @@ func (s *store) inspectionRoutes(mux *http.ServeMux) {
 			fail(w, 400, "Choose the condition of the equipment.")
 			return
 		}
-		if d, err := time.Parse(dayFmt, in2.Date); err != nil || d.After(time.Now().AddDate(0, 0, 1)) {
+		if d, err := time.Parse(dayFmt, in2.Date); err != nil || d.After(nowT().AddDate(0, 0, 1)) {
 			fail(w, 400, "Enter the date of the inspection (today or earlier).")
 			return
 		}
@@ -154,9 +154,9 @@ func (s *store) inspectionRoutes(mux *http.ServeMux) {
 			return
 		}
 		if x.Date == "" {
-			x.Date = time.Now().Format(dayFmt)
+			x.Date = nowT().Format(dayFmt)
 		}
-		if d, err := time.Parse(dayFmt, x.Date); err != nil || d.After(time.Now().AddDate(0, 0, 1)) {
+		if d, err := time.Parse(dayFmt, x.Date); err != nil || d.After(nowT().AddDate(0, 0, 1)) {
 			fail(w, 400, "Enter the date of the inspection (today or earlier).")
 			return
 		}

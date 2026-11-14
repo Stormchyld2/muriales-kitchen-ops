@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 )
 
 const (
@@ -60,7 +59,7 @@ func (s *store) safetyCopy(next []byte) {
 	if os.MkdirAll(dir, 0o755) != nil {
 		return
 	}
-	daily := filepath.Join(dir, "library-"+time.Now().Format("2006-01-02")+".json")
+	daily := filepath.Join(dir, "library-"+nowT().Format("2006-01-02")+".json")
 	if _, err := os.Stat(daily); err != nil {
 		if os.WriteFile(daily, old, 0o644) == nil {
 			prune(dir, "library-2", keepDailyCopies)
@@ -70,7 +69,7 @@ func (s *store) safetyCopy(next []byte) {
 		Products []json.RawMessage `json:"products"`
 	}
 	if json.Unmarshal(old, &was) == nil && json.Unmarshal(next, &will) == nil && len(was.Products) >= 5 && len(will.Products)*2 < len(was.Products) {
-		name := filepath.Join(dir, "library-before-big-change-"+time.Now().Format("2006-01-02-150405")+".json")
+		name := filepath.Join(dir, "library-before-big-change-"+nowT().Format("2006-01-02-150405")+".json")
 		if os.WriteFile(name, old, 0o644) == nil {
 			prune(dir, "library-before-big-change-", keepBigChange)
 		}

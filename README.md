@@ -90,3 +90,9 @@ The daily summary (Settings, Daily Summary & Backup Copy) can be sent automatica
 
 - **Phone page** (Settings > Phone Access): a second listener on port 47800 (kitchen network only, private addresses only, off until switched on once; the setting is per computer, kept beside the exe). `/m/` offers temperatures, par check, Today's Workflow, breakage (add only) and handoff notes through a fixed allowlist of APIs (also cleaning, deep clean, manager checks, PM and to-dos: see and mark done); everything else returns 403. Add it to the Android home screen from Chrome.
 - **Show / Hide Tabs** (Settings): hide any tab or subtab from the menu for every computer; nothing is deleted.
+
+### Phone page additions (2.48)
+
+- Twelve tiles: Temperatures, Par Check, Today's Workflow, Cleaning, To-Do & Maintenance, Log Breakage, Facility Walkthrough, Handoff Notes, Station Checklists, Station Guides, SDS Lookup, Needs Attention.
+- Offline queue: if the computer cannot be reached, a save is kept in the phone's storage and re-sent every 15 seconds. Each save carries a queue id (`X-Queue-Id`) so a retry is ignored, and the real entry time (`X-Queued-At`) so the entry shows when it was made.
+- Walkthrough photos are stored in `Walk Photos` next to the program.

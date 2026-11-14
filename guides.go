@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 )
 
 var guideKinds = []string{"Overview", "Opening SOP", "Opening Checklist", "Service 1 - Lunch", "Service 2 - Dinner", "Service SOP", "Closing SOP", "Closing Checklist", "Par Sheet", "Recipes", "Production Guide", "Role Cards", "Emergency Plan", "Training Program", "Other"}
@@ -247,7 +246,7 @@ func mdPlain(src string) string {
 // ---- reports ----
 
 func (s *store) guideReport(id string) (*report, bool) {
-	today := time.Now().Format("January 2, 2006")
+	today := nowT().Format("January 2, 2006")
 	if id == "stchecklog" {
 		return s.regReport(regDefs["stchecklog"], "Station Checklist Log", "", nil), true
 	}
@@ -387,7 +386,7 @@ func (s *store) guideRoutes(mux *http.ServeMux) {
 				missed = append(missed, l.Text)
 			}
 		}
-		now := time.Now()
+		now := nowT()
 		if _, err := s.regAdd(regDefs["stchecklog"], rec{"date": now.Format(dayFmt), "station": chk["station"], "kind": chk["kind"], "by": strings.TrimSpace(in.By), "time": now.Format("3:04 PM"),
 			"done": fmt.Sprintf("%d of %d", done, total), "missed": strings.Join(missed, "\n"), "notes": in.Notes}); err != nil {
 			fail(w, 500, err.Error())
@@ -399,7 +398,7 @@ func (s *store) guideRoutes(mux *http.ServeMux) {
 		s.mu.Lock()
 		lists, logs := s.regLoad(regDefs["stchecklists"]), s.regLoad(regDefs["stchecklog"])
 		s.mu.Unlock()
-		today := time.Now().Format(dayFmt)
+		today := nowT().Format(dayFmt)
 		fin := map[string]rec{}
 		for _, l := range logs {
 			if l["date"] == today {
@@ -424,7 +423,7 @@ func (s *store) guideRoutes(mux *http.ServeMux) {
 // stationBook is every SOP, guide and checklist for one station, in reading
 // order, each starting on its own page.
 func (s *store) stationBook(station string) *report {
-	rep := &report{Title: station + " Station Book", Subtitle: "SOPs, guides and checklists - " + time.Now().Format("January 2, 2006")}
+	rep := &report{Title: station + " Station Book", Subtitle: "SOPs, guides and checklists - " + nowT().Format("January 2, 2006")}
 	order := func(k string) int {
 		for i, v := range guideKinds {
 			if v == k {

@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
@@ -529,7 +528,7 @@ func (s *store) archiveName(p *Product) string {
 	if len(name) > 60 {
 		name = name[:60]
 	}
-	return fmt.Sprintf("%s_%s_%s.pdf", name, time.Now().Format("2006-01-02_150405"), newID()[:6])
+	return fmt.Sprintf("%s_%s_%s.pdf", name, nowT().Format("2006-01-02_150405"), newID()[:6])
 }
 
 // readUpload parses the form. It returns the product fields and, when a PDF
@@ -557,7 +556,7 @@ func settleSummary(p *Product, in *upload, textChanged, pdfReplaced bool) {
 	case !p.hasSummary():
 		p.SummaryVerifiedAt, p.SummaryVerifiedBy, p.SummarySourceRevision, p.SummaryNeedsCheck = "", "", "", false
 	case in.Verify:
-		p.SummaryVerifiedAt = time.Now().Format("2006-01-02")
+		p.SummaryVerifiedAt = nowT().Format("2006-01-02")
 		p.SummaryVerifiedBy = strings.TrimSpace(in.VerifiedBy)
 		p.SummarySourceRevision = p.RevisionDate
 		p.SummaryNeedsCheck = false

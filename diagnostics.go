@@ -127,7 +127,7 @@ func (s *store) diagnostics() map[string]any {
 	tail := logTail(filepath.Join(s.dir, "sdsbook.log"), 30)
 	var rep strings.Builder
 	fmt.Fprintf(&rep, "Muriale's Kitchen Operations diagnostics\nVersion: %s\nChecked: %s\nSystem: %s/%s, %s\nProgram: %s\nLibrary folder: %s\nBackups folder: %s\n\n",
-		appVersion, time.Now().Format("2006-01-02 15:04:05"), runtime.GOOS, runtime.GOARCH, runtime.Version(), exe, s.dir, s.backupDir())
+		appVersion, nowT().Format("2006-01-02 15:04:05"), runtime.GOOS, runtime.GOARCH, runtime.Version(), exe, s.dir, s.backupDir())
 	for _, c := range checks {
 		fmt.Fprintf(&rep, "[%s] %s: %s\n", strings.ToUpper(c.Status), c.Name, c.Detail)
 	}
@@ -149,7 +149,7 @@ func (s *store) recoverPreviousSave() (string, error) {
 	if err := json.Unmarshal(b, &lib); err != nil {
 		return "", errors.New("the previous-save copy is damaged, so it was not used")
 	}
-	keep := s.file() + ".replaced-" + time.Now().Format("2006-01-02-150405")
+	keep := s.file() + ".replaced-" + nowT().Format("2006-01-02-150405")
 	if exists(s.file()) {
 		if err := copyFile(s.file(), keep); err != nil {
 			return "", fmt.Errorf("the current library could not be kept safe, so nothing was changed: %v", err)

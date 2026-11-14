@@ -181,7 +181,7 @@ func (s *store) summaryRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/maint/summary", func(w http.ResponseWriter, r *http.Request) {
 		m := r.URL.Query().Get("month")
 		if _, err := time.Parse("2006-01", m); err != nil {
-			m = time.Now().Format("2006-01")
+			m = nowT().Format("2006-01")
 		}
 		s.mu.Lock()
 		defer s.mu.Unlock()

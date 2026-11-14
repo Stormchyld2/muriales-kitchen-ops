@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var priceUnits = []string{"lb", "oz", "g", "kg", "gal", "qt", "pt", "cup", "fl oz", "tbsp", "tsp", "ml", "l", "each", "dozen", "can", "bunch", "head", "loaf", "pan", "bag", "box"}
@@ -370,7 +369,7 @@ func (s *store) importPrices(text string) (added, updated int, bad []string) {
 	return
 }
 
-func todayStr() string { return time.Now().Format(dayFmt) }
+func todayStr() string { return nowT().Format(dayFmt) }
 
 func (s *store) costingRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/costing/settings", func(w http.ResponseWriter, r *http.Request) {

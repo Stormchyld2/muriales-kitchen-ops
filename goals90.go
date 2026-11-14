@@ -114,7 +114,7 @@ func (s *store) g90Attention(today string) []todoItem {
 }
 
 func (s *store) g90Report() *report {
-	v := s.g90View(time.Now())
+	v := s.g90View(nowT())
 	rep := &report{Title: "90-Day Introductory Goals", Subtitle: "Implementation & Progress Tracker"}
 	rows := [][]string{}
 	for n, g := range v["goals"].([]rec) {
@@ -141,7 +141,7 @@ func (s *store) g90Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/g90", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		writeJSON(w, 200, s.g90View(time.Now()))
+		writeJSON(w, 200, s.g90View(nowT()))
 	})
 	mux.HandleFunc("POST /api/g90/start", func(w http.ResponseWriter, r *http.Request) {
 		var in g90Settings
@@ -163,6 +163,6 @@ func (s *store) g90Routes(mux *http.ServeMux) {
 			fail(w, 500, err.Error())
 			return
 		}
-		writeJSON(w, 200, s.g90View(time.Now()))
+		writeJSON(w, 200, s.g90View(nowT()))
 	})
 }
