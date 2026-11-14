@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Phone access: an optional second listener on the kitchen network that serves
@@ -32,6 +33,56 @@ var phone struct {
 	err     string
 	inner   http.Handler
 	cfgPath string
+	log     []phoneEvent
+}
+
+// phoneEvent is one thing a phone sent: saves, and anything that failed.
+type phoneEvent struct {
+	At     string `json:"at"`
+	From   string `json:"from"`
+	Method string `json:"method"`
+	Path   string `json:"path"`
+	Code   int    `json:"code"`
+	Note   string `json:"note,omitempty"`
+}
+
+type recWriter struct {
+	http.ResponseWriter
+	code int
+	body bytes.Buffer
+}
+
+func (w *recWriter) WriteHeader(c int) { w.code = c; w.ResponseWriter.WriteHeader(c) }
+func (w *recWriter) Write(b []byte) (int, error) {
+	if w.code == 0 {
+		w.code = 200
+	}
+	if w.code >= 400 && w.body.Len() < 300 {
+		w.body.Write(b)
+	}
+	return w.ResponseWriter.Write(b)
+}
+
+func phoneRecord(r *http.Request, rw *recWriter) {
+	if r.Method == "GET" && rw.code < 400 {
+		return
+	}
+	note := ""
+	if rw.code >= 400 {
+		var m map[string]any
+		if json.Unmarshal(rw.body.Bytes(), &m) == nil {
+			note, _ = m["error"].(string)
+		} else {
+			note = strings.TrimSpace(rw.body.String())
+		}
+	}
+	h, _, _ := net.SplitHostPort(r.RemoteAddr)
+	phone.mu.Lock()
+	phone.log = append(phone.log, phoneEvent{At: time.Now().Format("1/2 3:04:05 PM"), From: h, Method: r.Method, Path: r.URL.Path, Code: rw.code, Note: note})
+	if len(phone.log) > 30 {
+		phone.log = phone.log[len(phone.log)-30:]
+	}
+	phone.mu.Unlock()
 }
 
 func (s *store) phoneCfgPath() string {
@@ -130,7 +181,9 @@ func phoneGate(inner http.Handler) http.Handler {
 				}
 				r.Body = io.NopCloser(bytes.NewReader(b))
 			}
-			inner.ServeHTTP(w, r)
+			rw := &recWriter{ResponseWriter: w}
+			inner.ServeHTTP(rw, r)
+			phoneRecord(r, rw)
 			return
 		}
 		switch {
@@ -169,6 +222,14 @@ func (s *store) phoneApply(on bool) {
 	phone.err = "The phone page could not start because its ports are in use."
 }
 
+func phoneActivity() []phoneEvent {
+	out := make([]phoneEvent, 0, len(phone.log))
+	for i := len(phone.log) - 1; i >= 0 && len(out) < 15; i-- {
+		out = append(out, phone.log[i])
+	}
+	return out
+}
+
 func (s *store) phoneStatus() map[string]any {
 	phone.mu.Lock()
 	defer phone.mu.Unlock()
@@ -178,7 +239,7 @@ func (s *store) phoneStatus() map[string]any {
 			urls = append(urls, fmt.Sprintf("http://%s:%d/", a, phone.port))
 		}
 	}
-	return map[string]any{"on": s.phoneEnabled(), "running": phone.srv != nil, "port": phone.port, "urls": urls, "error": phone.err}
+	return map[string]any{"on": s.phoneEnabled(), "running": phone.srv != nil, "port": phone.port, "urls": urls, "error": phone.err, "activity": phoneActivity()}
 }
 
 func (s *store) phoneRoutes(mux *http.ServeMux) {

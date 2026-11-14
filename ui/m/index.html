@@ -23,7 +23,8 @@ label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
 .btn.alt{background:#4a4d55}.btn.sm{display:inline-block;width:auto;padding:10px 16px;margin:0;font-size:15px}
 .row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.row>.fix{flex:none}
 .ok{color:#7fd48d}.bad{color:#ff8a93;font-weight:700}.mute{color:var(--mute);font-size:14px}
-.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px;background:#25272b;border-top:1px solid var(--line)}.bar .btn{margin:0;max-width:640px;margin:0 auto}
+.bar{position:sticky;bottom:0;margin:14px -14px -90px;padding:10px 14px;background:#25272b;border-top:1px solid var(--line)}.bar .btn{margin:0;max-width:640px;margin:0 auto}
+#errbar{position:sticky;top:52px;z-index:8;display:none;background:#5b0c17;border:2px solid var(--red);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-weight:700}
 #toast{position:fixed;left:14px;right:14px;bottom:80px;background:#111;border:1px solid var(--gold);border-radius:10px;padding:14px;display:none;z-index:9}#toast.err{border-color:var(--red)}
 .tick{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #45484f}.tick:last-child{border:0}
 .tick input{width:30px;height:30px;min-height:0;flex:none;margin-top:2px}
@@ -31,21 +32,22 @@ h2{font:700 18px Georgia,serif;margin:16px 0 6px;color:var(--gold)}
 </style></head>
 <body>
 <header><button id="back" style="display:none">‹ Home</button><h1 id="ttl">Muriale's Kitchen</h1><button id="who"></button></header>
-<main id="v"></main><div id="toast"></div>
+<main><div id="errbar" onclick="this.style.display='none'"></div><div id="v"></div></main><div id="toast"></div>
 <script>
 "use strict";
 const $=s=>document.querySelector(s), esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const V=$("#v"); let toastT;
-function toast(m,err){const t=$("#toast");t.textContent=m;t.className=err?"err":"";t.style.display="block";clearTimeout(toastT);toastT=setTimeout(()=>t.style.display="none",err?7000:2800);}
-async function api(p,o){const r=await fetch(p,o);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"That did not work. Try again.");return j;}
-const post=(p,b)=>api(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+window.addEventListener("unhandledrejection",e=>toast("Something went wrong: "+((e.reason&&e.reason.message)||e.reason),true));window.addEventListener("error",e=>toast("Something went wrong: "+e.message,true));
+function toast(m,err){if(err){const e=$("#errbar");e.innerHTML="⚠ "+esc(m)+'<div class="mute" style="font-weight:400">Nothing was lost on the screen. Tap here to close, fix it and try again.</div>';e.style.display="block";window.scrollTo(0,0);return;}$("#errbar").style.display="none";const t=$("#toast");t.textContent=m;t.className=err?"err":"";t.style.display="block";clearTimeout(toastT);toastT=setTimeout(()=>t.style.display="none",err?7000:2800);}
+async function api(p,o){let r;try{r=await fetch(p,o);}catch(e){throw new Error("Could not reach the kitchen computer. Check the Wi-Fi and that Kitchen Ops is open on it. Your entries are still on this screen, so try Save again.");}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"That did not work. Try again.");return j;}
+const post=(p,b)=>api(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(r=>{$("#errbar").style.display="none";return r;});
 function me(){try{return localStorage.getItem("kname")||""}catch(e){return ""}}
 function setMe(v){const n=(v||"").trim().split(/\s+/)[0]||"";const t=n?n[0].toUpperCase()+n.slice(1):"";try{localStorage.setItem("kname",t)}catch(e){}$("#who").textContent=t?"👤 "+t:"Who?";return t;}
 function whoField(){return `<label>Your first name</label><input id="by" value="${esc(me())}" autocomplete="off" autocapitalize="words" placeholder="First name">`;}
 function needBy(){const v=setMe($("#by").value);if(!v){toast("Type your first name.",true);$("#by").focus();return "";}return v;}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
 const SCREENS={home,temps,par,work,brk,note};
-async function route(){const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
+async function route(){$("#errbar").style.display="none";const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
   try{await (SCREENS[name]||home)(decodeURIComponent(arg||""));}catch(e){V.innerHTML=`<div class="card bad">${esc(e.message)}</div><button class="btn alt" onclick="route()">Try again</button>`;}}
 window.addEventListener("hashchange",route);$("#back").onclick=()=>location.hash="home";
 $("#who").onclick=()=>{const n=prompt("Your first name",me());if(n!==null){setMe(n);}};
