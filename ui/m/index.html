@@ -76,17 +76,17 @@ async function temps(){title("Temperatures");const d=await api("/api/temps");con
     ${r?`<div class="${bad?"bad":"ok"} mute">Logged today: ${esc(r.temp)}°F at ${esc(r.at.slice(11))} by ${esc(r.by)}${bad?" - OUT OF RANGE":""}</div>`:""}
     <div class="row" style="margin-top:6px"><button type="button" class="btn alt sm fix neg" style="min-width:64px;font-size:22px">±</button><input class="tv" type="text" inputmode="decimal" autocomplete="off" placeholder="°F"></div>
     <div class="st" style="margin-top:6px;font-weight:700"></div>
-    <input class="ta" style="display:none;margin-top:8px" placeholder="Corrective action (required)"></div>`;}).join("")).join("")+`<div class="bar"><button class="btn" id="go">Save Temperatures</button></div>`;
+    <input class="ta" style="display:none;margin-top:8px" placeholder="Enter Corrective Action"></div>`;}).join("")).join("")+`<div class="bar"><button class="btn" id="go">Save Temperatures</button></div>`;
   tempMsg="";
   const num=c=>parseFloat(c.querySelector(".tv").value.replace(/[−–]/g,"-"));
   const upd=c=>{const v=num(c),s=stat(L[c.dataset.p],v),st=c.querySelector(".st"),ta=c.querySelector(".ta");
-    st.textContent=s==="ok"?"✔ OK":s==="warm"?"✖ TOO WARM - write what you did":s==="cold"?"✖ TOO COLD - write what you did":"";st.className="st "+(s==="ok"?"ok":s?"bad":"");ta.style.display=s&&s!=="ok"?"block":"none";};
+    st.textContent=s==="ok"?"✔ OK":s==="warm"?"✖ TOO WARM - Enter Corrective Action":s==="cold"?"✖ TOO COLD - Enter Corrective Action":"";st.className="st "+(s==="ok"?"ok":s?"bad":"");ta.style.display=s&&s!=="ok"?"block":"none";};
   V.oninput=e=>{const c=e.target.closest("[data-p]");if(c&&e.target.classList.contains("tv"))upd(c);};
   V.onclick=e=>{const b=e.target.closest(".neg");if(!b)return;const i=b.parentNode.querySelector(".tv");i.value=i.value.startsWith("-")?i.value.slice(1):"-"+i.value;i.focus();upd(b.closest("[data-p]"));};
   $("#go").onclick=async()=>{const by=needBy();if(!by)return;const cards=[...V.querySelectorAll("[data-p]")].filter(c=>!isNaN(num(c)));
     if(!cards.length){toast("Enter at least one temperature.",true);return;}
     const rows=[],badList=[];for(const c of cards){const v=num(c),s=stat(L[c.dataset.p],v),a=c.querySelector(".ta").value.trim(),name=c.querySelector("b").textContent;
-      if(s&&s!=="ok"){if(!a){c.querySelector(".ta").focus();toast(name+" is out of range. Write the corrective action.",true);return;}badList.push(name+" "+v+"°F");}
+      if(s&&s!=="ok"){if(!a){c.querySelector(".ta").focus();toast(name+" is out of range. Enter Corrective Action.",true);return;}badList.push(name+" "+v+"°F");}
       rows.push({pointId:c.dataset.p,temp:v,action:s&&s!=="ok"?a:""});}
     try{await post("/api/temps",{by,readings:rows});
       tempMsg=badList.length?`<b class="bad">OUT OF RANGE (${badList.length}):</b><br>${badList.map(esc).join("<br>")}<br><span class="mute">Corrective action saved.</span>`:`<b class="ok">Saved ${rows.length} reading${rows.length>1?"s":""}. All in range.</b>`;

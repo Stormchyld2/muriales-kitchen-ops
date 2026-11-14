@@ -22,3 +22,28 @@ document.addEventListener("change", async e => {
 });
 
 Object.assign(ACT, { async "phone-refresh"() { await loadPhone(); } });
+
+// The computer screen refreshes itself when a phone saves something, so a
+// temperature or note entered on a phone shows up without reopening the program.
+let phoneStamp = null, phonePending = false;
+async function phoneRefresh() {
+  const v = state.view;
+  if (v === "temps" || v === "tpoints") await loadTemps();
+  else if (v === "dash") await loadDash();
+  else if (v === "parcheck" || v === "brk" || v === "dwtoday") ACT.nav({dataset: {v}});
+  else if (v === "notes" || v === "todo") { await reload(); if (v === "todo") await refreshTodo(); else render(); }
+  else if (v === "settings" && state.tab === "phone") await loadPhone();
+  else return;
+  toast("Updated with a new entry from a phone.");
+}
+async function phonePoll() {
+  let n; try { n = (await api("/api/phone/stamp")).n; } catch (e) { return; }
+  if (phoneStamp === null) { phoneStamp = n; return; }
+  if (n !== phoneStamp) phonePending = true;
+  if (!phonePending) return;
+  const a = document.activeElement;
+  if ($("#modal").className || $("#preview").className || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && $("#view").contains(a))) return;
+  phonePending = false; phoneStamp = n;
+  try { await phoneRefresh(); } catch (e) {}
+}
+setInterval(phonePoll, 5000); phonePoll();

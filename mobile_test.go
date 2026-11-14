@@ -162,3 +162,21 @@ func TestTempDelete(t *testing.T) {
 		t.Errorf("bad day = %d, want 400", c)
 	}
 }
+
+func TestPhoneStamp(t *testing.T) {
+	phone.stamp = 0
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+	g := phoneGate(inner)
+	req := httptest.NewRequest("POST", "/api/notes", strings.NewReader(`{}`))
+	req.RemoteAddr = "192.168.1.9:1"
+	g.ServeHTTP(httptest.NewRecorder(), req)
+	if phone.stamp != 1 {
+		t.Errorf("a phone save should move the stamp, got %d", phone.stamp)
+	}
+	req = httptest.NewRequest("GET", "/api/temps", nil)
+	req.RemoteAddr = "192.168.1.9:1"
+	g.ServeHTTP(httptest.NewRecorder(), req)
+	if phone.stamp != 1 {
+		t.Error("reading must not move the stamp")
+	}
+}

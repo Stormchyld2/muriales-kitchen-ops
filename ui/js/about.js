@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.44.4", "A phone save now shows up on the computer by itself. The program was saving the phone's temperatures but the Temperature Log on the open screen did not update until the program was restarted. Now the log (and the Dashboard, Daily Par Check, Breakage log, Handoff notes and To-Do List) refresh within a few seconds of a phone saving, unless a window is open or you are typing. Also the phone now says Enter Corrective Action for an out-of-range temperature."],
   ["2.44.3", "Phone page: if a save does not go through, a red message now stays at the top of the screen with the reason (out of range with no corrective action, the computer cannot be reached, or the program is locked by another computer) and the Save button is easier to tap with the keyboard open. Settings, Phone Access now lists the last things the phones sent and whether each was saved or refused."],
   ["2.44.2", "Temperature Check window is wider and no longer runs off the side; the safe range now sits under each point name and is easier to read."],
   ["2.44.1", "Temperature Log: you can now delete a single reading (trash button on its row in a check), a whole check (Delete This Check), or every reading for a day (pick the day beside Save Daily Report, then Delete Day). Each asks you to confirm first. Readings from the Google Form stay deleted when the form is synced again."],

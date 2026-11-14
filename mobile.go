@@ -34,6 +34,7 @@ var phone struct {
 	inner   http.Handler
 	cfgPath string
 	log     []phoneEvent
+	stamp   int // counts saves from phones, so the computer screen can refresh itself
 }
 
 // phoneEvent is one thing a phone sent: saves, and anything that failed.
@@ -78,6 +79,9 @@ func phoneRecord(r *http.Request, rw *recWriter) {
 	}
 	h, _, _ := net.SplitHostPort(r.RemoteAddr)
 	phone.mu.Lock()
+	if r.Method == "POST" && rw.code < 400 {
+		phone.stamp++
+	}
 	phone.log = append(phone.log, phoneEvent{At: time.Now().Format("1/2 3:04:05 PM"), From: h, Method: r.Method, Path: r.URL.Path, Code: rw.code, Note: note})
 	if len(phone.log) > 30 {
 		phone.log = phone.log[len(phone.log)-30:]
@@ -245,6 +249,12 @@ func (s *store) phoneStatus() map[string]any {
 func (s *store) phoneRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/phone", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, s.phoneStatus())
+	})
+	mux.HandleFunc("GET /api/phone/stamp", func(w http.ResponseWriter, r *http.Request) {
+		phone.mu.Lock()
+		n := phone.stamp
+		phone.mu.Unlock()
+		writeJSON(w, 200, map[string]int{"n": n})
 	})
 	mux.HandleFunc("POST /api/phone", func(w http.ResponseWriter, r *http.Request) {
 		var in phoneCfg
