@@ -459,3 +459,42 @@ func TestDailyWorkflowAnd90Day(t *testing.T) {
 		t.Fatal("g90 report")
 	}
 }
+
+func TestOperationsLists(t *testing.T) {
+	e := newEnv(t)
+	y := time.Now().AddDate(0, 0, -1).Format(dayFmt)
+	e.post("/api/reg/vendors", `{"id":"","name":"Pest Co","category":"Pest Control","contractEnd":"`+y+`"}`)
+	e.post("/api/reg/vendors", `{"id":"","name":"Sysco","category":"Food","nextService":"2999-01-01"}`)
+	_, o := e.get2("/api/reg/vendors")
+	rows := o["rows"].([]any)
+	got := map[string]string{}
+	for _, r := range rows {
+		m := r.(map[string]any)
+		got[m["name"].(string)], _ = m["state"].(string)
+	}
+	if got["Pest Co"] != "Expired" || got["Sysco"] != "" {
+		t.Fatalf("vendor states: %v", got)
+	}
+	e.post("/api/reg/forecasts", `{"id":"","date":"`+y+`","covers":"100","actual":"85"}`)
+	_, o = e.get2("/api/reg/forecasts")
+	if v := o["rows"].([]any)[0].(map[string]any)["variance"]; v != "-15 (-15%)" {
+		t.Fatalf("variance %v", v)
+	}
+	_, o = e.get2("/api/reg/smallware")
+	if len(o["rows"].([]any)) != 14 || o["rows"].([]any)[0].(map[string]any)["state"] != "Set par" {
+		t.Fatal("smallware seed")
+	}
+	e.post("/api/reg/smallware", `{"id":"SW-001","item":"Dinner plates","category":"China","par":"200","onHand":"150"}`)
+	_, o = e.get2("/api/reg/smallware")
+	if o["rows"].([]any)[0].(map[string]any)["state"] != "Short" {
+		t.Fatal("short not flagged")
+	}
+	_, o = e.get2("/api/reg/winterprep")
+	if len(o["rows"].([]any)) != 12 {
+		t.Fatal("winter seed")
+	}
+	a := e.s.opsAttention(time.Now().Format(dayFmt))
+	if len(a) != 2 {
+		t.Fatalf("attention %v", a)
+	}
+}

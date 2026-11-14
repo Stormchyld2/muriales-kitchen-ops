@@ -1,0 +1,134 @@
+[
+ {
+  "id": "WP-001",
+  "item": "Snow and ice plan",
+  "details": "Walkways, entrances and parking: who clears, when, and in what order.",
+  "area": "Grounds",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-002",
+  "item": "Ice melt and shovels in stock",
+  "details": "Count ice melt, sand, shovels and pushers; set a par and reorder before the first storm.",
+  "area": "Supplies",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-003",
+  "item": "Receiving access",
+  "details": "Keep the delivery door and path clear and treated so deliveries can be received safely.",
+  "area": "Receiving",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-004",
+  "item": "Grounds treatment contractor",
+  "details": "Confirm who plows or treats the lot, the call-out number and the response time.",
+  "area": "Vendor",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-005",
+  "item": "Staffing disruption plan",
+  "details": "Who covers if people cannot get in; call-in order; minimum crew by shift.",
+  "area": "Staffing",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-006",
+  "item": "Severe weather escalation",
+  "details": "Who decides to modify hours or close, and who gets told.",
+  "area": "Escalation",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-007",
+  "item": "Emergency supplies",
+  "details": "Flashlights, batteries, blankets, bottled water, first-aid kit checked and stocked.",
+  "area": "Supplies",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-008",
+  "item": "Power outage plan",
+  "details": "What happens to the walk-ins and freezers; temp checks; when to discard product.",
+  "area": "Food safety",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-009",
+  "item": "Frozen pipe prevention",
+  "details": "Exposed lines, outside spigots and dry storage heating checked before freezing weather.",
+  "area": "Facility",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-010",
+  "item": "Delivery rescheduling",
+  "details": "Vendor contacts and how to move or hold orders when roads are bad.",
+  "area": "Vendor",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-011",
+  "item": "Slip-resistant mats and entry",
+  "details": "Mats at doors and the wet-floor signs in place; entry cleaning schedule raised.",
+  "area": "Safety",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "WP-012",
+  "item": "Train staff on the plan",
+  "details": "Walk the team through the plan and record it in training.",
+  "area": "Training",
+  "owner": "",
+  "status": "Not Started",
+  "due": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ }
+]

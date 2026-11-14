@@ -18,7 +18,7 @@ function gaugeSvg(p) {
     + `<text x="100" y="92" text-anchor="middle" class="gnum" fill="${c}">${p < 0 ? "Set up" : p + "%"}</text></svg>`;
 }
 
-const DASH_VIEW = {"Cleaning": "cltoday", "Equipment PM": "pm", "Grounds / Facility": "fac", "Issue": "issues", "Inspection": "insp", "Temperature": "temps", "Corrective Action": "calog", "Manager Check": "mgrchk", "SDS": "library", "Equipment": "equip", "LOTO": "llog", "Binder": "blog", "Incident": "inc", "Handoff": "dwhandoff", "90-Day Goals": "g90", "Other": "todo"};
+const DASH_VIEW = {"Cleaning": "cltoday", "Equipment PM": "pm", "Grounds / Facility": "fac", "Issue": "issues", "Inspection": "insp", "Temperature": "temps", "Corrective Action": "calog", "Manager Check": "mgrchk", "SDS": "library", "Equipment": "equip", "LOTO": "llog", "Binder": "blog", "Incident": "inc", "Handoff": "dwhandoff", "Vendor": "vend", "Smallware": "swpar", "Winter Prep": "winter", "90-Day Goals": "g90", "Other": "todo"};
 
 function dBlock(cls, inner, view) { return `<div class="dblock ${cls}" ${view ? `data-act="nav" data-v="${esc(view)}" role="button" tabindex="0"` : ""}>${inner}</div>`; }
 

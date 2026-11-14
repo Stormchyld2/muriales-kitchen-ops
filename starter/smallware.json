@@ -1,0 +1,156 @@
+[
+ {
+  "id": "SW-001",
+  "item": "Dinner plates",
+  "category": "China",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-002",
+  "item": "Salad plates",
+  "category": "China",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-003",
+  "item": "Bread plates",
+  "category": "China",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-004",
+  "item": "Pasta bowls",
+  "category": "China",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-005",
+  "item": "Soup bowls",
+  "category": "China",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-006",
+  "item": "Coffee cups and saucers",
+  "category": "China",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-007",
+  "item": "Water glasses",
+  "category": "Glass",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-008",
+  "item": "Wine glasses",
+  "category": "Glass",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-009",
+  "item": "Rocks glasses",
+  "category": "Glass",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-010",
+  "item": "Forks",
+  "category": "Silver",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-011",
+  "item": "Knives",
+  "category": "Silver",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-012",
+  "item": "Spoons",
+  "category": "Silver",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-013",
+  "item": "Banquet plates",
+  "category": "Banquet ware",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ },
+ {
+  "id": "SW-014",
+  "item": "Banquet glasses",
+  "category": "Banquet ware",
+  "par": "",
+  "onHand": "",
+  "lastCounted": "",
+  "countedBy": "",
+  "notes": "",
+  "created": "2026-11-13 00:00"
+ }
+]

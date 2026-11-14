@@ -64,6 +64,9 @@ Push to `main`; GitHub Actions builds `MurialesKitchenOps.exe` for Windows and r
 ## Daily workflow and 90-day goals
 **Daily Workflow** holds the manager's day as timed blocks of checks (edit them under Workflow Items). Tick each one with your first name; weekly and monthly checks count once per week or month. The **Handoff Log** keeps open issues with an owner, next action and due date. **90-Day Goals** (under Maintenance) tracks the nine signed goals, the leadership scorecard and weekly reviews; set the first day to see the day and week.
 
+## Operations
+Vendors & Contracts, Daily Forecast, Prep Pars, Smallware Pars, Winter Prep and Shed Inventory are plain lists you edit in a form. Labor and scheduling are left to 365.
+
 ## Food costing
 
 **Food Costing** has Cost a Special, Specials and a Price List. Prices are entered once as what was paid and how much it bought (60.00 for 15 lb) or pasted in bulk. A recipe line is written `amount | ingredient` (a cost can be typed on the line to override the list). Weights convert to weights and volumes to volumes; a count needs a price per each. The result shows cost, cost per portion, food cost % against the target set on the Price List screen, and the menu price that would hit the target. Employee meal recipes are costed from the same list. Inventory, ordering and the menu stay in R365.
