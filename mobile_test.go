@@ -51,17 +51,17 @@ func TestPhoneGate(t *testing.T) {
 			t.Errorf("GET %s = %d %q", p, c, hit)
 		}
 	}
-	for _, p := range []string{"/api/clean/verify", "/api/maint/pm", "/api/maint/issues/x", "/api/clean/missed", "/api/maint/todos/x", "/api/maint/findings/x"} {
+	for _, p := range []string{"/api/clean/verify", "/api/maint/pm", "/api/maint/issues/x", "/api/clean/missed", "/api/maint/todos/x", "/api/maint/findings/x", "/api/maint/findings"} {
 		if c := call(lan, "POST", p, "{}"); c != 403 {
 			t.Errorf("POST %s = %d, want 403", p, c)
 		}
 	}
-	for _, p := range []string{"/api/clean/done", "/api/clean/deepdone", "/api/mgr/done", "/api/maint/pm/abc/done", "/api/maint/todos", "/api/maint/todos/abc/done", "/api/maint/findings"} {
+	for _, p := range []string{"/api/clean/done", "/api/clean/deepdone", "/api/mgr/done", "/api/maint/pm/abc/done", "/api/maint/todos", "/api/maint/todos/abc/done", "/api/walk"} {
 		if c := call(lan, "POST", p, "{}"); c != 200 {
 			t.Errorf("POST %s = %d, want 200", p, c)
 		}
 	}
-	for _, p := range []string{"/api/clean/today", "/api/todo", "/api/phone/options"} {
+	for _, p := range []string{"/api/clean/today", "/api/todo", "/api/phone/options", "/api/reg/walkchecks"} {
 		if c := call(lan, "GET", p, ""); c != 200 {
 			t.Errorf("GET %s = %d, want 200", p, c)
 		}
@@ -193,5 +193,26 @@ func TestPhoneStamp(t *testing.T) {
 	g.ServeHTTP(httptest.NewRecorder(), req)
 	if phone.stamp != 1 {
 		t.Error("reading must not move the stamp")
+	}
+}
+
+func TestWalkMakesInspectionItems(t *testing.T) {
+	e := newEnv(t)
+	body := `{"service":"Dinner","by":"Dana","overall":"No","inspection":true,"items":[
+	 {"n":1,"area":"Freezers","status":"Needs Attention","finding":"Door will not seal","priority":"P2 - Urgent","owner":"Brian","corrected":"No"},
+	 {"n":2,"area":"Hot Line","status":"Corrected","finding":"Knob replaced","corrected":"Yes"},
+	 {"n":3,"area":"Hand Sinks","status":"Ready"},
+	 {"n":101,"area":"Dining Room","status":"Needs Attention","finding":"Light out","priority":"P3 - Routine","corrected":"No"}]}`
+	c, o := e.post("/api/walk", body)
+	if c != 200 || o["findings"].(float64) != 2 {
+		t.Fatalf("walk: %d %v", c, o)
+	}
+	fs := e.s.findingList()
+	if len(fs) != 2 || fs[0].Category != "Equipment" || fs[0].AssignedTo != "Brian" || fs[0].Priority != "P2 - Urgent" || fs[1].Number != 2 {
+		t.Errorf("findings wrong: %+v %+v", fs[0], fs[1])
+	}
+	// without the flag the computer's walk adds nothing to Inspection Items
+	if _, o := e.post("/api/walk", strings.Replace(body, `"inspection":true`, `"inspection":false`, 1)); o["findings"].(float64) != 0 {
+		t.Error("the computer walk must not add inspection items by itself")
 	}
 }

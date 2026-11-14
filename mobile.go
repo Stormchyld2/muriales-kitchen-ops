@@ -158,7 +158,8 @@ var phoneAllowed = []phoneRule{
 	{"POST", regexp.MustCompile(`^/api/mgr/done$`)},
 	{"GET", regexp.MustCompile(`^/api/todo$`)},
 	{"GET", regexp.MustCompile(`^/api/phone/options$`)},
-	{"POST", regexp.MustCompile(`^/api/maint/findings$`)}, // facility walkthrough: add a finding
+	{"GET", regexp.MustCompile(`^/api/reg/walkchecks$`)}, // facility walkthrough: the checks, and finishing the walk
+	{"POST", regexp.MustCompile(`^/api/walk$`)},
 	{"POST", regexp.MustCompile(`^/api/maint/pm/[^/]+/done$`)},
 	{"POST", regexp.MustCompile(`^/api/maint/todos$`)},
 	{"POST", regexp.MustCompile(`^/api/maint/todos/[^/]+/done$`)},

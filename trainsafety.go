@@ -141,6 +141,7 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/walk", func(w http.ResponseWriter, r *http.Request) {
 		var in struct {
 			Service, By, Notes, Overall, P1, Oos, OosAsset, Wo, Sanit, Supply, Release, Reviewed string
+			Inspection                                                                           bool // also list each unresolved item under Maintenance, Inspection Items
 			Items                                                                                []struct {
 				N                                                        int
 				Area, Check, Status, Finding, Corrected, Priority, Owner string
@@ -179,7 +180,20 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 			fail(w, 500, err.Error())
 			return
 		}
-		writeJSON(w, 200, map[string]any{"id": n["id"], "need": need})
+		made := 0
+		if in.Inspection {
+			var fs []*Finding
+			for _, it := range in.Items {
+				if it.Status != "Needs Attention" || it.Corrected == "Yes" || strings.TrimSpace(it.Finding) == "" {
+					continue
+				}
+				fs = append(fs, &Finding{Date: now.Format(dayFmt), Area: it.Area, Category: walkCategory(it.Area), What: it.Area + ": " + strings.TrimSpace(it.Finding),
+					Priority: fixPriority(it.Priority), FoundBy: strings.TrimSpace(in.By), AssignedTo: strings.TrimSpace(it.Owner), Status: "Open",
+					History: []Entry{{stamp(), strings.TrimSpace(in.By), "Found on readiness walk " + n["id"] + "."}}})
+			}
+			made = s.addFindings(fs)
+		}
+		writeJSON(w, 200, map[string]any{"id": n["id"], "need": need, "findings": made})
 	})
 
 	mux.HandleFunc("GET /api/materials", func(w http.ResponseWriter, r *http.Request) {
@@ -410,4 +424,54 @@ func (s *store) safetyAttention(today string) []todoItem {
 		}
 	}
 	return out
+}
+
+// walkCategory sorts a readiness walk area into an Inspection Items category.
+func walkCategory(area string) string {
+	a := strings.ToLower(area)
+	has := func(w ...string) bool {
+		for _, x := range w {
+			if strings.Contains(a, x) {
+				return true
+			}
+		}
+		return false
+	}
+	switch {
+	case has("fire", "gas", "electrical"):
+		return "Safety"
+	case has("label", "allergen", "temperature", "hand sink", "sanitizer", "chemical", "pest"):
+		return "Food Safety"
+	case has("floor", "surface", "trash", "grease", "dish"):
+		return "Cleaning"
+	case has("cooler", "reach", "freezer", "hot line", "equipment", "hood", "ventilation"):
+		return "Equipment"
+	}
+	return "Other"
+}
+
+// addFindings adds inspection items in one write. The caller holds s.mu.
+func (s *store) addFindings(fs []*Finding) int {
+	if len(fs) == 0 {
+		return 0
+	}
+	all := s.findingList()
+	next := 0
+	for _, x := range all {
+		if x.Number > next {
+			next = x.Number
+		}
+	}
+	for _, f := range fs {
+		next++
+		f.ID, f.Number = newID(), next
+		if !oneOf(priorities, f.Priority) {
+			f.Priority = priorities[2]
+		}
+		all = append(all, f)
+	}
+	if s.writeMaint("findings.json", all) != nil {
+		return 0
+	}
+	return len(fs)
 }
