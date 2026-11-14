@@ -20,6 +20,9 @@ function tTrend(rows) {
 
 const tStatus = s => s === "OK" ? "OK" : s;
 
+const tKey = r => r.batch || (r.at + "|" + r.by);
+function tGroups(rows) { const m = new Map(); for (const r of rows) { const k = tKey(r); if (!m.has(k)) m.set(k, {key: k, at: r.at, by: r.by, rs: []}); m.get(k).rs.push(r); } return [...m.values()]; }
+
 function vTemps() {
   const d = state.temps; if (!d) { loadTemps(); return `<p class="hint">Loading...</p>`; }
   const bad = state.tbad, rows = d.readings.filter(r => (!bad || r.status === "Too Warm" || r.status === "Too Cold") && (!state.tpoint || r.point === state.tpoint));
@@ -34,9 +37,12 @@ function vTemps() {
     ${d.needAction ? `<span class="hint"><b>${d.needAction} reading${d.needAction === 1 ? "" : "s"} need a corrective action</b></span>` : ""}${d.syncedAt ? `<span class="hint">Form synced ${esc(d.syncedAt)}</span>` : ""}</div>
   ${!d.points.length ? `<p class="note warn">Add the places you check (coolers, freezers, hot wells) under Temperature Points, or import your Google Form responses in Settings, Temperature Form.</p>` : ""}
   ${state.tpoint ? tTrend(rows) : ""}<div class="tablewrap">${!rows.length ? `<div class="empty"><b>No readings</b>Use Enter Temperatures for a round of checks.</div>`
-    : `<table class="plain"><thead><tr>${["When", "Point", "Temp", "Safe Range", "Status", "By", "Notes / Corrective Action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
+    : (state.tpoint ? `<table class="plain"><thead><tr>${["When", "Point", "Temp", "Safe Range", "Status", "By", "Notes / Corrective Action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
       ${rows.map(r => `<tr><td>${esc(when12(r.at))}</td><td><b>${esc(r.point)}</b></td><td>${r.temp}°F</td><td>${esc(r.limit)}</td><td>${tag(tStatus(r.status))}</td><td>${esc(r.by)}</td><td>${esc([r.notes, r.action].filter(Boolean).join(" · "))}${r.edited ? `<div class="hint">Edited by ${esc(r.edited)}</div>` : ""}</td>
-        <td style="text-align:right"><div class="acts">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button> ` : ""}<button class="btn small" data-act="temp-edit" data-id="${r.id}">${icon("edit")}Edit</button></div></td></tr>`).join("")}</tbody></table>`}</div>
+        <td style="text-align:right"><div class="acts">${needs(r) ? `<button class="btn small wine" data-act="temp-action" data-id="${r.id}">Add Action</button> ` : ""}${isBad(r) ? `<button class="btn small" data-act="temp-ca" data-id="${r.id}">Corrective Action Form</button> ` : ""}<button class="btn small" data-act="temp-edit" data-id="${r.id}">${icon("edit")}Edit</button></div></td></tr>`).join("")}</tbody></table>` : `<table class="plain"><thead><tr>${["When", "Readings", "Status", "By", "Corrective Action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}<th class="nosort"></th></tr></thead><tbody>
+      ${tGroups(rows).map(g => { const nb = g.rs.filter(isBad).length, na = g.rs.filter(needs).length; return `<tr data-act="temp-group" data-key="${esc(g.key)}" style="cursor:pointer"><td>${esc(when12(g.at))}</td><td><b>${g.rs.length}</b> temperature${g.rs.length === 1 ? "" : "s"}${g.rs.some(r => r.edited) ? `<div class="hint">Edited</div>` : ""}</td>
+        <td>${nb ? `<span class="status Urgent">${nb} out of range</span>` : tag("OK")}</td><td>${esc(g.by)}</td><td>${na ? `<b style="color:#e0a0a8">${na} need${na === 1 ? "s" : ""} a corrective action</b>` : nb ? "Written" : ""}</td>
+        <td style="text-align:right"><div class="acts"><button class="btn small" data-act="temp-group" data-key="${esc(g.key)}">${icon("edit")}Open</button></div></td></tr>`; }).join("")}</tbody></table>`)}</div>
   ${(state.treports || []).length ? `<h3>Saved Daily Reports</h3><div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Day</th><th class="nosort" style="width:auto">Saved</th><th class="nosort"></th></tr></thead><tbody>${state.treports.map(x => `<tr><td><b>${esc(dayLong(x.Date))}</b></td><td>${esc(x.Saved)}</td><td style="text-align:right"><div class="acts"><button class="btn small" data-act="tr-open" data-f="${esc(x.File)}">Open</button> <button class="btn small" data-act="tr-print" data-f="${esc(x.File)}">${icon("print")}Print</button></div></td></tr>`).join("")}</tbody></table></div><p class="hint">Reports are also kept as files in the Temperature Reports folder beside the program.</p>` : ""}`;
 }
 
@@ -71,6 +77,20 @@ function tempEdit(id) {
     <label>Your name: <span class="req">*</span></label><input class="field" data-te="editedBy" value="${esc(who())}"></div>
     <p class="hint">${r.source === "import" ? "This reading came from the form. Your change stays when the form is synced again." : ""} The correction is recorded with your name and the date.</p></div>
     <div class="foot"><button class="btn green big" data-act="temp-edit-go">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`);
+}
+
+function tempGroup(key) {
+  const rs = (state.temps ? state.temps.readings : []).filter(r => tKey(r) === key); if (!rs.length) return toast("That check is not in the list.", true);
+  const [d, tm] = rs[0].at.split(" ");
+  showModal(`<h2>${icon("edit")}Temperature Check</h2><div class="body" id="tgbody" data-key="${esc(key)}"><div class="row" style="gap:12px;align-items:end">
+    <label style="font-weight:400">Date<br><input type="date" class="field" id="tgd" value="${esc(d)}" style="width:170px"></label><label style="font-weight:400">Time<br><input type="time" class="field" id="tgt" value="${esc(tm || "")}" style="width:130px"></label>
+    <label style="font-weight:400">Taken by<br><input class="field" id="tgby" value="${esc(rs[0].by)}" style="width:170px"></label></div>
+    <table class="plain" style="margin-top:10px"><thead><tr>${["Point", "Safe range", "Temp °F", "Status", "Notes", "Corrective action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}</tr></thead><tbody>
+    ${rs.map(r => `<tr data-tg="${r.id}"><td><b>${esc(r.point)}</b></td><td class="hint">${esc(r.limit)}</td><td><input type="number" step="0.1" class="field" data-f="temp" value="${r.temp}" style="width:90px"></td><td data-st>${tag(tStatus(r.status))}</td>
+      <td><input class="field" data-f="notes" value="${esc(r.notes || "")}"></td><td><input class="field" data-f="action" value="${esc(r.action || "")}" placeholder="${r.status === "OK" ? "" : "Required"}"></td></tr>`).join("")}</tbody></table>
+    <div class="fields" style="margin-top:8px"><label>Your name: <span class="req">*</span></label><input class="field" id="tgme" value="${esc(who())}" style="width:220px"></div>
+    <p class="hint">${rs.some(r => r.source === "import") ? "Readings that came from the form keep your changes when it is synced again. " : ""}Corrections are recorded with your name and the date.</p></div>
+    <div class="foot"><button class="btn green big" data-act="temp-group-go">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`);
 }
 
 function tempAction(id) {
@@ -137,6 +157,23 @@ const readTMap = () => { const m = {}; document.querySelectorAll("[data-tm]").fo
 const syncMsg = o => { const r = o.result; return `${r.Added} new reading${r.Added === 1 ? "" : "s"} added${r.Skipped ? `, ${r.Skipped} already there` : ""}${r.NewPoints ? `, ${r.NewPoints} new point${r.NewPoints === 1 ? "" : "s"} created` : ""}${r.OutOfRange ? `. ${r.OutOfRange} out of range!` : "."}${r.Unreadable ? ` ${r.Unreadable} could not be read.` : ""}`; };
 
 Object.assign(ACT, {
+  "temp-group"(el) { tempGroup(el.dataset.key); },
+  async "temp-group-go"() {
+    const key = $("#tgbody").dataset.key, me = $("#tgme").value.trim(); if (!me) return toast("Enter your name.", true);
+    const rs = state.temps.readings.filter(r => tKey(r) === key), date = $("#tgd").value, time = $("#tgt").value, by = $("#tgby").value.trim();
+    if (!date || !time) return toast("Enter the date and time.", true);
+    const pts = Object.fromEntries(state.temps.points.map(p => [p.id, p])), jobs = [];
+    for (const r of rs) {
+      const row = $(`[data-tg="${r.id}"]`), temp = parseFloat(row.querySelector('[data-f=temp]').value), notes = row.querySelector('[data-f=notes]').value.trim(), action = row.querySelector('[data-f=action]').value.trim();
+      if (isNaN(temp)) return toast(`Enter the temperature for ${r.point}.`, true);
+      const p = pts[r.pointId]; if (p && tOut(p, temp) && !action) return toast(`${r.point} is out of range. Write the corrective action.`, true);
+      const [od, ot] = r.at.split(" ");
+      if (temp !== r.temp || notes !== (r.notes || "") || action !== (r.action || "") || date !== od || time !== ot || by !== r.by) jobs.push({id: r.id, body: {date, time, pointId: r.pointId, temp, by, notes, action, editedBy: me}});
+    }
+    if (!jobs.length) { closeModal(); return; } rememberWho(me);
+    try { for (const j of jobs) await api("/api/temps/" + j.id, {method: "PUT", body: JSON.stringify(j.body)}); await loadTemps(); closeModal(); render(); toast("Saved " + jobs.length + " change" + (jobs.length === 1 ? "" : "s") + "."); }
+    catch (e) { toast(e.message, true); await loadTemps(); }
+  },
   "temp-edit"(el) { tempEdit(el.dataset.id); },
   async "temp-edit-go"() { const v = grab("[data-te]", "te"); if (!v.editedBy.trim()) return toast("Enter your name.", true); rememberWho(v.editedBy); v.temp = parseFloat(v.temp);
     if (isNaN(v.temp)) return toast("Enter the temperature.", true);

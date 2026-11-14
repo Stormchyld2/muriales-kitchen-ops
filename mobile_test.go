@@ -104,3 +104,19 @@ func TestFixTempLimits(t *testing.T) {
 		t.Error("limits are wrong after the fix")
 	}
 }
+
+func TestTempBatch(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.post("/api/temps/points/starter", `{}`)
+	pts := o["points"].([]any)
+	a, b := pts[0].(map[string]any)["id"].(string), pts[2].(map[string]any)["id"].(string)
+	_, o = e.post("/api/temps", `{"by":"Dana","readings":[{"pointId":"`+a+`","temp":38},{"pointId":"`+b+`","temp":39}]}`)
+	rs := o["readings"].([]any)
+	if len(rs) != 2 {
+		t.Fatalf("readings: %d", len(rs))
+	}
+	b0, b1 := rs[0].(map[string]any)["batch"], rs[1].(map[string]any)["batch"]
+	if b0 == nil || b0 != b1 {
+		t.Errorf("readings saved together should share a batch: %v %v", b0, b1)
+	}
+}

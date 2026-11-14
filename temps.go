@@ -53,8 +53,9 @@ type TempReading struct {
 	Temp    float64 `json:"temp"`
 	By      string  `json:"by"`
 	Notes   string  `json:"notes"`
-	Action  string  `json:"action"` // corrective action, needed when out of range
-	Source  string  `json:"source"` // entered, import
+	Action  string  `json:"action"`          // corrective action, needed when out of range
+	Source  string  `json:"source"`          // entered, import
+	Batch   string  `json:"batch,omitempty"` // readings saved together as one check
 	Key     string  `json:"key,omitempty"`
 	Edited  string  `json:"edited,omitempty"` // who corrected it, and when
 }
@@ -561,6 +562,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 		var all []*TempReading
 		s.readMaint("temps.json", &all)
 		now := time.Now().Format("2006-01-02 15:04")
+		batch := newID()
 		for _, x := range in2.Readings {
 			p := pts[x.PointID]
 			if p == nil {
@@ -575,7 +577,7 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 				fail(w, 400, "“"+p.Name+"” is out of range ("+strconv.FormatFloat(x.Temp, 'f', -1, 64)+"°F, safe: "+p.limitText()+"). Write the corrective action.")
 				return
 			}
-			all = append(all, &TempReading{ID: newID(), At: now, PointID: p.ID, Point: p.Name, Temp: x.Temp, By: strings.TrimSpace(in2.By), Notes: strings.TrimSpace(x.Notes), Action: strings.TrimSpace(x.Action), Source: "entered"})
+			all = append(all, &TempReading{ID: newID(), At: now, PointID: p.ID, Point: p.Name, Temp: x.Temp, By: strings.TrimSpace(in2.By), Notes: strings.TrimSpace(x.Notes), Action: strings.TrimSpace(x.Action), Source: "entered", Batch: batch})
 		}
 		if err := s.writeMaint("temps.json", all); err != nil {
 			s.maintFail(w, err)

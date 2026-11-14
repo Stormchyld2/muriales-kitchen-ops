@@ -60,20 +60,36 @@ function home(){title("Muriale's Kitchen");
   <a class="tile" href="#note" style="grid-column:span 2">📝<span>Handoff Note</span><small>Leave a note for the next shift</small></a></div>
   <p class="mute" style="text-align:center;margin-top:20px">${esc(new Date().toDateString())}</p>`;}
 
+let tempMsg="";
+function lim(p,kinds){const k=(kinds.find(x=>x.kind===p.kind)||{});const own=p.min!=null||p.max!=null;return {min:own?p.min:k.min,max:own?p.max:k.max};}
+function limText(l){return l.min!=null&&l.max!=null?l.min+"° to "+l.max+"°":l.max!=null?l.max+"° or below":l.min!=null?l.min+"° or above":"";}
+function stat(l,v){if(isNaN(v))return "";if(l.max!=null&&v>l.max)return "warm";if(l.min!=null&&v<l.min)return "cold";return "ok";}
 async function temps(){title("Temperatures");const d=await api("/api/temps");const t=today();
   const done={};(d.readings||[]).forEach(r=>{if((r.at||"").slice(0,10)===t)done[r.pointId]=r;});
+  const L={};d.points.forEach(p=>L[p.id]=lim(p,d.kinds));
   const groups={};d.points.forEach(p=>(groups[p.area||p.kind||"Other"]=groups[p.area||p.kind||"Other"]||[]).push(p));
   if(!d.points.length){V.innerHTML=`<div class="card">No temperature points are set up yet. Add them on the computer in Settings.</div>`;return;}
-  V.innerHTML=whoField()+Object.entries(groups).map(([g,ps])=>`<h2>${esc(g)}</h2>`+ps.map(p=>{const r=done[p.id];const lim=(p.min!=null?p.min+"°":"")+(p.min!=null&&p.max!=null?" to ":"")+(p.max!=null?(p.min==null?"max ":"")+p.max+"°":"");
-    return `<div class="card" data-p="${esc(p.id)}"><div class="row"><b>${esc(p.name)}</b>${lim?`<span class="mute fix">${esc(lim)}</span>`:""}</div>
-    ${r?`<div class="ok mute">Logged today: ${esc(r.temp)}°F at ${esc(r.at.slice(11))} by ${esc(r.by)}</div>`:""}
-    <div class="row"><button type="button" class="btn alt sm fix neg" style="min-width:64px;font-size:22px">±</button><input class="tv" type="text" inputmode="decimal" autocomplete="off" placeholder="°F"></div>
-    <input class="ta" style="display:none;margin-top:8px" placeholder="Corrective action (required, out of range)"></div>`;}).join("")).join("")+`<div class="bar"><button class="btn" id="go">Save Temperatures</button></div>`;
-  V.onclick=e=>{const b=e.target.closest(".neg");if(!b)return;const i=b.parentNode.querySelector(".tv");i.value=i.value.startsWith("-")?i.value.slice(1):"-"+i.value;i.focus();};
-  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const rows=[...V.querySelectorAll("[data-p]")].map(c=>({pointId:c.dataset.p,temp:parseFloat(c.querySelector(".tv").value.replace(/[−–]/g,"-")),action:c.querySelector(".ta").value.trim()})).filter(x=>!isNaN(x.temp));
-    if(!rows.length){toast("Enter at least one temperature.",true);return;}
-    try{await post("/api/temps",{by,readings:rows});toast("Saved "+rows.length+" reading"+(rows.length>1?"s":""));temps();}
-    catch(e){if(/out of range/.test(e.message)){V.querySelectorAll("[data-p]").forEach(c=>{if(c.querySelector(".tv").value!=="")c.querySelector(".ta").style.display="block";});}toast(e.message,true);}};}
+  V.innerHTML=(tempMsg?`<div class="card" style="border-color:${/OUT OF RANGE/.test(tempMsg)?"var(--red)":"var(--green)"}">${tempMsg}</div>`:"")+whoField()+Object.entries(groups).map(([g,ps])=>`<h2>${esc(g)}</h2>`+ps.map(p=>{const r=done[p.id];const bad=r&&(r.status==="Too Warm"||r.status==="Too Cold");
+    return `<div class="card" data-p="${esc(p.id)}"><div class="row"><b>${esc(p.name)}</b><span class="mute fix">${esc(limText(L[p.id]))}</span></div>
+    ${r?`<div class="${bad?"bad":"ok"} mute">Logged today: ${esc(r.temp)}°F at ${esc(r.at.slice(11))} by ${esc(r.by)}${bad?" - OUT OF RANGE":""}</div>`:""}
+    <div class="row" style="margin-top:6px"><button type="button" class="btn alt sm fix neg" style="min-width:64px;font-size:22px">±</button><input class="tv" type="text" inputmode="decimal" autocomplete="off" placeholder="°F"></div>
+    <div class="st" style="margin-top:6px;font-weight:700"></div>
+    <input class="ta" style="display:none;margin-top:8px" placeholder="Corrective action (required)"></div>`;}).join("")).join("")+`<div class="bar"><button class="btn" id="go">Save Temperatures</button></div>`;
+  tempMsg="";
+  const num=c=>parseFloat(c.querySelector(".tv").value.replace(/[−–]/g,"-"));
+  const upd=c=>{const v=num(c),s=stat(L[c.dataset.p],v),st=c.querySelector(".st"),ta=c.querySelector(".ta");
+    st.textContent=s==="ok"?"✔ OK":s==="warm"?"✖ TOO WARM - write what you did":s==="cold"?"✖ TOO COLD - write what you did":"";st.className="st "+(s==="ok"?"ok":s?"bad":"");ta.style.display=s&&s!=="ok"?"block":"none";};
+  V.oninput=e=>{const c=e.target.closest("[data-p]");if(c&&e.target.classList.contains("tv"))upd(c);};
+  V.onclick=e=>{const b=e.target.closest(".neg");if(!b)return;const i=b.parentNode.querySelector(".tv");i.value=i.value.startsWith("-")?i.value.slice(1):"-"+i.value;i.focus();upd(b.closest("[data-p]"));};
+  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const cards=[...V.querySelectorAll("[data-p]")].filter(c=>!isNaN(num(c)));
+    if(!cards.length){toast("Enter at least one temperature.",true);return;}
+    const rows=[],badList=[];for(const c of cards){const v=num(c),s=stat(L[c.dataset.p],v),a=c.querySelector(".ta").value.trim(),name=c.querySelector("b").textContent;
+      if(s&&s!=="ok"){if(!a){c.querySelector(".ta").focus();toast(name+" is out of range. Write the corrective action.",true);return;}badList.push(name+" "+v+"°F");}
+      rows.push({pointId:c.dataset.p,temp:v,action:s&&s!=="ok"?a:""});}
+    try{await post("/api/temps",{by,readings:rows});
+      tempMsg=badList.length?`<b class="bad">OUT OF RANGE (${badList.length}):</b><br>${badList.map(esc).join("<br>")}<br><span class="mute">Corrective action saved.</span>`:`<b class="ok">Saved ${rows.length} reading${rows.length>1?"s":""}. All in range.</b>`;
+      window.scrollTo(0,0);temps();}
+    catch(e){toast(e.message,true);}};}
 
 async function par(st){if(!st){title("Par Check");const d=await api("/api/parcheck");V.innerHTML=`<p class="mute">Pick your station.</p><div class="tiles">${d.stations.map(s=>`<a class="tile" href="#par/${encodeURIComponent(s)}">${esc(s)}</a>`).join("")}</div>`;return;}
   title(st+" Par Check");const d=await api("/api/parcheck?station="+encodeURIComponent(st));const c=d.check||{};const On=c.on||{},Mk=c.make||{},In=c.init||{};
