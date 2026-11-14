@@ -120,3 +120,45 @@ func TestTempBatch(t *testing.T) {
 		t.Errorf("readings saved together should share a batch: %v %v", b0, b1)
 	}
 }
+
+func TestTempDelete(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.post("/api/temps/points/starter", `{}`)
+	a := o["points"].([]any)[0].(map[string]any)["id"].(string)
+	rs := []*TempReading{
+		{ID: "r1", At: "2026-11-10 08:00", PointID: a, Point: "Cooler 1 Temp", Temp: 38, By: "A", Key: "k1", Source: "import"},
+		{ID: "r2", At: "2026-11-10 09:00", PointID: a, Point: "Cooler 1 Temp", Temp: 39, By: "A"},
+		{ID: "r3", At: "2026-11-11 09:00", PointID: a, Point: "Cooler 1 Temp", Temp: 40, By: "A"},
+	}
+	if err := e.s.writeMaint("temps.json", rs); err != nil {
+		t.Fatal(err)
+	}
+	del := func(path string) int {
+		req := httptest.NewRequest("DELETE", path, nil)
+		w := httptest.NewRecorder()
+		e.h.ServeHTTP(w, req)
+		return w.Code
+	}
+	if c := del("/api/temps/r1"); c != 200 {
+		t.Fatalf("delete one = %d", c)
+	}
+	var gone []string
+	e.s.readMaint("temps-deleted.json", &gone)
+	if len(gone) != 1 || gone[0] != "k1" {
+		t.Errorf("a form reading must be remembered as deleted: %v", gone)
+	}
+	if c := del("/api/temps/day/2026-11-10"); c != 200 {
+		t.Fatalf("delete day = %d", c)
+	}
+	var left []*TempReading
+	e.s.readMaint("temps.json", &left)
+	if len(left) != 1 || left[0].ID != "r3" {
+		t.Errorf("only the other day should remain: %v", left)
+	}
+	if c := del("/api/temps/day/2026-11-10"); c != 404 {
+		t.Errorf("empty day = %d, want 404", c)
+	}
+	if c := del("/api/temps/day/nope"); c != 400 {
+		t.Errorf("bad day = %d, want 400", c)
+	}
+}

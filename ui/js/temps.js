@@ -29,7 +29,7 @@ function vTemps() {
   const needs = r => (r.status === "Too Warm" || r.status === "Too Cold") && !(r.action || "").trim();
   const isBad = r => r.status === "Too Warm" || r.status === "Too Cold";
   return `<div class="row"><button class="btn green big" data-act="temp-enter">${icon("plus")}Enter Temperatures</button>${d.url ? `<button class="btn" data-act="temp-sync">${icon("down")}Sync Google Form</button>` : ""}
-    <button class="btn" data-act="tr-save">${icon("print")}Save Daily Report</button><input type="date" class="field" id="trdate" value="${esc(state.trdate || ymd(new Date()))}" style="width:150px" title="Day for the daily report">
+    <button class="btn" data-act="tr-save">${icon("print")}Save Daily Report</button><input type="date" class="field" id="trdate" value="${esc(state.trdate || ymd(new Date()))}" style="width:150px" title="Day for the daily report and for Delete Day"><button class="btn wine" data-act="temp-del-day">${icon("trash")}Delete Day</button>
     <select class="field" id="tdays" style="width:170px">${[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"], [90, "Last 90 days"], [365, "Last year"], [36500, "All readings"], [0, "Pick dates..."]].map(([n, l]) => `<option value="${n}" ${n === state.tdays ? "selected" : ""}>${l}</option>`).join("")}</select>
     ${state.tdays === 0 ? `<label style="font-weight:400">From <input type="date" class="field" id="tfrom" value="${esc(state.tfrom || "")}" style="width:150px"></label><label style="font-weight:400">To <input type="date" class="field" id="tto" value="${esc(state.tto || "")}" style="width:150px"></label>` : ""}
     <select class="field" id="tpoint" style="width:200px" title="Show one piece of equipment to see its trend"><option value="">All equipment</option>${[...new Set(d.readings.map(r => r.point))].sort().map(n => `<option ${n === state.tpoint ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
@@ -85,12 +85,12 @@ function tempGroup(key) {
   showModal(`<h2>${icon("edit")}Temperature Check</h2><div class="body" id="tgbody" data-key="${esc(key)}"><div class="row" style="gap:12px;align-items:end">
     <label style="font-weight:400">Date<br><input type="date" class="field" id="tgd" value="${esc(d)}" style="width:170px"></label><label style="font-weight:400">Time<br><input type="time" class="field" id="tgt" value="${esc(tm || "")}" style="width:130px"></label>
     <label style="font-weight:400">Taken by<br><input class="field" id="tgby" value="${esc(rs[0].by)}" style="width:170px"></label></div>
-    <table class="plain" style="margin-top:10px"><thead><tr>${["Point", "Safe range", "Temp °F", "Status", "Notes", "Corrective action"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}</tr></thead><tbody>
+    <table class="plain" style="margin-top:10px"><thead><tr>${["Point", "Safe range", "Temp °F", "Status", "Notes", "Corrective action", ""].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}</tr></thead><tbody>
     ${rs.map(r => `<tr data-tg="${r.id}"><td><b>${esc(r.point)}</b></td><td class="hint">${esc(r.limit)}</td><td><input type="number" step="0.1" class="field" data-f="temp" value="${r.temp}" style="width:90px"></td><td data-st>${tag(tStatus(r.status))}</td>
-      <td><input class="field" data-f="notes" value="${esc(r.notes || "")}"></td><td><input class="field" data-f="action" value="${esc(r.action || "")}" placeholder="${r.status === "OK" ? "" : "Required"}"></td></tr>`).join("")}</tbody></table>
+      <td><input class="field" data-f="notes" value="${esc(r.notes || "")}"></td><td><input class="field" data-f="action" value="${esc(r.action || "")}" placeholder="${r.status === "OK" ? "" : "Required"}"></td><td><button class="btn small wine" data-act="temp-del" data-id="${r.id}" title="Delete this reading">${icon("trash")}</button></td></tr>`).join("")}</tbody></table>
     <div class="fields" style="margin-top:8px"><label>Your name: <span class="req">*</span></label><input class="field" id="tgme" value="${esc(who())}" style="width:220px"></div>
     <p class="hint">${rs.some(r => r.source === "import") ? "Readings that came from the form keep your changes when it is synced again. " : ""}Corrections are recorded with your name and the date.</p></div>
-    <div class="foot"><button class="btn green big" data-act="temp-group-go">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`);
+    <div class="foot"><button class="btn green big" data-act="temp-group-go">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button><button class="btn wine big" data-act="temp-del-check" style="margin-left:auto">${icon("trash")}Delete This Check</button></div>`);
 }
 
 function tempAction(id) {
@@ -157,6 +157,15 @@ const readTMap = () => { const m = {}; document.querySelectorAll("[data-tm]").fo
 const syncMsg = o => { const r = o.result; return `${r.Added} new reading${r.Added === 1 ? "" : "s"} added${r.Skipped ? `, ${r.Skipped} already there` : ""}${r.NewPoints ? `, ${r.NewPoints} new point${r.NewPoints === 1 ? "" : "s"} created` : ""}${r.OutOfRange ? `. ${r.OutOfRange} out of range!` : "."}${r.Unreadable ? ` ${r.Unreadable} could not be read.` : ""}`; };
 
 Object.assign(ACT, {
+  async "temp-del"(el) { const r = state.temps.readings.find(x => x.id === el.dataset.id); if (!r || !confirm(`Delete this reading (${r.point}, ${r.temp}°F)? This cannot be undone.`)) return;
+    try { await api("/api/temps/" + r.id, {method: "DELETE"}); await loadTemps(); const key = tKey(r); closeModal(); if (state.temps.readings.some(x => tKey(x) === key)) tempGroup(key); render(); toast("Reading deleted."); } catch (e) { toast(e.message, true); } },
+  async "temp-del-check"() { const key = $("#tgbody").dataset.key, rs = state.temps.readings.filter(r => tKey(r) === key);
+    if (!confirm(`Delete this whole check (${rs.length} reading${rs.length === 1 ? "" : "s"})? This cannot be undone.`)) return;
+    try { for (const r of rs) await api("/api/temps/" + r.id, {method: "DELETE"}); await loadTemps(); closeModal(); render(); toast("Check deleted."); } catch (e) { toast(e.message, true); await loadTemps(); } },
+  async "temp-del-day"() { const day = $("#trdate").value; if (!day) return toast("Choose the day first.", true);
+    const n = state.temps.readings.filter(r => r.at.startsWith(day)).length;
+    if (!confirm(`Delete ALL temperature readings for ${dayLong(day)}${n ? ` (${n} shown)` : ""}? This cannot be undone.`)) return;
+    try { const o = await api("/api/temps/day/" + day, {method: "DELETE"}); await loadTemps(); render(); toast(`${o.deleted} reading${o.deleted === 1 ? "" : "s"} deleted for ${dayLong(day)}.`); } catch (e) { toast(e.message, true); } },
   "temp-group"(el) { tempGroup(el.dataset.key); },
   async "temp-group-go"() {
     const key = $("#tgbody").dataset.key, me = $("#tgme").value.trim(); if (!me) return toast("Enter your name.", true);

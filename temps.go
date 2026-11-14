@@ -339,6 +339,11 @@ func (s *store) importTemps(rows [][]string, m tempMap) (importResult, error) {
 			known[r.Key] = true
 		}
 	}
+	var gone []string // readings deleted on purpose stay deleted when the form is synced again
+	s.readMaint("temps-deleted.json", &gone)
+	for _, k := range gone {
+		known[k] = true
+	}
 	clean := func(h string) string {
 		n := regexp.MustCompile(`(?i)\b(temp(erature)?s?|reading|°?f)\b`).ReplaceAllString(h, "")
 		return strings.TrimSpace(strings.Trim(strings.TrimSpace(n), "-:()?"))
@@ -634,6 +639,54 @@ func (s *store) tempRoutes(mux *http.ServeMux) {
 			return
 		}
 		fail(w, 404, "That reading was not found.")
+	})
+	// Delete one reading, or every reading on one day. Readings that came from
+	// the form are remembered so a later sync does not bring them back.
+	dropReadings := func(w http.ResponseWriter, match func(*TempReading) bool) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		var all []*TempReading
+		s.readMaint("temps.json", &all)
+		var gone []string
+		s.readMaint("temps-deleted.json", &gone)
+		keep, n := []*TempReading{}, 0
+		for _, x := range all {
+			if match(x) {
+				n++
+				if x.Key != "" {
+					gone = append(gone, x.Key)
+				}
+				continue
+			}
+			keep = append(keep, x)
+		}
+		if n == 0 {
+			fail(w, 404, "Nothing to delete.")
+			return
+		}
+		if err := s.writeMaint("temps-deleted.json", gone); err != nil {
+			s.maintFail(w, err)
+			return
+		}
+		if err := s.writeMaint("temps.json", keep); err != nil {
+			s.maintFail(w, err)
+			return
+		}
+		out := payload(time.Now().AddDate(0, 0, -30).Format(dayFmt), "")
+		out["deleted"] = n
+		writeJSON(w, 200, out)
+	}
+	mux.HandleFunc("DELETE /api/temps/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		dropReadings(w, func(x *TempReading) bool { return x.ID == id })
+	})
+	mux.HandleFunc("DELETE /api/temps/day/{date}", func(w http.ResponseWriter, r *http.Request) {
+		day := r.PathValue("date")
+		if _, err := time.Parse(dayFmt, day); err != nil {
+			fail(w, 400, "Choose the day.")
+			return
+		}
+		dropReadings(w, func(x *TempReading) bool { return strings.HasPrefix(x.At, day) })
 	})
 	mux.HandleFunc("PUT /api/temps/{id}/action", func(w http.ResponseWriter, r *http.Request) {
 		var in2 struct{ Action, By string }
