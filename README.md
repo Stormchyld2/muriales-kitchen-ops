@@ -68,7 +68,7 @@ Push to `main`; GitHub Actions builds `MurialesKitchenOps.exe` for Windows and r
 Inspections > Weekly Self-Inspection scores the 20 areas of the Health Inspection Success Program. Internal score = 100 minus deductions (Corrected on Spot 1, Major 3, Critical 5), Green 95+, Yellow 90-94 or a repeat Major, Red under 90 or an unresolved Critical. The monthly review on the same screen is worked out from the weekly scores. Areas can be edited under Self-Inspection Areas.
 
 ## Operations
-Vendors & Contracts, Daily Forecast, Prep Pars, Smallware Pars, Winter Prep and Shed Inventory are plain lists you edit in a form. Labor and scheduling are left to 365.
+Vendors & Contracts, Daily Forecast, Prep Pars, Smallware Pars and Winter Prep are plain lists you edit in a form. Labor and scheduling are left to 365.
 
 ## Food costing
 

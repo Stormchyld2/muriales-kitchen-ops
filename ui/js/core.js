@@ -108,7 +108,7 @@ const MAINT_VIEWS = ["insp", "procs", "finds", "equip", "assets", "issues", "pm"
 
 const MODS = [
   {k: "maint", label: "Maintenance", icon: "wrench", subs: [["equip","Equipment"],["assets","Assets & Costs"],["issues","Maintenance Issues"],["pm","Equipment PM"],["insp","PM Inspections"],["finds","Inspection Items"],["repl","Replacement Requests"],["summary","Monthly Summary"],["procs","Procedures"],["g90","90-Day Goals"]]},
-  {k: "ops", label: "Operations", icon: "list", subs: [["fcst","Daily Forecast"],["ppars","Prep Pars"],["vend","Vendors & Contracts"],["swpar","Smallware Pars"],["winter","Winter Prep"],["shed","Shed Inventory"]]},
+  {k: "ops", label: "Operations", icon: "list", subs: [["fcst","Daily Forecast"],["ppars","Prep Pars"],["vend","Vendors & Contracts"],["swpar","Smallware Pars"],["winter","Winter Prep"]]},
   {k: "dw", label: "Daily Workflow", icon: "list", subs: [["dwtoday","Today"],["dwhandoff","Handoff Log"],["dwitems","Workflow Items"]]},
   {k: "clean", label: "Cleaning & Sanitation", icon: "list", subs: [["cltoday","Today's Checklist"],["cltasks","Cleaning Schedule"],["clweek","Weekly Schedules"],["cldeep","Weekly Deep Clean"],["clarea","Area Matrix"],["clstd","Standards"],["clref","Chemical & Tool Reference"],["clmiss","Missed & Overdue"],["cllog","Completion Log"]]},
   {k: "sched", label: "Schedule", icon: "list", subs: [["cal","Calendar"],["clean","Cleaning Tasks"],["fac","Grounds / Facility"]]},
