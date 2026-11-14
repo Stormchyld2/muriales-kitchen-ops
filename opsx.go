@@ -102,5 +102,5 @@ func (s *store) opsAttention(today string) []todoItem {
 			out = append(out, todoItem{Group: "Winter Prep", Title: "Winter prep: " + clipText(r["item"], 60), Detail: r["owner"], Due: r["due"], State: "Overdue", Kind: "winter", ID: r["id"]})
 		}
 	}
-	return out
+	return append(out, s.parsAttention(today)...)
 }

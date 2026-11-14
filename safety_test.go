@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -749,5 +750,66 @@ func TestSmallwareConditionAndQty(t *testing.T) {
 		if m := x.(map[string]any); m["item"] == "Test ramekins" && (m["state"] != "OK" || m["onHand"] != "45") {
 			t.Fatalf("qty edit: %v", m)
 		}
+	}
+}
+
+func TestParsAndBreakage(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/reg/parsheets")
+	rows := o["rows"].([]any)
+	if len(rows) != 146 {
+		t.Fatalf("par items %d", len(rows))
+	}
+	_, ch := e.get2("/api/parcheck?station=Spoon")
+	items := ch["items"].([]any)
+	if len(items) != 10 || len(ch["notes"].([]any)) == 0 {
+		t.Fatalf("spoon items %d", len(items))
+	}
+	id := items[0].(map[string]any)["id"].(string)
+	if c, _ := e.post("/api/parcheck", `{"station":"Spoon","by":"","rows":[]}`); c != 400 {
+		t.Fatalf("unsigned check accepted: %d", c)
+	}
+	if c, _ := e.post("/api/parcheck", `{"station":"Spoon","by":"Sam","rows":[{"ID":"`+id+`","On":"4 pans","Make":"1 pan","Init":"SM"}]}`); c != 200 {
+		t.Fatalf("save check %d", c)
+	}
+	rr, _ := e.get("/api/reports/parcheck:Spoon?print=1")
+	if !strings.Contains(rr.Body.String(), "4 pans") || !strings.Contains(rr.Body.String(), "Checked by Sam") {
+		t.Fatal("filled par check not printed")
+	}
+	if rr, _ = e.get("/api/reports/parsheets-all?print=1"); rr.Code != 200 || !strings.Contains(rr.Body.String(), "Hoagie Bench") {
+		t.Fatalf("all sheets %d", rr.Code)
+	}
+	_, op := e.get2("/api/reg/orderpars")
+	if len(op["rows"].([]any)) < 300 {
+		t.Fatalf("order pars %d", len(op["rows"].([]any)))
+	}
+	_, od := e.get2("/api/reg/orderdays")
+	if len(od["rows"].([]any)) != 7 {
+		t.Fatal("order days")
+	}
+	today := time.Now().Format("2006-01-02")
+	e.post("/api/reg/breakage", `{"date":"`+today+`","area":"Dish / Stewarding","item":"Wine glass","issueType":"Broken","qty":"3","cause":"Dropped / Impact","replace":"Yes","qtyReplace":"3","unitCost":"4.00","priority":"P2 - Urgent","status":"Open"}`)
+	_, b := e.post("/api/reg/breakage", `{"date":"`+today+`","area":"Dish / Stewarding","item":"wine glass","issueType":"Broken","qty":"2","status":"Open"}`)
+	got := b["rows"].([]any)
+	f := got[0].(map[string]any)
+	if f["repeat"] != "Yes" {
+		t.Fatalf("repeat not flagged: %v", f)
+	}
+	var est any
+	for _, x := range got {
+		if m := x.(map[string]any); m["qty"] == "3" {
+			est = m["estCost"]
+		}
+	}
+	if est != "$12.00" {
+		t.Fatalf("est cost %v", est)
+	}
+	rr, _ = e.get("/api/reports/breakage-month?print=1")
+	if !strings.Contains(rr.Body.String(), "5 items affected") || !strings.Contains(rr.Body.String(), "$12.00") {
+		t.Fatalf("monthly breakage: %s", rr.Body.String()[:200])
+	}
+	_, dash := e.get2("/api/dashboard")
+	if !strings.Contains(fmt.Sprint(dash["attention"]), "Smallware replacements open") {
+		t.Fatalf("no breakage alert: %v", dash["attention"])
 	}
 }

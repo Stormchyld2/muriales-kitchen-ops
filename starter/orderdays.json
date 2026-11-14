@@ -1,0 +1,51 @@
+[
+ {
+  "id": "OD-001",
+  "day": "Monday",
+  "vendors": "Paragon, PennMac, PFG",
+  "notes": "",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "OD-002",
+  "day": "Tuesday",
+  "vendors": "Sysco, Young and Stout, Tomaro's, D'Annunzio's",
+  "notes": "",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "OD-003",
+  "day": "Wednesday",
+  "vendors": "Goot's, Tomaro's, D'Annunzio's",
+  "notes": "",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "OD-004",
+  "day": "Thursday",
+  "vendors": "Sysco, PennMac, PFG, Young and Stout, Tomaro's, D'Annunzio's",
+  "notes": "",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "OD-005",
+  "day": "Friday",
+  "vendors": "Paragon",
+  "notes": "",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "OD-006",
+  "day": "Saturday",
+  "vendors": "Tomaro's, D'Annunzio's",
+  "notes": "",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "OD-007",
+  "day": "Sunday",
+  "vendors": "Sysco, Goot's, Tomaro's, D'Annunzio's, Young and Stout",
+  "notes": "",
+  "created": "2026-11-14 00:00"
+ }
+]

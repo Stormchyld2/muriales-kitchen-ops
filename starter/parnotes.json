@@ -1,0 +1,92 @@
+[
+ {
+  "id": "PN-001",
+  "station": "Spoon",
+  "note": "All pasta is cooked and shocked during morning prep",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-002",
+  "station": "Spoon",
+  "note": "PAR reflects full-day service needs, not starting quantity",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-003",
+  "station": "Spoon",
+  "note": "Maintain at least 1 full pan backup for high-volume pastas (spag, rig)",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-004",
+  "station": "Spoon",
+  "note": "Do not begin service below PAR levels",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-005",
+  "station": "Spoon",
+  "note": "This sheet is used to verify station readiness before service",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-006",
+  "station": "Spoon",
+  "note": "Any item below PAR must be prepped before service begins",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-007",
+  "station": "Spoon",
+  "note": "If product runs out during service, it is a PAR or prep failure",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-008",
+  "station": "Middle",
+  "note": "Stock all salad toppings.",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-009",
+  "station": "Middle",
+  "note": "Stock and rotate sausage links, chicken, and freezer items.",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-010",
+  "station": "Middle",
+  "note": "Cut bruschetta mix.",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-011",
+  "station": "Sauté",
+  "note": "Maintain FIFO on all seafood and dairy",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-012",
+  "station": "Sauté",
+  "note": "Keep scallops dry always using towels to dry and store them.",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-013",
+  "station": "Sauté",
+  "note": "Replace sauces from prep as needed",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-014",
+  "station": "Sauté",
+  "note": "Restock before running low, do not wait until empty",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "PN-015",
+  "station": "Sauté",
+  "note": "PAR levels are for active service, not full-day storage",
+  "created": "2026-11-14 00:00"
+ }
+]

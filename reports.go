@@ -50,6 +50,10 @@ var reportCatalog = []reportDef{
 	{"rbook-cost", "Food Costing", "Recipe Cost Summary", "Portion cost, price, food cost % and review flag for every recipe.", false},
 	{"events-summary", "Food Costing", "Event Costing Summary", "Every event with cost, quote, margin and GOOD / WATCH / LOW.", false},
 	{"meal-binder", "Employee Meals", "Employee Meal Binder", "The whole binder: cover, instructions, monthly menus, weekly and appendix recipes, production guides.", false},
+	{"parsheets-all", "Pars", "Station Par Sheets", "Every station's par sheet with On hand, Make and Initial columns, one station per page.", false},
+	{"orderpars-all", "Pars", "Order Guide Pars", "Every vendor's order guide with location, pack, busy and slow pars.", false},
+	{"orderpars-days", "Pars", "Ordering Schedule for Vendors", "The days each vendor's order must be placed.", false},
+	{"breakage-month", "Operations", "Monthly Breakage & Replacement Summary", "Smallware breakage, loss and replacement cost for a month.", true},
 	{"meals-costs", "Employee Meals", "Employee Meal Costs", "Staff meal recipes with cost per serving, and what was served in the last 30 days with its cost.", false},
 	{"handoff", "Maintenance", "Manager Handoff", "The notes left for the next manager plus what is open: out-of-service equipment, issues, overdue jobs and missed cleaning.", false},
 	{"equipment", "Maintenance", "Equipment List", "Every piece of equipment with make, model, serial number, status and open issues.", false},
@@ -111,6 +115,9 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 	}
 	if id == "selfinsp-blank" || id == "selfinsp-month" || strings.HasPrefix(id, "selfinsp:") {
 		return s.selfReport(id)
+	}
+	if id == "parsheets-all" || id == "orderpars-all" || id == "orderpars-days" || id == "breakage-month" || strings.HasPrefix(id, "parsheet:") || strings.HasPrefix(id, "parcheck:") || strings.HasPrefix(id, "orderpars:") {
+		return s.parsReport(id, month)
 	}
 	if id == "events-summary" || strings.HasPrefix(id, "event:") {
 		return s.eventReport(id)

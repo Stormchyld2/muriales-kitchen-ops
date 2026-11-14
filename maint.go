@@ -321,6 +321,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.costingRoutes(mux)
 	s.recipeBookRoutes(mux)
 	s.eventsRoutes(mux)
+	s.parsRoutes(mux)
 	s.referenceRoutes(mux)
 	s.workflowRoutes(mux)
 	s.g90Routes(mux)

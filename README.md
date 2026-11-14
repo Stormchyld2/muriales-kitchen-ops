@@ -82,3 +82,8 @@ The daily summary (Settings, Daily Summary & Backup Copy) can be sent automatica
 - **Events** (Food Costing): events, event menu items (cost from a recipe or typed, with a waste/buffer %), labor and other costs, and actual results. Projected cost, profit and margin are worked out, with GOOD / WATCH / LOW at margins you set. Each event prints a cost sheet.
 - **Policies & Reference**: a "Policies & Reference" folder next to the program. The FDA Food Code 2022 and the WV 64-17 filing are copied in once on first run; copy your own policies in too.
 - **Employee Meal Binder**: Employee Meals dashboard, Print Meal Binder (cover, instructions, monthly menus, recipes, appendix, production guides). The Meal Log has sides, assigned to, prep start, status and overstock.
+
+## Pars and breakage
+
+- **Pars** (own section): *Daily Par Check* counts a station against its par sheet (On hand, Make, Initial) and signs it; *Station Par Sheets* are the 7 sheets you provided, editable with the par typed straight into the list; *Order Guide Pars* holds the vendor order guide (location, pack, busy and slow par) and *Order Days* the days each vendor's order goes in, with an "Order today" reminder. These are par references only; purchasing stays in 365.
+- **Breakage & Replacement Log** and **Repeat Review** (Operations): smallware breakage with cost, status and an automatic Repeat flag (same item twice in 90 days), a monthly summary report, and a dashboard alert while replacements are open.
