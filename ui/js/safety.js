@@ -2,6 +2,23 @@
 
 /* Daily Readiness Walk, New Hire checklist, Training Materials, LOTO procedure page */
 
+function walkItems(w) { try { return JSON.parse(w.itemsJson || "[]"); } catch (e) { return []; } }
+function walkIssues(items) { return items.filter(i => i.status === "Needs Attention" || i.status === "Corrected").map(i => { let l = `#${i.n} ${i.area} - ${i.status}: ${(i.finding || "").trim()}`; const x = ((i.priority || "") + " " + (i.owner || "")).trim(); return x ? l + " [" + x + "]" : l; }).join("\n"); }
+
+function walkOpen(id) {
+  const w = (WK.recent || []).find(x => x.id === id); if (!w) return toast("That walk is not in the list.", true);
+  const items = walkItems(w), sel = (k, opts, v) => `<select class="field" data-wo="${k}" style="width:auto">${opts.map(o => `<option ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  showModal(`<h2>${icon("edit")}Readiness Walk ${esc(w.id)}</h2><div class="body" id="wobody" data-id="${esc(w.id)}"><div class="row" style="gap:12px;align-items:end;flex-wrap:wrap">
+    <label style="font-weight:400">Date<br><input type="date" class="field" data-wo="date" value="${esc(w.date)}" style="width:160px"></label><label style="font-weight:400">Service<br>${sel("service", ["Breakfast/Lunch", "Dinner", "Both", "Prep"], w.service)}</label>
+    <label style="font-weight:400">Completed by<br><input class="field" data-wo="by" value="${esc(w.by)}" style="width:150px"></label><label style="font-weight:400">Overall ready?<br>${sel("overall", ["Yes", "No"], w.overall)}</label>
+    <label style="font-weight:400">Reviewed by<br><input class="field" data-wo="reviewedBy" value="${esc(w.reviewedBy || "")}" style="width:150px"></label></div>
+    ${items.length ? `<table class="plain" style="margin-top:10px"><thead><tr>${["Check", "Status", "What is wrong", "Priority", "Who fixes it"].map(x => `<th class="nosort" style="width:auto">${x}</th>`).join("")}</tr></thead><tbody>
+    ${items.map((i, k) => `<tr data-wi="${k}"><td><b>${i.n}. ${esc(i.area)}</b></td><td>${sel("status", WK_STATUS, i.status)}</td><td><input class="field" data-wi-f="finding" value="${esc(i.finding || "")}"></td><td>${sel("priority", ["P1 - Critical", "P2 - Urgent", "P3 - Routine"], i.priority || "P3 - Routine")}</td><td><input class="field" data-wi-f="owner" value="${esc(i.owner || "")}" style="width:120px"></td></tr>`).join("")}</tbody></table>`
+      : `<p class="hint">This walk was saved before the full checklist was kept. Only the items that needed attention are listed.</p><textarea class="field" rows="4" data-wo="issues">${esc(w.issues || "")}</textarea>`}
+    <div class="fields" style="margin-top:8px"><label>Notes:</label><textarea class="field" rows="2" data-wo="notes">${esc(w.notes || "")}</textarea></div></div>
+    <div class="foot"><button class="btn green big" data-act="walk-save">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button><button class="btn wine big" data-act="walk-del" style="margin-left:auto">${icon("trash")}Delete This Walk</button></div>`);
+}
+
 const WK = {checks: null, items: {}, f: {}, svc: ""};
 const WK_STATUS = ["Ready", "Needs Attention", "Corrected", "N/A"];
 
@@ -19,8 +36,8 @@ function vWalk() {
   if (!WK.checks) { loadWalk(); return `<p class="hint">Loading...</p>`; }
   const f = WK.f, bad = WK.checks.filter(c => (WK.items[+c.id.replace(/\D/g, "")] || {}).status === "Needs Attention").length;
   const yn2 = (k, d) => `<select class="field" data-wf="${k}" style="width:100px">${["No", "Yes"].map(o => `<option ${(f[k] || d || "No") === o ? "selected" : ""}>${o}</option>`).join("")}</select>`;
-  const rec = (WK.recent || []).map(w => `<div class="catrow"><div class="grow"><b>${esc(w.id)}</b> · ${esc(shortDate(w.date))} ${esc(w.time || "")} · ${esc(w.service)} · ${esc(w.by)} · ${w.overall === "Yes" ? "Ready" : "<b>Not ready</b>"}${w.issues ? `<div class="hint" style="white-space:pre-wrap">${esc(w.issues)}</div>` : ""}</div></div>`).join("");
-  return `${rec ? `<div class="panel" style="margin:0 0 10px"><h3 style="margin:0 0 6px">Recent walks (includes walks sent from a phone)</h3>${rec}<div class="row" style="margin-top:6px"><button class="btn small" data-act="nav" data-v="walkhist">Open Walk History</button></div></div>` : ""}<p class="hint" style="margin-top:0">Walk the kitchen before service. Everything starts as Ready, so only change the checks that are not. Fix what you can on the spot and mark it Corrected.</p>
+  const rec = (WK.recent || []).map(w => `<div class="catrow" data-act="walk-open" data-id="${esc(w.id)}" style="cursor:pointer"><div class="grow"><b>${esc(w.id)}</b> · ${esc(shortDate(w.date))} ${esc(w.time || "")} · ${esc(w.service)} · ${esc(w.by)} · ${w.overall === "Yes" ? "Ready" : "<b>Not ready</b>"}${w.issues ? `<div class="hint" style="white-space:pre-wrap">${esc(w.issues)}</div>` : ""}</div><button class="btn small" data-act="walk-open" data-id="${esc(w.id)}">${icon("edit")}Open</button></div>`).join("");
+  return `${rec ? `<div class="panel" style="margin:0 0 10px"><h3 style="margin:0 0 6px">Recent walks (includes walks sent from a phone)</h3><p class="hint" style="margin:0 0 6px">Click a walk to see every check and change or delete it.</p>${rec}<div class="row" style="margin-top:6px"><button class="btn small" data-act="nav" data-v="walkhist">Open Walk History</button></div></div>` : ""}<p class="hint" style="margin-top:0">Walk the kitchen before service. Everything starts as Ready, so only change the checks that are not. Fix what you can on the spot and mark it Corrected.</p>
   <div class="row"><label>Service:</label><select class="field" data-wf="service" style="width:170px">${["Breakfast/Lunch", "Dinner", "Both", "Prep"].map(o => `<option ${WK.svc === o ? "selected" : ""}>${o}</option>`).join("")}</select><label>Your first name:</label><input class="field" data-wf="by" value="${esc(f.by !== undefined ? f.by : who())}" style="width:180px"><span class="hint">${bad} need attention</span><button class="btn" data-act="wk-reset">Start Over</button></div>
   <div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:36px">#</th><th class="nosort" style="width:150px">Area</th><th class="nosort" style="width:auto">Check</th><th class="nosort" style="width:170px">Status</th></tr></thead><tbody>
   ${WK.checks.map(c => { const n = +c.id.replace(/\D/g, ""), it = WK.items[n]; return `<tr><td>${n}</td><td><b>${esc(c.area)}</b></td><td>${esc(c.check)}</td><td><select class="field" data-wk="${n}" data-k="status">${WK_STATUS.map(o => `<option ${it.status === o ? "selected" : ""}>${o}</option>`).join("")}</select></td></tr>
@@ -73,6 +90,15 @@ function vLotoGen() {
 }
 
 Object.assign(ACT, {
+  "walk-open"(el) { walkOpen(el.dataset.id); },
+  async "walk-save"() {
+    const id = $("#wobody").dataset.id, w = WK.recent.find(x => x.id === id), v = {}; document.querySelectorAll("#wobody [data-wo]").forEach(x => v[x.dataset.wo] = x.value);
+    const items = walkItems(w); document.querySelectorAll("#wobody [data-wi]").forEach(tr => { const i = items[+tr.dataset.wi]; tr.querySelectorAll("select[data-wo]").forEach(s => i[s.dataset.wo] = s.value); tr.querySelectorAll("[data-wi-f]").forEach(f => i[f.dataset.wiF] = f.value.trim()); });
+    for (const i of items) if (i.status === "Needs Attention" && !(i.finding || "").trim()) return toast(`Check ${i.n} (${i.area}) needs attention. Write what is wrong.`, true);
+    const body = Object.assign({}, w, v, items.length ? {issues: walkIssues(items), itemsJson: JSON.stringify(items)} : {});
+    try { await api("/api/reg/walks", {method: "POST", body: JSON.stringify(body)}); delete state.reg.walks; await loadWalkRecent(); closeModal(); render(); toast("Walk saved."); } catch (e) { toast(e.message, true); } },
+  async "walk-del"() { const id = $("#wobody").dataset.id; if (!confirm("Delete walk " + id + "? This cannot be undone.")) return;
+    try { await api("/api/reg/walks/" + encodeURIComponent(id), {method: "DELETE"}); delete state.reg.walks; await loadWalkRecent(); closeModal(); render(); toast("Walk deleted."); } catch (e) { toast(e.message, true); } },
   "wk-reset"() { WK.items = {}; WK.f = {}; WK.checks = null; render(); },
   async "wk-save"() {
     const f = WK.f, by = (f.by !== undefined ? f.by : who()).trim(); if (!by) { toast("Type your first name.", true); return; }

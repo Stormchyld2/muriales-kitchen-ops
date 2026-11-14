@@ -67,11 +67,11 @@ func init() {
 		Intro:    "The checks on the Daily Readiness Walk, in order. Change, add or remove checks to suit the kitchen.",
 		ListCols: []string{"id", "area", "check", "active"},
 		Fields:   []fieldDef{txt("area", "Area", true), lng("check", "Readiness check", true), yn("active", "Active?")}}
-	regDefs["walks"] = &collDef{Name: "walks", Title: "Readiness Walk History", NewLabel: "Add Entry", Prefix: "RDY-", Digits: 4, Desc: true, Report: "reg:walks",
+	regDefs["walks"] = &collDef{Name: "walks", Title: "Readiness Walk History", NewLabel: "Add Entry", Prefix: "RDY-", Digits: 4, Desc: true, Deletable: true, Report: "reg:walks",
 		Intro:    "One line for each Daily Readiness Walk that was finished.",
 		ListCols: []string{"id", "date", "service", "by", "overall", "p1", "oos", "sanit", "supply"},
 		Fields: []fieldDef{dat("date", "Date", true), sel("service", "Service", walkService, true), txt("time", "Walk time", false), txt("by", "Completed by", true), yn("overall", "Overall ready?"), yn("p1", "P1 issue found?"), yn("oos", "Equipment out of service?"), txt("oosAsset", "Equipment / asset", false), txt("wo", "Work order ref", false),
-			yn("sanit", "Sanitation follow-up?"), yn("supply", "Supply follow-up?"), txt("release", "Service released by", false), txt("reviewedBy", "Manager review", false), docF("issues", "Items needing attention", false), lng("notes", "Notes", false)}}
+			yn("sanit", "Sanitation follow-up?"), yn("supply", "Supply follow-up?"), txt("release", "Service released by", false), txt("reviewedBy", "Manager review", false), docF("issues", "Items needing attention", false), lng("notes", "Notes", false), hiddenF("itemsJson")}}
 	regDefs["binder"] = &collDef{Name: "binder", Title: "Emergency Binder Index", NewLabel: "Add Binder Tab", Prefix: "BND-", Digits: 2, Deletable: true, Starter: "binder_index.json", Report: "reg:binder",
 		Intro:    "The front page of the kitchen emergency binder: what each tab holds, where it is kept and when it was last reviewed.",
 		ListCols: []string{"id", "tab", "doc", "location", "owner", "lastReviewed", "current"},
@@ -167,9 +167,14 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 			}
 		}
 		now := time.Now()
+		all := []map[string]any{}
+		for _, it := range in.Items {
+			all = append(all, map[string]any{"n": it.N, "area": it.Area, "check": it.Check, "status": it.Status, "finding": it.Finding, "corrected": it.Corrected, "priority": it.Priority, "owner": it.Owner})
+		}
+		itemsJSON, _ := json.Marshal(all)
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		rowRec := rec{"date": now.Format(dayFmt), "service": in.Service, "time": now.Format("3:04 PM"), "by": strings.TrimSpace(in.By), "overall": in.Overall, "p1": in.P1, "oos": in.Oos, "oosAsset": in.OosAsset, "wo": in.Wo,
+		rowRec := rec{"itemsJson": string(itemsJSON), "date": now.Format(dayFmt), "service": in.Service, "time": now.Format("3:04 PM"), "by": strings.TrimSpace(in.By), "overall": in.Overall, "p1": in.P1, "oos": in.Oos, "oosAsset": in.OosAsset, "wo": in.Wo,
 			"sanit": in.Sanit, "supply": in.Supply, "release": in.Release, "reviewedBy": in.Reviewed, "issues": strings.Join(iss, "\n"), "notes": in.Notes}
 		if msg := regDefs["walks"].validate(rowRec); msg != "" {
 			fail(w, 400, msg)

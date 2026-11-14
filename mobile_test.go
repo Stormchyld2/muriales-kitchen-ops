@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -214,5 +215,25 @@ func TestWalkMakesInspectionItems(t *testing.T) {
 	// without the flag the computer's walk adds nothing to Inspection Items
 	if _, o := e.post("/api/walk", strings.Replace(body, `"inspection":true`, `"inspection":false`, 1)); o["findings"].(float64) != 0 {
 		t.Error("the computer walk must not add inspection items by itself")
+	}
+}
+
+func TestWalkKeepsItemsAndDeletes(t *testing.T) {
+	e := newEnv(t)
+	if c, o := e.post("/api/walk", `{"service":"Dinner","by":"Sam","overall":"No","items":[{"n":1,"area":"Floors","check":"x","status":"Ready"},{"n":2,"area":"Hood","check":"y","status":"Needs Attention","finding":"greasy"}]}`); c != 200 {
+		t.Fatalf("walk: %d %v", c, o)
+	}
+	rec := httptest.NewRecorder()
+	e.h.ServeHTTP(rec, httptest.NewRequest("GET", "/api/reg/walks", nil))
+	var got struct{ Rows []map[string]any }
+	_ = json.Unmarshal(rec.Body.Bytes(), &got)
+	rows := got.Rows
+	if len(rows) != 1 || !strings.Contains(rows[0]["itemsJson"].(string), "Hood") {
+		t.Fatalf("itemsJson not stored: %v", rows)
+	}
+	rec = httptest.NewRecorder()
+	e.h.ServeHTTP(rec, httptest.NewRequest("DELETE", "/api/reg/walks/"+rows[0]["id"].(string), nil))
+	if rec.Code != 200 {
+		t.Fatalf("delete status %d", rec.Code)
 	}
 }
