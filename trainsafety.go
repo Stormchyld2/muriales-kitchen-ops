@@ -136,6 +136,7 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 	s.seedOnce("guides-238", "guides", "guides_inspect.json")
 	s.seedOnce("guides-240", "guides", "guides_6417.json")
 	s.seedOnce("types-229", "trainingtypes", "training_types_add.json")
+	s.fillGuidePlaceholders()
 	s.mu.Unlock()
 
 	mux.HandleFunc("POST /api/walk", func(w http.ResponseWriter, r *http.Request) {
@@ -480,4 +481,33 @@ func (s *store) addFindings(fs []*Finding) int {
 		return 0
 	}
 	return len(fs)
+}
+
+// fillGuidePlaceholders writes draft text into the station guides that were
+// only a title page, once. A guide someone has already edited is never touched.
+func (s *store) fillGuidePlaceholders() {
+	flag := filepath.Join(s.maintDir(), "seed-guides-fill.flag")
+	if _, err := os.Stat(flag); err == nil {
+		return
+	}
+	b, err := starterFiles.ReadFile("starter/guides_fill.json")
+	if err != nil {
+		return
+	}
+	var fill map[string]string
+	if json.Unmarshal(b, &fill) != nil {
+		return
+	}
+	c := regDefs["guides"]
+	rows, ch := s.regLoad(c), false
+	for _, r := range rows {
+		if body, ok := fill[r["id"]]; ok && strings.HasPrefix(r["body"], "*This document was only a title page") {
+			r["body"], r["updated"], ch = body, nowT().Format("2006-01-02 15:04"), true
+		}
+	}
+	if ch && s.regSave(c, rows) != nil {
+		return
+	}
+	_ = os.MkdirAll(s.maintDir(), 0o755)
+	_ = os.WriteFile(flag, []byte(nowT().Format(time.RFC3339)), 0o644)
 }

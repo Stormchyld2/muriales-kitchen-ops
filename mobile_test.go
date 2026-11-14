@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -318,5 +320,33 @@ func TestWalkPhotos(t *testing.T) {
 		if w.Code != 200 {
 			t.Errorf("phone GET %s = %d", p, w.Code)
 		}
+	}
+}
+
+func TestFillGuidePlaceholders(t *testing.T) {
+	e := newEnv(t)
+	e.s.mu.Lock()
+	rows := e.s.regLoad(regDefs["guides"])
+	for _, r := range rows {
+		if r["id"] == "GDE-053" {
+			r["body"] = "*This document was only a title page when it was loaded.*\n"
+		}
+		if r["id"] == "GDE-052" {
+			r["body"] = "My own words"
+		}
+	}
+	_ = e.s.regSave(regDefs["guides"], rows)
+	_ = os.Remove(filepath.Join(e.s.maintDir(), "seed-guides-fill.flag"))
+	e.s.fillGuidePlaceholders()
+	got := map[string]string{}
+	for _, r := range e.s.regLoad(regDefs["guides"]) {
+		got[r["id"]] = r["body"]
+	}
+	e.s.mu.Unlock()
+	if !strings.Contains(got["GDE-053"], "Fryer Closing SOP") {
+		t.Error("placeholder was not filled")
+	}
+	if got["GDE-052"] != "My own words" {
+		t.Error("an edited guide must not be overwritten")
 	}
 }
