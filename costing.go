@@ -411,6 +411,7 @@ func (s *store) costingRoutes(mux *http.ServeMux) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		a, u, bad := s.importPrices(in.Text)
+		s.rbRecost("Price list import", "")
 		writeJSON(w, 200, map[string]any{"added": a, "updated": u, "bad": bad})
 	})
 	mux.HandleFunc("GET /api/costing/special/{id}", func(w http.ResponseWriter, r *http.Request) {

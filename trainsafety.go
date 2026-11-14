@@ -134,6 +134,7 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 	s.mu.Lock()
 	s.seedOnce("guides-229", "guides", "guides_add.json")
 	s.seedOnce("guides-238", "guides", "guides_inspect.json")
+	s.seedOnce("guides-240", "guides", "guides_6417.json")
 	s.seedOnce("types-229", "trainingtypes", "training_types_add.json")
 	s.mu.Unlock()
 

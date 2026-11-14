@@ -91,3 +91,18 @@ Object.assign(ACT, {
   async "mat-open"(el) { try { await api("/api/materials/open", {method: "POST", body: JSON.stringify({name: el.dataset.n})}); } catch (e) { toast(e.message, true); } },
 });
 document.addEventListener("change", e => { const c = e.target.closest && e.target.closest("[data-nhi]"); if (c) { /* progress is read when saved */ } });
+
+/* Policies & Reference library */
+async function loadRefs() { try { state.refs = await api("/api/reference"); } catch (e) { state.refs = {files: [], folder: ""}; } render(); }
+function vReference() {
+  if (!state.refs) { loadRefs(); return `<p class="hint">Loading...</p>`; }
+  const m = state.refs, sz = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+  return `<div class="row"><button class="btn green big" data-act="ref-folder">${icon("list")}Open Policies &amp; Reference Folder</button><button class="btn" data-act="ref-refresh">Refresh</button><span class="hint">${m.files.length} files</span></div>
+  <p class="hint" style="margin-top:0">The FDA Food Code and the West Virginia food establishment rule are kept here. Copy your own policies, handbooks and permits into the folder, which sits next to this program, and they show up here and open in whatever program normally opens them. A plain-language summary of the 2026 rule change is in Station Guides under Kitchen-Wide.</p>
+  ${!m.files.length ? `<div class="empty"><b>The folder is empty</b>Open the folder and copy your files into it.</div>` : `<div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">File</th><th class="nosort" style="width:auto">Size</th><th class="nosort" style="width:auto">Changed</th><th class="nosort"></th></tr></thead><tbody>${m.files.map(f => `<tr><td><b>${esc(f.name)}</b></td><td>${sz(f.size)}</td><td>${esc(shortDate(f.modified))}</td><td style="text-align:right"><button class="btn small green" data-act="ref-open" data-n="${esc(f.name)}">Open</button></td></tr>`).join("")}</tbody></table></div>`}`;
+}
+Object.assign(ACT, {
+  "ref-refresh"() { state.refs = null; render(); },
+  async "ref-folder"() { await api("/api/reference/folder", {method: "POST", body: "{}"}); },
+  async "ref-open"(el) { try { await api("/api/reference/open", {method: "POST", body: JSON.stringify({name: el.dataset.n})}); } catch (e) { toast(e.message, true); } },
+});

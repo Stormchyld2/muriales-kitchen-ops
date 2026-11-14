@@ -46,6 +46,10 @@ type reportDef struct {
 
 var reportCatalog = []reportDef{
 	{"binder-all", "Emergency", "Emergency Response Binder", "The binder index, emergency contacts, critical equipment plan and vendor contacts, ready to print for the binder.", false},
+	{"rbook-all", "Food Costing", "Recipe Book", "Every recipe with ingredients, procedure, standards, food safety and cost, one per page.", false},
+	{"rbook-cost", "Food Costing", "Recipe Cost Summary", "Portion cost, price, food cost % and review flag for every recipe.", false},
+	{"events-summary", "Food Costing", "Event Costing Summary", "Every event with cost, quote, margin and GOOD / WATCH / LOW.", false},
+	{"meal-binder", "Employee Meals", "Employee Meal Binder", "The whole binder: cover, instructions, monthly menus, weekly and appendix recipes, production guides.", false},
 	{"meals-costs", "Employee Meals", "Employee Meal Costs", "Staff meal recipes with cost per serving, and what was served in the last 30 days with its cost.", false},
 	{"handoff", "Maintenance", "Manager Handoff", "The notes left for the next manager plus what is open: out-of-service equipment, issues, overdue jobs and missed cleaning.", false},
 	{"equipment", "Maintenance", "Equipment List", "Every piece of equipment with make, model, serial number, status and open issues.", false},
@@ -107,6 +111,12 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 	}
 	if id == "selfinsp-blank" || id == "selfinsp-month" || strings.HasPrefix(id, "selfinsp:") {
 		return s.selfReport(id)
+	}
+	if id == "events-summary" || strings.HasPrefix(id, "event:") {
+		return s.eventReport(id)
+	}
+	if id == "rbook-all" || id == "rbook-cost" || strings.HasPrefix(id, "rbook:") {
+		return s.recipeReport(id)
 	}
 	if id == "g90" {
 		return s.g90Report(), true

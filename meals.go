@@ -36,8 +36,8 @@ func init() {
 		Fields:   []fieldDef{txt("name", "Recipe", true), txt("kind", "Kind", false), txt("yield", "Yield", false), txt("time", "Target time", false), docF("ingredients", "Ingredients (amount | ingredient | cost)", false), docF("method", "Method", false), lng("notes", "Production notes", false), yn("active", "Active?")}}
 	regDefs["mealplan"] = &collDef{Name: "mealplan", Title: "Employee Meal Log", NewLabel: "Log a Meal", Prefix: "MP-", Digits: 4, Desc: true, Deletable: true, Report: "meals-costs",
 		Intro:    "What staff were actually served. Pick the recipe and the cost is worked out when costs are entered. Print gives the cost report.",
-		ListCols: []string{"id", "date", "service", "mealName", "servings", "cost", "by"},
-		Fields:   []fieldDef{dat("date", "Date", true), sel("service", "Meal", []string{"Breakfast", "Lunch", "Dinner"}, true), {Key: "recipeId", Label: "Recipe (optional)", Type: "ref", Src: "mealrecipes"}, txt("mealName", "What was served", true), txt("servings", "How many people", false), txt("by", "Made by", false), lng("notes", "Notes", false)}}
+		ListCols: []string{"id", "date", "service", "mealName", "servings", "assignedTo", "prepStart", "status", "cost"},
+		Fields:   []fieldDef{dat("date", "Date", true), sel("service", "Meal", []string{"Breakfast", "Lunch", "Dinner"}, true), {Key: "recipeId", Label: "Recipe (optional)", Type: "ref", Src: "mealrecipes"}, txt("mealName", "Main dish", true), txt("sides", "Sides", false), txt("servings", "Expected people", false), txt("assignedTo", "Assigned to (first name)", false), txt("prepStart", "Prep / start time", false), sel("status", "Status", []string{"Planned", "Prepped", "Served", "Skipped"}, false), yn("overstock", "Using overstock or leftovers?"), txt("by", "Made by", false), lng("notes", "Notes", false)}}
 }
 
 // ---- costs ----
@@ -335,6 +335,9 @@ func (s *store) mealsReport() *report {
 }
 
 func (s *store) mealReports(id string) (*report, bool) {
+	if id == "meal-binder" {
+		return s.mealBinderReport(), true
+	}
 	if n, ok := strings.CutPrefix(id, "mealweek:"); ok {
 		wk, _ := strconv.Atoi(n)
 		if wk < 1 || wk > 4 {
@@ -480,4 +483,57 @@ func (s *store) mealUpdate238() {
 		_ = os.MkdirAll(s.maintDir(), 0o755)
 		_ = os.WriteFile(flag, []byte("done"), 0o644)
 	}
+}
+
+// mealBinderReport is the whole Employee Meal binder: cover, the four weekly
+// menus, every recipe, the appendix recipes and the production notes.
+func (s *store) mealBinderReport() *report {
+	st := s.mealSettings()
+	cover := `<div style="text-align:center;padding:40px 0 20px"><img src="/binder-cover-logo.png" alt="" style="width:360px;max-width:80%"><h1 style="font-size:34px;letter-spacing:.04em;margin:34px 0 10px">EMPLOYEE MEAL SYSTEM &amp; RECIPE BINDER</h1>` +
+		`<p style="font-size:17px;letter-spacing:.08em;margin:4px 0">MONTHLY MENUS &bull; WEEKLY RECIPES</p><p style="font-size:17px;letter-spacing:.08em;margin:4px 0">APPENDIX RECIPES &bull; PRODUCTION GUIDES</p>` +
+		`<p style="font-size:17px;letter-spacing:.08em;margin:4px 0 40px">EMPLOYEE MEAL SYSTEM INSTRUCTIONS</p><p style="font-size:20px;font-weight:700;margin:0">Muriale's Italian Kitchen</p><p style="font-size:16px;margin:4px 0">Kitchen Operations</p></div>`
+	secs := []reportSection{{HTML: cover, Text: "Employee Meal System & Recipe Binder - Muriale's Italian Kitchen, Kitchen Operations"}}
+	secs = append(secs, reportSection{Heading: "Employee Meal System Instructions", Group: true})
+	secs = append(secs, reportSection{Note: fmt.Sprintf("Staff meals run on a 4-week rotation. Each meal is planned to take about %d minutes. Breakfast and lunch cost target $%.2f a person; dinner $%.2f. The cook plans from the weekly menu, uses the recipe in this binder, and logs what was served in the Employee Meal Log (main dish, sides, how many people, who made it, whether overstock or leftovers were used). Appendix recipes are the sauces, sides and bases the weekly recipes call for.", st.Minutes, st.BLTarget, st.DinnerTarget)})
+	secs = append(secs, reportSection{Heading: "Monthly Menus", Group: true})
+	for wk := 1; wk <= 4; wk++ {
+		rows := [][]string{}
+		for _, d := range s.mealWeek(wk, time.Time{}) {
+			bl, dn := "(no recipe yet)", "(no recipe yet)"
+			if d.BL != nil {
+				bl = d.BL.Name
+			}
+			if d.Dinner != nil {
+				dn = d.Dinner.Name
+			}
+			rows = append(rows, []string{d.Day, fmt.Sprint(d.People), bl, dn})
+		}
+		secs = append(secs, reportSection{Heading: fmt.Sprintf("Week %d", wk), Cols: []string{"Day", "People", "Breakfast and Lunch", "Dinner"}, Rows: rows})
+	}
+	prod := [][]string{}
+	for _, part := range []struct{ title, coll string }{{"Weekly Recipes", "mealrecipes"}, {"Appendix Recipes", "mealappendix"}} {
+		secs = append(secs, reportSection{Heading: part.title, Group: true})
+		n := 0
+		for _, r := range s.regSorted(regDefs[part.coll]) {
+			if r["active"] == "No" {
+				continue
+			}
+			n++
+			md := s.mealMarkdown(r, true)
+			secs = append(secs, reportSection{Heading: r["name"], HTML: mdHTML(md), Text: mdPlain(md)})
+			if strings.TrimSpace(r["notes"]) != "" {
+				prod = append(prod, []string{r["name"], r["yield"], r["time"], r["notes"]})
+			}
+		}
+		if n == 0 {
+			secs = append(secs, reportSection{Note: "No recipes have been added yet."})
+		}
+	}
+	secs = append(secs, reportSection{Heading: "Production Guides", Group: true})
+	if len(prod) == 0 {
+		secs = append(secs, reportSection{Note: "No production notes have been written yet. Add them on each recipe under Production notes."})
+	} else {
+		secs = append(secs, reportSection{Cols: []string{"Recipe", "Yield", "Target time", "Production notes"}, Rows: prod})
+	}
+	return &report{Title: "Employee Meal System & Recipe Binder", Subtitle: time.Now().Format("January 2, 2006"), Sections: secs}
 }

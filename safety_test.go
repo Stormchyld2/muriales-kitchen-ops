@@ -605,3 +605,126 @@ func TestMealUpdate238(t *testing.T) {
 		t.Fatalf("appendix %d", len(a["rows"].([]any)))
 	}
 }
+
+func TestRecipeBook(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/costing/prices/import", `{"text":"Bacon | 60.00 | 15 | lb"}`)
+	code, o := e.post("/api/reg/recipes", `{"name":"BLT","category":"Entree","status":"Active","portions":"10","menuPrice":"5","ingredients":"5 lb | Bacon","procedure":"Cook bacon | oven | 20 min | 350F | Yes"}`)
+	if code != 200 {
+		t.Fatalf("add recipe %d %v", code, o)
+	}
+	rows := o["rows"].([]any)
+	r := rows[0].(map[string]any)
+	if r["perPortion"] != "$2.00" || r["flag"] != "REVIEW" {
+		t.Fatalf("cost/flag wrong: %v %v", r["perPortion"], r["flag"])
+	}
+	id := r["id"].(string)
+	// first save sets the baseline, so no history yet
+	e.post("/api/rbook/recost", `{}`)
+	_, h := e.get2("/api/reg/costhist")
+	if len(h["rows"].([]any)) != 0 {
+		t.Fatalf("baseline should not log: %v", h["rows"])
+	}
+	// a price change on the list is logged
+	_, p := e.get2("/api/reg/prices")
+	pid := p["rows"].([]any)[0].(map[string]any)["id"].(string)
+	e.post("/api/reg/prices", `{"id":"`+pid+`","ingredient":"Bacon","packPrice":"75.00","packSize":"15","unit":"lb"}`)
+	_, h = e.get2("/api/reg/costhist")
+	hr := h["rows"].([]any)
+	if len(hr) != 1 || hr[0].(map[string]any)["newCost"] != "2.50" {
+		t.Fatalf("history after price change: %v", hr)
+	}
+	// editing the selling price is logged with the typed reason
+	e.post("/api/reg/recipes", `{"id":"`+id+`","name":"BLT","category":"Entree","status":"Active","portions":"10","menuPrice":"6","ingredients":"5 lb | Bacon","procedure":"Cook bacon | oven | 20 min | 350F | Yes","changeReason":"Menu reprice"}`)
+	_, h = e.get2("/api/reg/costhist")
+	hr = h["rows"].([]any)
+	if len(hr) != 2 || hr[0].(map[string]any)["reason"] != "Menu reprice" {
+		t.Fatalf("history after price edit: %v", hr)
+	}
+	rr, _ := e.get("/api/reports/rbook:" + id + "?print=1")
+	if rr.Code != 200 || !strings.Contains(rr.Body.String(), "Cook bacon") {
+		t.Fatalf("recipe sheet: %d", rr.Code)
+	}
+}
+
+func TestEventCosting(t *testing.T) {
+	e := newEnv(t)
+	e.post("/api/costing/prices/import", `{"text":"Bacon | 60.00 | 15 | lb"}`)
+	_, o := e.post("/api/reg/recipes", `{"name":"BLT","category":"Entree","status":"Active","portions":"10","menuPrice":"5","ingredients":"5 lb | Bacon"}`)
+	rid := o["rows"].([]any)[0].(map[string]any)["id"].(string)
+	_, o = e.post("/api/reg/events", `{"name":"Smith Wedding","date":"2026-12-05","serviceType":"Buffet","guests":"100","quotedPrice":"1000","status":"Confirmed"}`)
+	eid := o["rows"].([]any)[0].(map[string]any)["id"].(string)
+	// 100 servings at $2.00 (from the recipe) with 10% buffer = $220
+	e.post("/api/reg/eventmenu", `{"event":"`+eid+`","item":"BLT trays","recipeId":"`+rid+`","servings":"100","waste":"10"}`)
+	e.post("/api/reg/eventcost", `{"event":"`+eid+`","costType":"Labor","description":"Servers","qty":"10","rate":"20"}`)
+	_, o = e.get2("/api/reg/events")
+	r := o["rows"].([]any)[0].(map[string]any)
+	if r["foodCost"] != "$220.00" || r["otherCost"] != "$200.00" || r["totalCost"] != "$420.00" || r["margin"] != "58.0%" || r["band"] != "GOOD" {
+		t.Fatalf("event calc wrong: %v", r)
+	}
+	_, s := e.get2("/api/events/summary")
+	if s["confirmed"].(float64) != 1 || s["revenue"].(float64) != 1000 {
+		t.Fatalf("summary: %v", s)
+	}
+	if c, _ := e.post("/api/events/settings", `{"good":20,"watch":30}`); c != 400 {
+		t.Fatalf("bad thresholds accepted: %d", c)
+	}
+	e.post("/api/events/settings", `{"good":70,"watch":50}`)
+	_, o = e.get2("/api/reg/events")
+	if o["rows"].([]any)[0].(map[string]any)["band"] != "WATCH" {
+		t.Fatalf("band after threshold change: %v", o["rows"])
+	}
+	e.post("/api/reg/eventres", `{"event":"`+eid+`","revenue":"1100","foodActual":"250","otherActual":"200","review":"Ran long"}`)
+	_, o = e.get2("/api/reg/eventres")
+	rr := o["rows"].([]any)[0].(map[string]any)
+	if rr["profit"] != "$650.00" || rr["variance"] != "$70.00" {
+		t.Fatalf("result calc: %v", rr)
+	}
+	rep, _ := e.get("/api/reports/event:" + eid + "?print=1")
+	if rep.Code != 200 || !strings.Contains(rep.Body.String(), "BLT trays") || !strings.Contains(rep.Body.String(), "Ran long") {
+		t.Fatalf("cost sheet: %d", rep.Code)
+	}
+}
+
+func TestReferenceLibrary(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/reference")
+	files := o["files"].([]any)
+	if len(files) != 2 {
+		t.Fatalf("expected the 2 bundled documents, got %v", files)
+	}
+	if c, _ := e.post("/api/reference/open", `{"name":"../x.pdf"}`); c != 400 {
+		t.Fatalf("path escape accepted: %d", c)
+	}
+	if c, _ := e.post("/api/reference/open", `{"name":"missing.pdf"}`); c != 404 {
+		t.Fatalf("missing file: %d", c)
+	}
+	n := files[0].(map[string]any)["name"].(string)
+	if c, _ := e.post("/api/reference/open", `{"name":"`+n+`"}`); c != 200 {
+		t.Fatalf("open: %d", c)
+	}
+	_, g := e.get2("/api/guides/GDE-112")
+	if g["title"] == nil && g["html"] == nil {
+		t.Fatalf("64-17 summary guide missing: %v", g)
+	}
+}
+
+func TestMealBinderAndPlanFields(t *testing.T) {
+	e := newEnv(t)
+	rr, _ := e.get("/api/reports/meal-binder?print=1")
+	b := rr.Body.String()
+	if rr.Code != 200 || !strings.Contains(b, "EMPLOYEE MEAL SYSTEM &amp; RECIPE BINDER") || !strings.Contains(b, "binder-cover-logo.png") || !strings.Contains(b, "Appendix Recipes") || !strings.Contains(b, "Production Guides") {
+		t.Fatalf("meal binder: %d", rr.Code)
+	}
+	if strings.Index(b, "EMPLOYEE MEAL SYSTEM &amp; RECIPE BINDER") > strings.Index(b, "Monthly Menus") {
+		t.Fatal("cover is not first")
+	}
+	if lb, err := uiFiles.ReadFile("ui/binder-cover-logo.png"); err != nil || len(lb) < 1000 {
+		t.Fatalf("cover logo not embedded: %v", err)
+	}
+	_, o := e.post("/api/reg/mealplan", `{"date":"2026-11-16","service":"Dinner","mealName":"Chicken Parm","sides":"Pasta","servings":"12","assignedTo":"Sam","prepStart":"3:00 PM","status":"Planned","overstock":"Yes"}`)
+	r := o["rows"].([]any)[0].(map[string]any)
+	if r["assignedTo"] != "Sam" || r["status"] != "Planned" || r["sides"] != "Pasta" || r["overstock"] != "Yes" {
+		t.Fatalf("plan fields not kept: %v", r)
+	}
+}

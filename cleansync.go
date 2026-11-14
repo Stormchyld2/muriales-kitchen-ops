@@ -54,6 +54,14 @@ func (s *store) decorate(c *collDef, rows []rec) []rec {
 		s.decorateCosting(c, rows)
 		return rows
 	}
+	if c.Name == "events" || c.Name == "eventmenu" || c.Name == "eventcost" || c.Name == "eventres" {
+		s.decorateEvents(c, rows)
+		return rows
+	}
+	if c.Name == "recipes" {
+		s.decorateRecipes(rows)
+		return rows
+	}
 	if c.Name == "selfinsp" {
 		s.decorateSelf(rows)
 		return rows
