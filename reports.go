@@ -129,7 +129,7 @@ func (s *store) buildReport(id, month string) (*report, bool) {
 	if strings.HasPrefix(id, "reg:") || strings.HasPrefix(id, "rec:") || strings.HasPrefix(id, "lototag:") || id == "binder-all" {
 		return s.safetyReport(id)
 	}
-	if strings.HasPrefix(id, "guide:") || strings.HasPrefix(id, "checklist:") || id == "stchecklog" {
+	if strings.HasPrefix(id, "guide:") || strings.HasPrefix(id, "stationbook:") || strings.HasPrefix(id, "checklist:") || id == "stchecklog" {
 		return s.guideReport(id)
 	}
 	if strings.HasPrefix(id, "training") {

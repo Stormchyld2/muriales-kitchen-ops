@@ -498,3 +498,26 @@ func TestOperationsLists(t *testing.T) {
 		t.Fatalf("attention %v", a)
 	}
 }
+
+func TestStationBook(t *testing.T) {
+	e := newEnv(t)
+	rep, ok := e.s.guideReport("stationbook:Salad")
+	if !ok || rep.Title != "Salad Station Book" {
+		t.Fatal("no station book")
+	}
+	groups, html := 0, 0
+	for _, sec := range rep.Sections {
+		if sec.Group {
+			groups++
+		}
+		if sec.HTML != "" {
+			html++
+		}
+	}
+	if groups < 8 || html < 7 {
+		t.Fatalf("salad book: %d banners, %d guides", groups, html)
+	}
+	if rep, _ := e.s.guideReport("stationbook:Nowhere"); len(rep.Sections) != 1 {
+		t.Fatal("empty station should say so")
+	}
+}

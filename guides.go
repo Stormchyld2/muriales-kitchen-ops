@@ -259,6 +259,9 @@ func (s *store) guideReport(id string) (*report, bool) {
 		}
 		return nil, false
 	}
+	if st, ok := strings.CutPrefix(id, "stationbook:"); ok {
+		return s.stationBook(st), true
+	}
 	cid, _ := strings.CutPrefix(id, "checklist:")
 	for _, r := range s.regLoad(regDefs["stchecklists"]) {
 		if r["id"] != cid {
@@ -416,4 +419,41 @@ func (s *store) guideRoutes(mux *http.ServeMux) {
 		}
 		writeJSON(w, 200, map[string]any{"lists": out})
 	})
+}
+
+// stationBook is every SOP, guide and checklist for one station, in reading
+// order, each starting on its own page.
+func (s *store) stationBook(station string) *report {
+	rep := &report{Title: station + " Station Book", Subtitle: "SOPs, guides and checklists - " + time.Now().Format("January 2, 2006")}
+	order := func(k string) int {
+		for i, v := range guideKinds {
+			if v == k {
+				return i
+			}
+		}
+		return len(guideKinds)
+	}
+	gs := []rec{}
+	for _, r := range s.regLoad(regDefs["guides"]) {
+		if r["station"] == station {
+			gs = append(gs, r)
+		}
+	}
+	sort.SliceStable(gs, func(i, j int) bool { return order(gs[i]["kind"]) < order(gs[j]["kind"]) })
+	for _, g := range gs {
+		rep.Sections = append(rep.Sections, reportSection{Heading: g["title"], Group: true}, reportSection{HTML: mdHTML(g["body"]), Text: mdPlain(g["body"])})
+	}
+	for _, c := range s.regSorted(regDefs["stchecklists"]) {
+		if c["station"] != station {
+			continue
+		}
+		if cr, ok := s.guideReport("checklist:" + c["id"]); ok {
+			rep.Sections = append(rep.Sections, reportSection{Heading: "Checklist: " + c["title"], Group: true})
+			rep.Sections = append(rep.Sections, cr.Sections...)
+		}
+	}
+	if len(rep.Sections) == 0 {
+		rep.Sections = append(rep.Sections, reportSection{Note: "Nothing has been written for this station yet."})
+	}
+	return rep
 }

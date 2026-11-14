@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.38.0", "Station Guides: grouped by station, with Open, Edit and Print on every SOP row. Pick a station and press Print Station Book to print every SOP, guide and checklist for it, each on its own page."],
   ["2.37.3", "The Muriale's logo now stays put at the top of the menu while the menu below it scrolls."],
   ["2.37.2", "90-Day Goals: an Add Goal button at the top, goals renumber automatically, and every edit form now has a Delete button at the bottom right (works on all lists that allow deleting)."],
   ["2.37.1", "Monthly Summary: the highlighted warning tile (such as PM jobs overdue) was a white block with unreadable text; it now matches the dark theme."],

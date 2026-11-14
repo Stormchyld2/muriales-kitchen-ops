@@ -18,8 +18,9 @@ function vGuides() {
   const rows = GD.list.filter(g => (!GD.station || g.station === GD.station));
   return `<div class="row"><input class="field" id="gdq" style="width:320px" placeholder="Search every guide..." value="${esc(GD.q)}"><button class="btn" data-act="gd-search">Search</button>${GD.q ? `<button class="btn" data-act="gd-clear">Clear</button>` : ""}<button class="btn green" data-act="reg-new" data-c="guides">${icon("plus")}Add Guide</button><span class="hint">${rows.length} guides</span></div>
   <div class="row" style="flex-wrap:wrap;gap:6px"><button class="btn small ${GD.station ? "" : "green"}" data-act="gd-station" data-s="">All</button>${sts.map(n => `<button class="btn small ${GD.station === n ? "green" : ""}" data-act="gd-station" data-s="${esc(n)}">${esc(n)}</button>`).join("")}</div>
-  ${!rows.length ? `<div class="empty"><b>No guides found</b></div>` : `<div class="tablewrap"><table class="plain"><thead><tr><th class="nosort" style="width:auto">Station</th><th class="nosort" style="width:auto">Kind</th><th class="nosort" style="width:auto">Guide</th><th class="nosort"></th></tr></thead><tbody>
-  ${rows.map(g => `<tr><td>${esc(g.station)}</td><td>${esc(g.kind)}</td><td><b>${esc(g.title)}</b>${g.snip ? `<div class="hint">...${esc(g.snip)}...</div>` : ""}</td><td style="text-align:right"><button class="btn small green" data-act="gd-open" data-id="${esc(g.id)}">Open</button></td></tr>`).join("")}</tbody></table></div>`}`;
+  ${GD.station ? `<div class="row"><button class="btn green" data-act="gd-book" data-s="${esc(GD.station)}">${icon("print")}Print the ${esc(GD.station)} Station Book</button><span class="hint">Every SOP, guide and checklist for this station, each on its own page.</span></div>` : ""}
+  ${!rows.length ? `<div class="empty"><b>No guides found</b></div>` : [...new Set(rows.map(g => g.station))].map(st => `<div class="tablewrap"><h3 style="margin:10px 0 4px">${esc(st)}</h3><table class="plain"><thead><tr><th class="nosort" style="width:150px">Kind</th><th class="nosort" style="width:auto">Guide</th><th class="nosort"></th></tr></thead><tbody>
+  ${rows.filter(g => g.station === st).map(g => `<tr><td>${esc(g.kind)}</td><td><b>${esc(g.title)}</b>${g.snip ? `<div class="hint">...${esc(g.snip)}...</div>` : ""}</td><td style="text-align:right;white-space:nowrap"><button class="btn small green" data-act="gd-open" data-id="${esc(g.id)}">Open</button> <button class="btn small" data-act="reg-open" data-c="guides" data-id="${esc(g.id)}">${icon("edit")}Edit</button> <button class="btn small" data-act="gd-print" data-id="${esc(g.id)}">${icon("print")}Print</button></td></tr>`).join("")}</tbody></table></div>`).join("")}`;
 }
 
 async function guideView(id) {
@@ -52,6 +53,7 @@ Object.assign(ACT, {
   "gd-search"() { GD.q = $("#gdq").value.trim(); GD.list = null; render(); },
   "gd-clear"() { GD.q = ""; GD.list = null; render(); },
   "gd-open"(el) { guideView(el.dataset.id); },
+  "gd-book"(el) { repPrint("stationbook:" + el.dataset.s); },
   "gd-print"(el) { repPrint("guide:" + el.dataset.id); },
   "stc-pick"(el) { GD.pick = el.dataset.id; GD.ticked = new Set(); render(); },
   "stc-back"() { GD.pick = ""; GD.lists = null; render(); },
