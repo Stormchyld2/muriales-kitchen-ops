@@ -242,3 +242,4 @@ header p{color:#ece6d6}
 .wfitem{display:flex;align-items:flex-start;gap:12px;padding:10px 4px;border-top:1px solid var(--line,#3a3f47);cursor:pointer}.wfitem input{width:22px;height:22px;flex:none;margin-top:1px}.wfitem.done .grow{opacity:.55;text-decoration:line-through}
 .wfblock.wfnow{border-color:#4a8fd9;box-shadow:0 0 0 2px rgba(74,143,217,.35)}.wfbar{height:10px;border-radius:5px;background:rgba(255,255,255,.1);margin-top:10px;overflow:hidden}.wfbar>div{height:100%;background:#4caf6a}
 .wfgoal{align-items:flex-start}
+aside{overflow:hidden}aside img{flex:none}aside #nav{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
