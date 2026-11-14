@@ -813,3 +813,20 @@ func TestParsAndBreakage(t *testing.T) {
 		t.Fatalf("no breakage alert: %v", dash["attention"])
 	}
 }
+
+func TestMenuHidden(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/menu")
+	if len(o["hidden"].([]any)) != 0 {
+		t.Fatalf("default: %v", o)
+	}
+	_, o = e.post("/api/menu", `{"hidden":["mod:pars","sub:swpar","bogus","sub:swpar"]}`)
+	h := o["hidden"].([]any)
+	if len(h) != 2 {
+		t.Fatalf("clean list: %v", h)
+	}
+	_, o = e.get2("/api/menu")
+	if len(o["hidden"].([]any)) != 2 {
+		t.Fatalf("not kept: %v", o)
+	}
+}

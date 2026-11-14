@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.42.0", "Settings has a new Show / Hide Tabs page: untick any tab or subtab to hide it from the menu on every computer, and tick it again to bring it back (nothing is deleted). Order Guide Pars now shows every vendor, including ones with no items yet, and Add Order Item opens a form for each line (vendor, where it is kept, product, item number, pack, busy and slow par)."],
   ["2.41.0", "New Pars section: Daily Par Check (count each station's par sheet, sign it, print it), Station Par Sheets for Apps, Bread & Dessert, Spoon, Middle, Salad, Hoagie Bench and Sauté, Order Guide Pars (about 330 vendor items with busy and slow pars, type new pars right in the list) with the Order Days schedule and an 'Order today' reminder. New Breakage & Replacement Log and Repeat Review under Operations, with a monthly summary, repeat flags and a dashboard alert for open replacements. Prep Pars is replaced by the station par sheets. The program now uses the correct Muriale's logo."],
   ["2.40.2", "Smallware & Service-Ware Pars: type new Par and On hand numbers straight into the list and they save; new Condition, Where it is kept, Labeled and What to do fields track what needs repair, replacing or throwing out."],
   ["2.40.1", "Shed Inventory is gone from the Operations menu. The Smallware & Service-Ware Pars list is the one inventory for smallwares."],

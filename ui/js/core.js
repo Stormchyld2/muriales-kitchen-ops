@@ -136,7 +136,7 @@ const SUB = {parcheck:"Daily Par Check", parsheets:"Station Par Sheets", ordpars
 function render() {
   const active = state.view === "detail" ? "library" : state.view;
   if (state.lastView !== state.view) { const cur = modOf(state.view); if (cur) state.openMod = cur; state.lastView = state.view; }
-  $("#nav").innerHTML = NAV_HEAD.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("") + MODS.map(m => `<button class="nav mod ${state.openMod === m.k ? "open" : ""}" data-act="mod" data-k="${m.k}">${icon(m.icon)}<span class="grow">${m.label}</span><span class="chev">${state.openMod === m.k ? "▾" : "▸"}</span></button>`
+  $("#nav").innerHTML = NAV_HEAD.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("") + menuMods().map(m => `<button class="nav mod ${state.openMod === m.k ? "open" : ""}" data-act="mod" data-k="${m.k}">${icon(m.icon)}<span class="grow">${m.label}</span><span class="chev">${state.openMod === m.k ? "▾" : "▸"}</span></button>`
       + (state.openMod === m.k ? m.subs.map(([v, l]) => `<button class="nav sub ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${l}</button>`).join("") : "")).join("")
     + `<button class="btn wine wo" data-act="problem-new" title="Equipment, food safety, chemical, temperature, training or a reminder">${icon("warn")}Report a Problem</button><button class="btn green wo" data-act="todo-new" title="Gather everything due into one list">${icon("list")}Create To-Do List</button><div class="navsep"></div>` + NAV_TOP.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("")
     + (MAINT_VIEWS.includes(state.view) ? `<button class="btn green wo" data-act="submit-wo" title="Opens MaintainX in its own window">${icon("ext")}Submit Work Order</button>` : "");
@@ -201,7 +201,7 @@ const grab = (sel, attr) => Object.fromEntries([...document.querySelectorAll(sel
 const maintDone = async (data, msg) => { state.maint = data; state.sum = null; closeModal(); if (state.view === "cal") await loadCal(true); if (state.view === "todo") await refreshTodo(); render(); if (msg) toast(msg); };
 
 Object.assign(ACT, {
-  mod(el) { const k = el.dataset.k, m = MODS.find(x => x.k === k);
+  mod(el) { const k = el.dataset.k, m = menuMods().find(x => x.k === k) || MODS.find(x => x.k === k);
     if (state.openMod === k) { state.openMod = null; return render(); }
     state.openMod = k; return ACT.nav({dataset: {v: m.subs[0][0]}}); },
   nav(el) { const v = el.dataset.v; if (v === "insp") state.insp = null; if (v === "finds") state.finds = null; if (v === "summary") state.sum = null; if (v === "print") return state.lib.products.length ? printDialog("all") : toast("Add a product first."); if (v === "add") state.form = blankForm(); state.view = v; if (v === "settings") loadTab(); if (v === "dash") loadDash(); state.focusQ = false; render(); if (v === "library") return reload().then(render); },

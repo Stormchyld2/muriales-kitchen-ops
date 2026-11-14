@@ -87,3 +87,5 @@ The daily summary (Settings, Daily Summary & Backup Copy) can be sent automatica
 
 - **Pars** (own section): *Daily Par Check* counts a station against its par sheet (On hand, Make, Initial) and signs it; *Station Par Sheets* are the 7 sheets you provided, editable with the par typed straight into the list; *Order Guide Pars* holds the vendor order guide (location, pack, busy and slow par) and *Order Days* the days each vendor's order goes in, with an "Order today" reminder. These are par references only; purchasing stays in 365.
 - **Breakage & Replacement Log** and **Repeat Review** (Operations): smallware breakage with cost, status and an automatic Repeat flag (same item twice in 90 days), a monthly summary report, and a dashboard alert while replacements are open.
+
+- **Show / Hide Tabs** (Settings): hide any tab or subtab from the menu for every computer; nothing is deleted.
