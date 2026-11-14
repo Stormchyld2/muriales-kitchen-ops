@@ -31,7 +31,7 @@ async function phoneRefresh() {
   if (v === "temps" || v === "tpoints") await loadTemps();
   else if (v === "dash") await loadDash();
   else if (v === "cltoday") { state.today = null; await loadToday(); }
-  else if (v === "parcheck" || v === "brk" || v === "dwtoday") ACT.nav({dataset: {v}});
+  else if (v === "parcheck" || v === "brk" || v === "dwtoday" || v === "finds") ACT.nav({dataset: {v}});
   else if (v === "notes" || v === "todo") { await reload(); if (v === "todo") await refreshTodo(); else render(); }
   else if (v === "settings" && state.tab === "phone") await loadPhone();
   else return;

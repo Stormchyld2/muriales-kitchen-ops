@@ -46,7 +46,7 @@ function setMe(v){const n=(v||"").trim().split(/\s+/)[0]||"";const t=n?n[0].toUp
 function whoField(){return `<label>Your first name</label><input id="by" value="${esc(me())}" autocomplete="off" autocapitalize="words" placeholder="First name">`;}
 function needBy(){const v=setMe($("#by").value);if(!v){toast("Type your first name.",true);$("#by").focus();return "";}return v;}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
-const SCREENS={home,temps,par,work,clean,todo,brk,note};
+const SCREENS={home,temps,par,work,clean,todo,walk,brk,note};
 async function route(){$("#errbar").style.display="none";const h=(location.hash||"#home").slice(1);const [name,arg]=h.split("/");$("#back").style.display=name==="home"?"none":"";setMe(me());
   try{await (SCREENS[name]||home)(decodeURIComponent(arg||""));}catch(e){V.innerHTML=`<div class="card bad">${esc(e.message)}</div><button class="btn alt" onclick="route()">Try again</button>`;}}
 window.addEventListener("hashchange",route);$("#back").onclick=()=>location.hash="home";
@@ -61,6 +61,7 @@ function home(){title("Muriale's Kitchen");
   <a class="tile" href="#clean">🧽<span>Cleaning</span></a>
   <a class="tile" href="#todo">🛠️<span>To-Do &amp; Maintenance</span></a>
   <a class="tile" href="#brk">🥣<span>Log Breakage</span></a>
+  <a class="tile" href="#walk">🔍<span>Facility Walkthrough</span></a>
   <a class="tile" href="#note">📝<span>Handoff Note</span><small>Leave a note for the next shift</small></a></div>
   <p class="mute" style="text-align:center;margin-top:20px">${esc(new Date().toDateString())}</p>`;}
 
@@ -152,6 +153,26 @@ async function todo(){title("To-Do & Maintenance");const t=today();
   $("#add").onclick=()=>{const b=$("#addbox");b.style.display=b.style.display==="none"?"block":"none";};
   $("#a-go").onclick=async()=>{const by=needBy();if(!by)return;const title=$("#a-t").value.trim();if(!title){toast("Write what needs doing.",true);return;}
     try{await post("/api/maint/todos",{title,type:$("#a-ty").value,due:$("#a-d").value,createdBy:by});toast("Added.");route();}catch(e){toast(e.message,true);}};}
+
+let walkLog=[];
+async function walk(){title("Facility Walkthrough");const o=await api("/api/phone/options");
+  const lastArea=(()=>{try{return localStorage.getItem("warea")||""}catch(e){return ""}})();
+  const pr=o.priorities||[];const defP=pr[2]||pr[pr.length-1]||"";
+  V.innerHTML=whoField()+`<p class="mute">Walk the building. Add each broken, damaged or unsafe thing as you find it. Each one is saved right away to Inspection Items.</p>
+  <div class="card"><label>Area</label><select id="w-a"><option value="">Choose the area</option>${o.areas.map(a=>`<option ${a===lastArea?"selected":""}>${esc(a)}</option>`).join("")}</select>
+  <label>What is wrong?</label><textarea id="w-w" placeholder="e.g. Walk-in door seal torn, hood light out"></textarea>
+  <label>Type</label><select id="w-c">${o.categories.map(c=>`<option>${esc(c)}</option>`).join("")}</select>
+  <label>How urgent?</label><select id="w-p">${pr.map(x=>`<option ${x===defP?"selected":""}>${esc(x)}</option>`).join("")}</select>
+  <button class="btn" id="w-go">Add Finding</button></div>
+  <h2>Logged this walkthrough (${walkLog.length})</h2>${walkLog.length?walkLog.map(x=>`<div class="card"><b>${esc(x.area||"No area")}</b> · <span class="mute">${esc(x.cat)} · ${esc(x.pri)}</span><br>${esc(x.what)}<div class="ok mute">Saved ${esc(x.at)}</div></div>`).join(""):`<p class="mute">Nothing yet.</p>`}`;
+  V.onclick=null;
+  $("#w-go").onclick=async()=>{const b=$("#w-go");if(b.disabled)return;const by=needBy();if(!by)return;const what=$("#w-w").value.trim(),area=$("#w-a").value;
+    if(!area){toast("Choose the area.",true);return;}if(!what){toast("Write what is wrong.",true);return;}
+    b.disabled=true;b.textContent="Saving...";
+    try{await post("/api/maint/findings",{area,category:$("#w-c").value,what,priority:$("#w-p").value,foundBy:by});
+      try{localStorage.setItem("warea",area)}catch(e){}
+      walkLog.unshift({area,cat:$("#w-c").value,pri:$("#w-p").value,what,at:new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})});toast("Saved.");walk();}
+    catch(e){toast(e.message,true);b.disabled=false;b.textContent="Add Finding";}};}
 
 function note(){title("Handoff Note");V.innerHTML=whoField()+`<label>Note for the next shift</label><textarea id="nt" style="min-height:160px" maxlength="2000"></textarea><div class="bar"><button class="btn" id="go">Leave Note</button></div>`;
   $("#go").onclick=async()=>{const by=needBy();if(!by)return;const text=$("#nt").value.trim();if(!text){toast("Write the note first.",true);return;}

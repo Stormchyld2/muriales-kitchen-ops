@@ -157,6 +157,8 @@ var phoneAllowed = []phoneRule{
 	{"POST", regexp.MustCompile(`^/api/clean/deepdone$`)},
 	{"POST", regexp.MustCompile(`^/api/mgr/done$`)},
 	{"GET", regexp.MustCompile(`^/api/todo$`)},
+	{"GET", regexp.MustCompile(`^/api/phone/options$`)},
+	{"POST", regexp.MustCompile(`^/api/maint/findings$`)}, // facility walkthrough: add a finding
 	{"POST", regexp.MustCompile(`^/api/maint/pm/[^/]+/done$`)},
 	{"POST", regexp.MustCompile(`^/api/maint/todos$`)},
 	{"POST", regexp.MustCompile(`^/api/maint/todos/[^/]+/done$`)},
@@ -258,6 +260,12 @@ func (s *store) phoneStatus() map[string]any {
 func (s *store) phoneRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/phone", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, s.phoneStatus())
+	})
+	mux.HandleFunc("GET /api/phone/options", func(w http.ResponseWriter, r *http.Request) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		_, _, st := s.loadMaint()
+		writeJSON(w, 200, map[string]any{"areas": st.areas(), "categories": findingCategories, "priorities": priorities})
 	})
 	mux.HandleFunc("GET /api/phone/stamp", func(w http.ResponseWriter, r *http.Request) {
 		phone.mu.Lock()

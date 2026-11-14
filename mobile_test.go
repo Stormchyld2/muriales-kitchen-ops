@@ -51,17 +51,17 @@ func TestPhoneGate(t *testing.T) {
 			t.Errorf("GET %s = %d %q", p, c, hit)
 		}
 	}
-	for _, p := range []string{"/api/clean/verify", "/api/maint/pm", "/api/maint/issues/x", "/api/clean/missed", "/api/maint/todos/x"} {
+	for _, p := range []string{"/api/clean/verify", "/api/maint/pm", "/api/maint/issues/x", "/api/clean/missed", "/api/maint/todos/x", "/api/maint/findings/x"} {
 		if c := call(lan, "POST", p, "{}"); c != 403 {
 			t.Errorf("POST %s = %d, want 403", p, c)
 		}
 	}
-	for _, p := range []string{"/api/clean/done", "/api/clean/deepdone", "/api/mgr/done", "/api/maint/pm/abc/done", "/api/maint/todos", "/api/maint/todos/abc/done"} {
+	for _, p := range []string{"/api/clean/done", "/api/clean/deepdone", "/api/mgr/done", "/api/maint/pm/abc/done", "/api/maint/todos", "/api/maint/todos/abc/done", "/api/maint/findings"} {
 		if c := call(lan, "POST", p, "{}"); c != 200 {
 			t.Errorf("POST %s = %d, want 200", p, c)
 		}
 	}
-	for _, p := range []string{"/api/clean/today", "/api/todo"} {
+	for _, p := range []string{"/api/clean/today", "/api/todo", "/api/phone/options"} {
 		if c := call(lan, "GET", p, ""); c != 200 {
 			t.Errorf("GET %s = %d, want 200", p, c)
 		}
