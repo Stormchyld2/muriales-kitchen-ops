@@ -67,9 +67,10 @@ async function temps(){title("Temperatures");const d=await api("/api/temps");con
   V.innerHTML=whoField()+Object.entries(groups).map(([g,ps])=>`<h2>${esc(g)}</h2>`+ps.map(p=>{const r=done[p.id];const lim=(p.min!=null?p.min+"°":"")+(p.min!=null&&p.max!=null?" to ":"")+(p.max!=null?(p.min==null?"max ":"")+p.max+"°":"");
     return `<div class="card" data-p="${esc(p.id)}"><div class="row"><b>${esc(p.name)}</b>${lim?`<span class="mute fix">${esc(lim)}</span>`:""}</div>
     ${r?`<div class="ok mute">Logged today: ${esc(r.temp)}°F at ${esc(r.at.slice(11))} by ${esc(r.by)}</div>`:""}
-    <input class="tv" type="number" inputmode="decimal" step="any" placeholder="°F">
+    <div class="row"><button type="button" class="btn alt sm fix neg" style="min-width:64px;font-size:22px">±</button><input class="tv" type="text" inputmode="decimal" autocomplete="off" placeholder="°F"></div>
     <input class="ta" style="display:none;margin-top:8px" placeholder="Corrective action (required, out of range)"></div>`;}).join("")).join("")+`<div class="bar"><button class="btn" id="go">Save Temperatures</button></div>`;
-  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const rows=[...V.querySelectorAll("[data-p]")].map(c=>({pointId:c.dataset.p,temp:parseFloat(c.querySelector(".tv").value),action:c.querySelector(".ta").value.trim()})).filter(x=>!isNaN(x.temp));
+  V.onclick=e=>{const b=e.target.closest(".neg");if(!b)return;const i=b.parentNode.querySelector(".tv");i.value=i.value.startsWith("-")?i.value.slice(1):"-"+i.value;i.focus();};
+  $("#go").onclick=async()=>{const by=needBy();if(!by)return;const rows=[...V.querySelectorAll("[data-p]")].map(c=>({pointId:c.dataset.p,temp:parseFloat(c.querySelector(".tv").value.replace(/[−–]/g,"-")),action:c.querySelector(".ta").value.trim()})).filter(x=>!isNaN(x.temp));
     if(!rows.length){toast("Enter at least one temperature.",true);return;}
     try{await post("/api/temps",{by,readings:rows});toast("Saved "+rows.length+" reading"+(rows.length>1?"s":""));temps();}
     catch(e){if(/out of range/.test(e.message)){V.querySelectorAll("[data-p]").forEach(c=>{if(c.querySelector(".tv").value!=="")c.querySelector(".ta").style.display="block";});}toast(e.message,true);}};}
