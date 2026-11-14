@@ -170,7 +170,7 @@ func TestMealRotation(t *testing.T) {
 		t.Fatalf("dash %v", d["have"])
 	}
 	_, app := e.get2("/api/reg/mealappendix")
-	if len(app["rows"].([]any)) != 12 {
+	if len(app["rows"].([]any)) != 17 {
 		t.Fatalf("appendix rows %d", len(app["rows"].([]any)))
 	}
 	if c, o := e.post("/api/meals/settings", `{"anchor":"nope","weekdayPeople":30,"weekendPeople":40,"minutes":30}`); c != 400 {
@@ -519,5 +519,89 @@ func TestStationBook(t *testing.T) {
 	}
 	if rep, _ := e.s.guideReport("stationbook:Nowhere"); len(rep.Sections) != 1 {
 		t.Fatal("empty station should say so")
+	}
+}
+
+func TestSelfInspection(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/selfinsp")
+	areas := o["areas"].([]any)
+	if len(areas) != 20 {
+		t.Fatalf("areas %d", len(areas))
+	}
+	var lines []string
+	for i, a := range areas {
+		id := a.(map[string]any)["id"].(string)
+		r := "C"
+		switch i {
+		case 0:
+			r = "CR"
+		case 1:
+			r = "M"
+		case 2:
+			r = "COS"
+		case 3:
+			r = "NA"
+		}
+		lines = append(lines, id+"|"+r+"|note")
+	}
+	if c, _ := e.post("/api/selfinsp", `{"date":"2026-11-02","by":"","results":"x"}`); c != 400 {
+		t.Fatal("missing inspector accepted")
+	}
+	if c, _ := e.post("/api/selfinsp", `{"date":"2026-11-02","by":"Sam","results":"SIA-001|Z"}`); c != 400 {
+		t.Fatal("bad rating accepted")
+	}
+	body := `{"date":"2026-11-02","by":"Sam","makeCA":true,"results":"` + strings.Join(lines, `\n`) + `"}`
+	c, o := e.post("/api/selfinsp", body)
+	if c != 200 || o["made"].(float64) != 2 {
+		t.Fatalf("save %d %v", c, o)
+	}
+	_, l := e.get2("/api/selfinsp")
+	row := l["rows"].([]any)[0].(map[string]any)
+	// 19 rated areas: deductions 5+3+1 = 9 of 95 -> 100-9*100/95 = 91
+	if row["score"] != "91" || row["band"] != "Red" || row["critical"] != "1" {
+		t.Fatalf("score row: %v", row)
+	}
+	e.post("/api/selfinsp", `{"id":"`+row["id"].(string)+`","date":"2026-11-02","by":"Sam","critResolved":"Yes","results":"`+strings.Join(lines, `\n`)+`"}`)
+	_, l = e.get2("/api/selfinsp")
+	if l["rows"].([]any)[0].(map[string]any)["band"] != "Yellow" {
+		t.Fatalf("band after resolving critical: %v", l["rows"])
+	}
+	// next week: same major again flags a repeat and stays yellow even at a high score
+	e.post("/api/selfinsp", `{"date":"2026-11-09","by":"Sam","results":"SIA-002|M|again\nSIA-003|C|"}`)
+	_, m := e.get2("/api/selfinsp/month?month=2026-11")
+	if m["count"].(float64) != 2 || m["criticals"].(float64) != 1 {
+		t.Fatalf("month: %v", m)
+	}
+	if rep, ok := e.s.selfReport("selfinsp-month"); !ok || len(rep.Sections) == 0 {
+		t.Fatal("monthly report")
+	}
+	if a := e.s.selfAttention(time.Date(2026, 11, 12, 9, 0, 0, 0, time.Local)); len(a) != 0 {
+		t.Fatal("alert too early")
+	}
+	if a := e.s.selfAttention(time.Date(2026, 11, 20, 9, 0, 0, 0, time.Local)); len(a) != 1 {
+		t.Fatalf("overdue self-inspection alert: %v", a)
+	}
+	if rep, ok := e.s.selfReport("selfinsp-blank"); !ok || len(rep.Sections[0].Rows) != 20 {
+		t.Fatal("blank form")
+	}
+	if len(e.s.caForms()) != 2 {
+		t.Fatalf("CA forms %d", len(e.s.caForms()))
+	}
+}
+
+func TestMealUpdate238(t *testing.T) {
+	e := newEnv(t)
+	_, o := e.get2("/api/reg/mealrecipes")
+	names := map[string]bool{}
+	for _, r := range o["rows"].([]any) {
+		names[r.(map[string]any)["name"].(string)] = true
+	}
+	if !names["Grilled Cheese with Fries"] || names["Grilled Cheese with Cream of Tomato Soup"] || len(o["rows"].([]any)) != 56 {
+		t.Fatalf("recipes after update: %d", len(o["rows"].([]any)))
+	}
+	_, a := e.get2("/api/reg/mealappendix")
+	if len(a["rows"].([]any)) != 17 {
+		t.Fatalf("appendix %d", len(a["rows"].([]any)))
 	}
 }

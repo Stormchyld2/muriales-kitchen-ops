@@ -54,6 +54,10 @@ func (s *store) decorate(c *collDef, rows []rec) []rec {
 		s.decorateCosting(c, rows)
 		return rows
 	}
+	if c.Name == "selfinsp" {
+		s.decorateSelf(rows)
+		return rows
+	}
 	if s.decorateOps(c, rows) {
 		return rows
 	}

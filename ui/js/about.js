@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.39.0", "Weekly Self-Inspection (Inspections menu): the 20 areas from the Health Inspection Success Program, scored C / COS / M / CR / NA with the internal score out of 100 and Green, Yellow or Red band, repeat findings flagged, and optional corrective action forms for every Major and Critical finding. Monthly Inspection Performance Review worked out from the weekly scores. Added the 15-Minute Inspection Sweep and Inspection-Day Response checklists to Kitchen-Wide station guides. Employee meals: revised Week 1 and Week 4 recipes and five new appendix recipes (Hot Dog Chili, Italian Pasta Salad, Nashville Hot Chicken Sauce, Scratch Pancakes, Spanish Rice)."],
   ["2.38.0", "Station Guides: grouped by station, with Open, Edit and Print on every SOP row. Pick a station and press Print Station Book to print every SOP, guide and checklist for it, each on its own page."],
   ["2.37.3", "The Muriale's logo now stays put at the top of the menu while the menu below it scrolls."],
   ["2.37.2", "90-Day Goals: an Add Goal button at the top, goals renumber automatically, and every edit form now has a Delete button at the bottom right (works on all lists that allow deleting)."],

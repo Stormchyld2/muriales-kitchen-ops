@@ -321,6 +321,7 @@ func (s *store) maintRoutes(mux *http.ServeMux) {
 	s.costingRoutes(mux)
 	s.workflowRoutes(mux)
 	s.g90Routes(mux)
+	s.selfRoutes(mux)
 	s.historyRoutes(mux)
 	s.dashboardRoutes(mux)
 	s.replRoutes(mux)

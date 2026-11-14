@@ -64,6 +64,9 @@ Push to `main`; GitHub Actions builds `MurialesKitchenOps.exe` for Windows and r
 ## Daily workflow and 90-day goals
 **Daily Workflow** holds the manager's day as timed blocks of checks (edit them under Workflow Items). Tick each one with your first name; weekly and monthly checks count once per week or month. The **Handoff Log** keeps open issues with an owner, next action and due date. **90-Day Goals** (under Maintenance) tracks the nine signed goals, the leadership scorecard and weekly reviews; set the first day to see the day and week.
 
+## Weekly self-inspection
+Inspections > Weekly Self-Inspection scores the 20 areas of the Health Inspection Success Program. Internal score = 100 minus deductions (Corrected on Spot 1, Major 3, Critical 5), Green 95+, Yellow 90-94 or a repeat Major, Red under 90 or an unresolved Critical. The monthly review on the same screen is worked out from the weekly scores. Areas can be edited under Self-Inspection Areas.
+
 ## Operations
 Vendors & Contracts, Daily Forecast, Prep Pars, Smallware Pars, Winter Prep and Shed Inventory are plain lists you edit in a form. Labor and scheduling are left to 365.
 

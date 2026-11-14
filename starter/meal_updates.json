@@ -1,0 +1,121 @@
+{
+ "replace": [
+  {
+   "week": "1",
+   "day": "Wednesday",
+   "meal": "Breakfast and Lunch",
+   "name": "Bacon Egg and Cheese Biscuits with Home Fries and Fruit",
+   "serves": "30",
+   "time": "30 minutes",
+   "ingredients": "24 | Biscuits, baked and split\n2 qt | Liquid eggs\n2 trays | Bacon\n24 slices | American or provolone cheese\n8 lb | Potatoes, small dice or par-cooked\n1.5 lb | Diced onions\n8 lb | Fresh fruit\nAs needed | Oil, butter, pan spray, salt, black pepper, and paprika",
+   "method": "1. Bake or warm the biscuits. Cook the sausage patties to 155°F and hold warm.\n2. Cook the potatoes and onions on the flat top with oil and seasoning until browned and tender.\n3. Cook the liquid eggs in greased hotel pans or in batches on the flat top and divide into 30 portions.\n4. Build each biscuit with sausage, egg, and one slice of cheese. Heat briefly to melt the cheese.\n5. Serve one sandwich per person with home fries and fruit.",
+   "notes": "Run sausage, potatoes, and eggs at the same time. Use par-cooked potatoes and avoid assembling the biscuits too early."
+  },
+  {
+   "week": "1",
+   "day": "Wednesday",
+   "meal": "Dinner",
+   "name": "Chicken Parmesan Sandwich with Pasta Salad and Green Salad",
+   "serves": "30",
+   "time": "30 minutes",
+   "ingredients": "36 | Breaded chicken portions\n2 gal | Hot house marinara\n3 lb | Shredded mozzarella or provolone\n30 | Sub rolls or portions of Tomaro’s bread\n6 lb dry | Short pasta for pasta salad\n2 qt | Italian dressing\n4 lb | Mixed vegetables for pasta salad\n2 large bowls | Green salad with dressing\n1 lb | Grated Romano",
+   "method": "1. Bake or fry the breaded chicken until crisp and heated to 165°F.\n2. Cook the pasta, cool it promptly, and toss with Italian dressing and vegetables.\n3. Warm the marinara. Place chicken in the rolls, top with controlled portions of sauce and cheese, and heat until melted.\n4. Prepare the green salad and hold cold at 41°F or below.\n5. Serve one chicken Parmesan sub per person with pasta salad and green salad.",
+   "notes": "Prepare and chill the pasta salad ahead when possible. Add marinara just before service so the bread and chicken stay crisp."
+  },
+  {
+   "week": "1",
+   "day": "Thursday",
+   "meal": "Breakfast and Lunch",
+   "name": "Grilled Cheese with Fries",
+   "serves": "30",
+   "time": "20 to 25 minutes",
+   "ingredients": "60 slices | Sandwich bread\n60 slices | American cheese, 2 per sandwich\n1 lb | Soft butter\n1.5 bags | Fries\nAs needed | Milk or water to adjust soup\nAs needed | Salt and black pepper",
+   "method": "1. Heat the tomato soup to 165°F, stirring often. Adjust the consistency with milk or water if needed.\n2. Butter one side of each bread slice. Place two cheese slices between the unbuttered sides.\n3. Cook the sandwiches on the flat top in batches until golden on both sides and the cheese is melted.\n4. Cut each sandwich in half and hold only briefly so the bread stays crisp.\n5. Serve one grilled-cheese sandwich per person with about 10 ounces of soup.",
+   "notes": "Heat the soup first, then cook the sandwiches as close to service as possible. Do not stack hot sandwiches tightly or they will steam."
+  },
+  {
+   "week": "4",
+   "day": "Monday",
+   "meal": "Dinner",
+   "name": "Nashville Hot Chicken with Macaroni and Cheese",
+   "serves": "30",
+   "time": "30 minutes",
+   "ingredients": "40 pieces | Raw bone-in chicken pieces\n1 gal | Buttermilk\n5 lb | All-purpose flour\n8 oz | Seasoned salt\n3 oz | Paprika\n2 oz each | Garlic powder and black pepper\nAs needed | Fryer oil\n1 batch | Prepared Nashville Hot Chicken Sauce, separate recipe\n4 lb dry | Elbow macaroni\n1.5 gal | Hot prepared cheese sauce\n60 slices | White bread, about 2 per person\n2 qt | Dill pickle chips",
+   "method": "1. Soak or coat the chicken in buttermilk. Combine the flour, seasoned salt, paprika, garlic powder, and black pepper.\n2. Dredge the chicken thoroughly in the seasoned flour. Stage the pieces by size so the fryer batches cook evenly.\n3. Deep-fry the chicken in batches until crisp and every piece reaches 165°F. Drain briefly on racks.\n4. Cook the macaroni while the chicken fries. Drain and fold it into the hot cheese sauce; hold at 135°F or above.\n5. Whisk the prepared Nashville hot sauce and brush or ladle it over the hot chicken. Leave some pieces plain. Serve with pickles and white bread.",
+   "notes": "Bread the chicken before the meal window when possible. Fry the largest pieces first. The Nashville hot sauce is maintained as a separate recipe and should be whisked before every use."
+  },
+  {
+   "week": "4",
+   "day": "Saturday",
+   "meal": "Breakfast and Lunch",
+   "name": "Pancakes with Scrambled Eggs and Bacon",
+   "serves": "45",
+   "time": "30 minutes",
+   "ingredients": "90 | Medium pancakes, about 2 per person\n1.8 gal | Prepared pancake batter\n3 qt | Liquid eggs\n5 lb | Bacon\n1.5 qt | Pancake syrup\n12 oz | Butter\nAs needed | Pan spray, salt, and black pepper",
+   "method": "1. Cook the bacon on sheet pans until crisp. Drain and hold warm.\n2. Cook the pancakes in batches on a greased flat top, making about 90 medium pancakes.\n3. Cook the liquid eggs in greased hotel pans or in batches on the flat top. Season lightly.\n4. Hold pancakes covered only briefly so they stay soft without becoming wet.\n5. Serve two pancakes with scrambled eggs, bacon, butter, and syrup.",
+   "notes": "Run the bacon in the oven while the pancakes cook on the flat top and the eggs cook in hotel pans. Use the house scratch pancake batter."
+  }
+ ],
+ "appendix": [
+  {
+   "id": "EMA-013",
+   "name": "Hot Dog Chili",
+   "time": "20–25 minutes",
+   "kind": "Topping",
+   "ingredients": "3 lb | Ground beef\n1 lb | Yellow onion, finely diced\n1 qt | Tomato sauce\n2 cups | Ketchup\n1 qt | Water or beef stock\n3 oz | Chili powder\n1 oz | Ground cumin\n1 oz | Paprika\n2 Tbsp | Garlic powder\n2 Tbsp | Onion powder\n2 Tbsp | Brown sugar\n2 Tbsp | Worcestershire sauce\nAs needed | Kosher salt and black pepper",
+   "method": "1. Combine the ground beef and cold water or stock in a rondeau. Break the raw beef into very fine pieces before turning on the heat.\n2. Bring to a simmer over medium-high heat, stirring and continuing to break up the beef. Add the diced onion and cook until the beef reaches 155°F and the onion softens.\n3. Stir in the tomato sauce, ketchup, chili powder, cumin, paprika, garlic powder, onion powder, brown sugar, and Worcestershire sauce.\n4. Simmer uncovered for 15–20 minutes, stirring often, until thick enough to spoon onto a hot dog. Add a small amount of water if it becomes too thick.\n5. Season with salt and pepper. Hold at 135°F or above until service.",
+   "notes": "Start the chili first. Breaking the raw beef into cold liquid gives it the fine texture needed for hot dogs. Stir often so the bottom does not scorch. Yield is about 2½ quarts—enough for 30 servings at roughly 2½–3 oz each.",
+   "created": "2026-11-14 00:00",
+   "yield": "About 2½ qt",
+   "active": "Yes"
+  },
+  {
+   "id": "EMA-014",
+   "name": "Italian Pasta Salad",
+   "time": "35 to 45 minutes + chill",
+   "kind": "Side",
+   "ingredients": "4 lb | Rotini pasta, dry\n1 1/2 qt | Prepared Italian dressing, divided\n2 lb | Grape or cherry tomatoes, halved\n1 1/2 lb | Cucumber, seeded and medium dice\n1 lb | Red onion, small dice\n1 lb | Green bell pepper, medium dice\n1 lb | Red bell pepper, medium dice\n12 oz | Sliced black olives, drained\n12 oz | Pepperoncini, drained and sliced\n1 1/2 lb | Mozzarella, 1/2-inch dice\n12 oz | Grated or shredded Parmesan cheese\n2 Tbsp | Italian seasoning\n1 Tbsp | Garlic powder\n2 tsp | Black pepper\nAs needed | Kosher salt\nAs needed | Additional Italian dressing before service",
+   "method": "1. Cook the rotini in well-salted boiling water until just al dente. Do not overcook.\n2. Drain the pasta thoroughly. Do not rinse unless it must be cooled quickly for immediate production; otherwise spread it on sheet pans and allow the steam to escape for several minutes.\n3. While the pasta is still slightly warm, toss it with about 1 quart of the Italian dressing so the pasta absorbs the seasoning as it cools.\n4. Transfer the pasta to shallow pans and cool rapidly to 41°F or below before combining with the remaining ingredients.\n5. In a large mixing bowl or food-safe container, combine the cooled pasta, tomatoes, cucumber, red onion, green pepper, red pepper, black olives, pepperoncini, mozzarella, and Parmesan.\n6. Add the Italian seasoning, garlic powder, black pepper, and the remaining 1 pint Italian dressing. Toss gently until everything is evenly coated.\n7. Taste and adjust with kosher salt if needed. Add additional dressing if the salad seems dry.\n8. Cover and refrigerate at least 1 hour before service. Toss again before placing on the line.\n9. Hold at 41°F or below for service.",
+   "notes": "Cook the pasta only to al dente so it stays firm after chilling. Dressing is absorbed as the salad sits, so reserve extra dressing for the final toss before service. For best texture, combine the cheese and vegetables only after the pasta has cooled to 41°F or below. Keep refrigerated and do not allow the finished salad to remain in the temperature danger zone during prep or service.",
+   "created": "2026-11-14 00:00",
+   "yield": "30 people",
+   "active": "Yes"
+  },
+  {
+   "id": "EMA-015",
+   "name": "Nashville Hot Chicken Sauce",
+   "time": "10 minutes",
+   "kind": "Sauce",
+   "ingredients": "1 qt | Neutral oil or clean hot fryer oil\n1 cup | Cayenne pepper\n½ cup | Packed light brown sugar\n¼ cup | Paprika\n3 Tbsp | Chili powder\n2 Tbsp | Garlic powder\n2 Tbsp | Onion powder\n2 Tbsp | Kosher salt\n1 Tbsp | Ground black pepper",
+   "method": "1. Place the cayenne, brown sugar, paprika, chili powder, garlic powder, onion powder, salt, and black pepper in a heatproof stainless-steel bowl or saucepan.\n2. Heat the oil to 300-325°F. Do not let it smoke.\n3. Carefully pour the hot oil over the spice mixture while whisking. Continue whisking until the sugar dissolves and the spices are evenly suspended.\n4. Keep the sauce warm over very low heat. Whisk well before and during use because the spices will settle.\n5. Brush or ladle about 1½ oz over each piece of cooked fried chicken immediately before service.",
+   "notes": "This is a medium-hot Nashville-style coating sized for about 30 portions. For a milder batch, reduce the cayenne to ¾ cup; for hotter chicken, increase it to 1¼ cups. Prepare it while the chicken fries, keep it warm rather than boiling, and whisk before every application.",
+   "created": "2026-11-14 00:00",
+   "yield": "About 1½ qt",
+   "active": "Yes"
+  },
+  {
+   "id": "EMA-016",
+   "name": "Scratch Pancake Recipe",
+   "time": "25 to 30 minutes",
+   "kind": "Batter",
+   "ingredients": "10 cups / about 2 lb 10 oz | All-purpose flour\n1 1/4 cups / about 9 oz | Granulated sugar\n1/3 cup plus 1 Tbsp | Baking powder\n1 Tbsp | Baking soda\n2 Tbsp | Kosher salt\n8 cups / 1/2 gal | Whole milk\n8 | Large eggs\n1 1/4 cups / 10 oz | Butter, melted\n1/4 cup / 4 Tbsp | Vanilla extract\n1 qt | Pancake syrup\nAs needed | Pan spray and additional milk for consistency",
+   "method": "1. Cook the bacon on sheet pans or the flat top until crisp. Drain and hold warm.\n2. Whisk the flour, sugar, baking powder, baking soda, and salt together thoroughly.\n3. In a separate container, whisk together the milk, eggs, and vanilla. Slowly whisk in the melted butter.\n4. Pour the wet mixture into the dry ingredients. Mix only until incorporated. Small lumps are fine.\n5. Rest the batter 10 to 15 minutes. If it is too thick, add milk 4 to 8 ounces at a time.\n6. Lightly grease the flat top. Portion about 1/3 cup batter per pancake.\n7. Cook until bubbles form and the edges begin to set. Flip and cook until golden and cooked through.\n8. Make about 60 medium pancakes. Serve two per person with bacon, butter, and syrup.",
+   "notes": "Mix the batter slightly thick and adjust it with milk only after it rests. Do not overmix. Then cook pancakes in batches. Hold finished pancakes covered only briefly so they stay soft without becoming wet.",
+   "created": "2026-11-14 00:00",
+   "yield": "30 people",
+   "active": "Yes"
+  },
+  {
+   "id": "EMA-017",
+   "name": "Spanish Rice",
+   "time": "35 to 40 minutes",
+   "kind": "Side",
+   "ingredients": "4 lb | Long-grain white rice, dry\n8 oz | Vegetable oil\n2 lb | Yellow onion, small dice\n1 1/2 lb | Green bell pepper, small dice\n4 oz | Garlic, minced\n3 1/2 qt | Chicken stock\n1 qt | Tomato sauce\n1 #10 can, drained | Diced tomatoes\n3 Tbsp | Chili powder\n2 Tbsp | Ground cumin\n2 Tbsp | Paprika\n1 Tbsp | Dried oregano\n1 1/2 oz | Kosher salt, then adjust to taste\n1 Tbsp | Black pepper\n4 | Bay leaves\nAs needed | Additional chicken stock if rice needs more liquid",
+   "method": "1. Heat the vegetable oil in a large rondeau or heavy stockpot over medium-high heat.\n2. Add the diced onion and green pepper. Cook 5 to 7 minutes until softened but not browned.\n3. Add the garlic and cook about 1 minute.\n4. Add the dry rice and stir well. Toast the rice in the oil and vegetables for 2 to 3 minutes.\n5. Add the chili powder, cumin, paprika, oregano, salt, and black pepper. Stir until the rice is evenly coated with the seasoning.\n6. Add the chicken stock, tomato sauce, drained diced tomatoes, and bay leaves. Stir thoroughly and bring to a simmer.\n7. Once simmering, reduce the heat to low and cover tightly.\n8. Cook 20 to 25 minutes without stirring, until the rice is tender and the liquid has been absorbed.\n9. Remove from the heat and leave covered for 10 minutes.\n10. Remove the bay leaves. Fluff the rice gently with a fork or kitchen paddle. Taste and adjust salt if necessary.\n11. Transfer to a full hotel pan, cover, and hold at 135°F or above for service.",
+   "notes": "Keep the diced tomatoes well drained so the rice does not become wet or gummy. Do not stir the rice once it is covered and cooking. If the rice is still slightly firm after the liquid has absorbed, add chicken stock 4 to 8 ounces at a time, cover, and allow it to steam until tender. The finished rice should be moist and separate, not soupy or sticky.",
+   "created": "2026-11-14 00:00",
+   "yield": "30 people",
+   "active": "Yes"
+  }
+ ]
+}

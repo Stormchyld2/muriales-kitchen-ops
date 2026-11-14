@@ -6,10 +6,13 @@ package main
 // in by hand. Inventory, purchasing and menu costing stay in R365.
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 	"math"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -368,6 +371,7 @@ func (s *store) mealRoutes(mux *http.ServeMux) {
 	s.seedOnce("meals-231a", "mealrecipes", "meal_recipes.json")
 	s.seedOnce("meals-231b", "mealappendix", "meal_appendix.json")
 	s.seedOnce("meals-231c", "mealrecipes", "meal_recipes_w2.json")
+	s.mealUpdate238()
 	s.mu.Unlock()
 	mux.HandleFunc("GET /api/meals/dash", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
@@ -421,4 +425,59 @@ func (s *store) mealRoutes(mux *http.ServeMux) {
 	}
 	mux.HandleFunc("GET /api/meals/recipe/{id}", page("mealrecipes"))
 	mux.HandleFunc("GET /api/meals/appendix/{id}", page("mealappendix"))
+}
+
+// mealUpdate238 brings in the revised Week 1 and Week 4 recipes and five new
+// appendix recipes. It runs once; it replaces only the five named slots.
+func (s *store) mealUpdate238() {
+	flag := filepath.Join(s.maintDir(), "seed-meals-238.flag")
+	if _, err := os.Stat(flag); err == nil {
+		return
+	}
+	b, err := starterFiles.ReadFile("starter/meal_updates.json")
+	if err != nil {
+		return
+	}
+	var u struct {
+		Replace  []rec `json:"replace"`
+		Appendix []rec `json:"appendix"`
+	}
+	if json.Unmarshal(b, &u) != nil {
+		return
+	}
+	rc := regDefs["mealrecipes"]
+	rows := s.regLoad(rc)
+	for _, n := range u.Replace {
+		for _, r := range rows {
+			if r["week"] == n["week"] && r["day"] == n["day"] && r["meal"] == n["meal"] {
+				for _, k := range []string{"name", "serves", "time", "ingredients", "method", "notes"} {
+					r[k] = n[k]
+				}
+			}
+		}
+	}
+	ok := s.regSave(rc, rows) == nil
+	ac := regDefs["mealappendix"]
+	arows := s.regLoad(ac)
+	have := map[string]bool{}
+	for _, r := range arows {
+		have[strings.ToLower(r["name"])] = true
+	}
+	for _, a := range u.Appendix {
+		if !have[strings.ToLower(a["name"])] {
+			next := 0
+			for _, r := range arows {
+				var n int
+				if _, err := fmt.Sscanf(r["id"], "EMA-%d", &n); err == nil && n > next {
+					next = n
+				}
+			}
+			a["id"] = fmt.Sprintf("EMA-%03d", next+1)
+			arows = append(arows, a)
+		}
+	}
+	if ok && s.regSave(ac, arows) == nil {
+		_ = os.MkdirAll(s.maintDir(), 0o755)
+		_ = os.WriteFile(flag, []byte("done"), 0o644)
+	}
 }

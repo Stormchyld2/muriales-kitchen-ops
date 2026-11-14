@@ -152,6 +152,7 @@ func (s *store) dashboard() map[string]any {
 	items = append(s.dwAttention(now.Format(dayFmt)), items...)
 	items = append(s.g90Attention(now.Format(dayFmt)), items...)
 	items = append(s.opsAttention(now.Format(dayFmt)), items...)
+	items = append(s.selfAttention(now), items...)
 	over, dueToday := 0, 0
 	for _, it := range items {
 		switch it.State {

@@ -1,0 +1,142 @@
+[
+ {
+  "id": "SIA-001",
+  "area": "Management / PIC",
+  "standard": "Manager can demonstrate knowledge of critical controls; required records available; open corrective actions understood.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-002",
+  "area": "Employee health",
+  "standard": "Illness reporting followed; restricted/excluded employees handled correctly; wounds protected.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-003",
+  "area": "Personal hygiene",
+  "standard": "Hair/beard restraint, clean clothing, correct glove use, no unsafe personal practices.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-004",
+  "area": "Handwashing",
+  "standard": "Sinks stocked/accessibly; employees wash correctly and at required times.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-005",
+  "area": "Receiving",
+  "standard": "Temperatures, package condition, frozen condition, substitutions/shortages, rejection decisions controlled.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-006",
+  "area": "Cold holding",
+  "standard": "TCS cold foods maintained at 41°F or below; equipment functioning; temps recorded.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-007",
+  "area": "Hot holding",
+  "standard": "Hot foods maintained at 135°F or above; equipment functioning; temps recorded.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-008",
+  "area": "Cooking/reheating",
+  "standard": "Required internal temperatures achieved; thermometer used correctly.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-009",
+  "area": "Cooling",
+  "standard": "Cooling method, pan depth, airflow, time/temperature checks and records acceptable.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-010",
+  "area": "Date marking/FIFO",
+  "standard": "Muriale’s tape system used consistently; product rotated; expired/unlabeled food corrected.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-011",
+  "area": "Cross-contamination",
+  "standard": "Raw/RTE separation; clean tools; safe storage order; hand/glove changes.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-012",
+  "area": "Allergen control",
+  "standard": "Ticket communication, clean tools/surfaces, ingredient verification, cross-contact controls.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-013",
+  "area": "Food storage",
+  "standard": "Food protected, food-grade containers, off floor, clean shelving, dry storage orderly.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-014",
+  "area": "Cleaning/sanitizing",
+  "standard": "Correct sequence; sanitizer concentration; test strips; food-contact surfaces; wiping cloths.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-015",
+  "area": "Warewashing",
+  "standard": "Dish machine/3-compartment sink effective; clean/dirty separation; air drying.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-016",
+  "area": "Chemicals/SDS",
+  "standard": "Labeled, stored away from food, no mixing, SDS/PPE/dilution controls.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-017",
+  "area": "Facility/equipment",
+  "standard": "Equipment clean/in repair; plumbing, drains, floors, walls, ceilings, lighting, ventilation acceptable.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-018",
+  "area": "Pest control",
+  "standard": "No evidence; exterior doors/seals controlled; service documentation available.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-019",
+  "area": "Waste/grease",
+  "standard": "Trash, dumpster, grease, drains and service areas controlled and clean enough.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ },
+ {
+  "id": "SIA-020",
+  "area": "Training",
+  "standard": "Employees can explain the standards relevant to their jobs; retraining completed where needed.",
+  "active": "Yes",
+  "created": "2026-11-14 00:00"
+ }
+]
