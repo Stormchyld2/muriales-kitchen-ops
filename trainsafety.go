@@ -136,7 +136,7 @@ func (s *store) safetyRoutes(mux *http.ServeMux) {
 	s.seedOnce("guides-238", "guides", "guides_inspect.json")
 	s.seedOnce("guides-240", "guides", "guides_6417.json")
 	s.seedOnce("types-229", "trainingtypes", "training_types_add.json")
-	s.fillGuidePlaceholders()
+	s.undoGuideDrafts()
 	s.mu.Unlock()
 
 	mux.HandleFunc("POST /api/walk", func(w http.ResponseWriter, r *http.Request) {
@@ -483,26 +483,28 @@ func (s *store) addFindings(fs []*Finding) int {
 	return len(fs)
 }
 
-// fillGuidePlaceholders writes draft text into the station guides that were
-// only a title page, once. A guide someone has already edited is never touched.
-func (s *store) fillGuidePlaceholders() {
-	flag := filepath.Join(s.maintDir(), "seed-guides-fill.flag")
+// undoGuideDrafts puts the title-page note back on the four guides that
+// version 2.48.1 filled with a draft, once, but only where the text is still
+// exactly the draft. A guide someone has edited is never touched.
+func (s *store) undoGuideDrafts() {
+	flag := filepath.Join(s.maintDir(), "seed-guides-unfill.flag")
 	if _, err := os.Stat(flag); err == nil {
 		return
 	}
-	b, err := starterFiles.ReadFile("starter/guides_fill.json")
+	b, err := starterFiles.ReadFile("starter/guides_undo.json")
 	if err != nil {
 		return
 	}
-	var fill map[string]string
-	if json.Unmarshal(b, &fill) != nil {
+	var drafts map[string]string
+	if json.Unmarshal(b, &drafts) != nil {
 		return
 	}
+	const blank = "*This document was only a title page when it was loaded. Use Edit to write the content for this station.*\n"
 	c := regDefs["guides"]
 	rows, ch := s.regLoad(c), false
 	for _, r := range rows {
-		if body, ok := fill[r["id"]]; ok && strings.HasPrefix(r["body"], "*This document was only a title page") {
-			r["body"], r["updated"], ch = body, nowT().Format("2006-01-02 15:04"), true
+		if d, ok := drafts[r["id"]]; ok && r["body"] == d {
+			r["body"], r["updated"], ch = blank, nowT().Format("2006-01-02 15:04"), true
 		}
 	}
 	if ch && s.regSave(c, rows) != nil {

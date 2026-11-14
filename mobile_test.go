@@ -323,30 +323,33 @@ func TestWalkPhotos(t *testing.T) {
 	}
 }
 
-func TestFillGuidePlaceholders(t *testing.T) {
+func TestUndoGuideDrafts(t *testing.T) {
 	e := newEnv(t)
+	b, _ := starterFiles.ReadFile("starter/guides_undo.json")
+	var drafts map[string]string
+	_ = json.Unmarshal(b, &drafts)
 	e.s.mu.Lock()
 	rows := e.s.regLoad(regDefs["guides"])
 	for _, r := range rows {
 		if r["id"] == "GDE-053" {
-			r["body"] = "*This document was only a title page when it was loaded.*\n"
+			r["body"] = drafts["GDE-053"]
 		}
 		if r["id"] == "GDE-052" {
-			r["body"] = "My own words"
+			r["body"] = drafts["GDE-052"] + "\nMy own change"
 		}
 	}
 	_ = e.s.regSave(regDefs["guides"], rows)
-	_ = os.Remove(filepath.Join(e.s.maintDir(), "seed-guides-fill.flag"))
-	e.s.fillGuidePlaceholders()
+	_ = os.Remove(filepath.Join(e.s.maintDir(), "seed-guides-unfill.flag"))
+	e.s.undoGuideDrafts()
 	got := map[string]string{}
 	for _, r := range e.s.regLoad(regDefs["guides"]) {
 		got[r["id"]] = r["body"]
 	}
 	e.s.mu.Unlock()
-	if !strings.Contains(got["GDE-053"], "Fryer Closing SOP") {
-		t.Error("placeholder was not filled")
+	if !strings.HasPrefix(got["GDE-053"], "*This document was only a title page") {
+		t.Error("untouched draft was not removed")
 	}
-	if got["GDE-052"] != "My own words" {
-		t.Error("an edited guide must not be overwritten")
+	if !strings.Contains(got["GDE-052"], "My own change") {
+		t.Error("an edited guide must not be changed")
 	}
 }
