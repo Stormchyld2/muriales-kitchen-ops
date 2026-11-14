@@ -26,11 +26,12 @@ function regForm(name, id, preset) {
       : f.type === "ref" ? `<select class="field" ${a}><option value="">Choose...</option>${((state.reg[f.src] || {}).rows || []).filter(o => (o.status || "Active") !== "Inactive" && o.active !== "No" || o.id === v).map(o => `<option value="${esc(o.id)}" ${o.id === v ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select>`
       : f.type === "yn" ? `<select class="field" ${a} style="width:120px">${["", "Yes", "No"].map(o => `<option ${o === v ? "selected" : ""}>${o}</option>`).join("")}</select>` : `<input class="field" ${a} value="${esc(v)}">`; };
   showModal(`<h2>${icon("list")}${id ? esc(id) : esc(def.newLabel)}</h2><div class="body" id="rgbody" data-c="${name}" data-id="${esc(id || "")}"><div class="fields">${def.fields.filter(f => f.type !== "hidden").map(f => `<label>${esc(f.label)}:${f.req ? ' <span class="req">*</span>' : ""}</label>${input(f)}`).join("")}</div></div>
-    <div class="foot"><button class="btn green big" data-act="reg-save">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button></div>`);
+    <div class="foot"><button class="btn green big" data-act="reg-save">${icon("save")}Save</button><button class="btn big" data-act="close">Cancel</button>${id && def.deletable ? `<button class="btn big wine" style="margin-left:auto" data-act="reg-del-modal" data-c="${name}" data-id="${esc(id)}">${icon("trash")}Delete</button>` : ""}</div>`);
 }
 
 Object.assign(ACT, {
   "reg-new"(el) { regForm(el.dataset.c, ""); },
+  async "reg-del-modal"(el) { if (!confirm("Delete this record? This cannot be undone.")) return; try { state.reg[el.dataset.c] = await api("/api/reg/" + el.dataset.c + "/" + encodeURIComponent(el.dataset.id), {method: "DELETE"}); closeModal(); state.trr = null; state.trm = null; if (typeof WF !== "undefined") { WF.day = null; WF.g90 = null; } render(); toast("Deleted."); } catch (e) { toast(e.message, true); } },
   "reg-open"(el) { regForm(el.dataset.c, el.dataset.id); },
   async "reg-del"(el) { if (!confirm("Delete this record?")) return; state.reg[el.dataset.c] = await api("/api/reg/" + el.dataset.c + "/" + encodeURIComponent(el.dataset.id), {method: "DELETE"}); state.trr = null; state.trm = null; render(); },
   async "reg-save"() { const c = $("#rgbody").dataset.c, v = grab("[data-rg]", "rg"); v.id = $("#rgbody").dataset.id;

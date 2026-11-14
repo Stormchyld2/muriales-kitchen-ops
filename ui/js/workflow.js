@@ -42,7 +42,7 @@ function vG90() {
     ? (g.day ? `<b>Day ${Math.min(g.day, 90)} of 90</b> · Week ${g.week}${g.phase >= 0 ? " · " + esc(g.phases[g.phase]) : ""}` : `Starts ${esc(fmtDate(g.start))}`)
     : `Set the first day of the 90 days to track the weeks.`;
   const stc = {"Not Started": "Open", "In Progress": "Upcoming", "Blocked": "Overdue", "Done": "Done"};
-  const goals = g.goals.map(x => `<div class="catrow wfgoal"><div class="grow"><b>${esc(x.order)}. ${esc(x.title)}</b><div class="hint">${esc(x.scope)}</div>
+  const goals = g.goals.map((x, n) => `<div class="catrow wfgoal"><div class="grow"><b>${n + 1}. ${esc(x.title)}</b><div class="hint">${esc(x.scope)}</div>
       <div class="hint">${x.owner ? "Owner: " + esc(x.owner) : "No owner yet"}${x.target ? " · Target " + esc(shortDate(x.target)) : ""}${x.nextAction ? " · Next: " + esc(x.nextAction) : ""}</div>${x.evidence ? `<div class="hint">Evidence: ${esc(x.evidence)}</div>` : ""}</div>
       <span class="status ${stc[x.status] || "Open"}">${esc(x.status)}</span><button class="btn small" data-act="reg-open" data-c="goals90" data-id="${esc(x.id)}">${icon("edit")}Edit</button></div>`).join("");
   const obj = g.objectives.map(o => `<div class="catrow"><div class="grow">${esc(o.objective)}${o.notes ? `<div class="hint">${esc(o.notes)}</div>` : ""}</div><span class="status ${o.rating === "On Track" ? "Done" : o.rating === "Behind" ? "Overdue" : "Upcoming"}">${esc(o.rating)}</span><button class="btn small" data-act="reg-open" data-c="obj90" data-id="${esc(o.id)}">${icon("edit")}Edit</button></div>`).join("");
@@ -50,7 +50,7 @@ function vG90() {
   return `<div class="panel" style="max-width:980px"><div class="row" style="justify-content:space-between"><div><div>${head}</div><div class="hint">${done} of ${g.total} goals done${g.counts.Blocked ? " · " + g.counts.Blocked + " blocked" : ""}</div></div>
       <div class="row"><label style="margin:0">First day:</label><input type="date" id="g90start" class="field" style="width:160px" value="${esc(g.start)}"><button class="btn small" data-act="g90-start">Save</button><button class="btn small" data-act="rep-view" data-id="g90">${icon("print")}Print</button></div></div>
     <div class="wfbar"><div style="width:${pct}%"></div></div>${g.reviewedThisWeek ? "" : `<div class="note warn" style="margin-top:8px">No weekly review has been written this week.</div>`}</div>
-  <div class="panel" style="max-width:980px"><h3 style="margin-top:0">Nine signed short-term goals</h3>${goals}</div>
+  <div class="panel" style="max-width:980px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">${g.total === 9 ? "Nine signed" : g.total} short-term goals</h3><button class="btn green" data-act="reg-new" data-c="goals90">${icon("plus")}Add Goal</button></div>${goals}</div>
   <div class="panel" style="max-width:980px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Weekly progress review</h3><button class="btn green" data-act="reg-new" data-c="rev90">${icon("plus")}Add Weekly Review</button></div>${revs}</div>
   <div class="panel" style="max-width:980px"><h3 style="margin-top:0">Leadership scorecard</h3>${obj}</div>`;
 }
@@ -65,5 +65,5 @@ Object.assign(ACT, {
 });
 {
   const nav = ACT.nav; ACT.nav = (el, e) => { if (["dwtoday", "g90"].includes(el.dataset.v)) { WF.day = null; WF.g90 = null; } return nav(el, e); };
-  const sv = ACT["reg-save"]; ACT["reg-save"] = async (el, e) => { const r = await sv(el, e); WF.day = null; WF.g90 = null; return r; };
+  const sv = ACT["reg-save"]; ACT["reg-save"] = async (el, e) => { const r = await sv(el, e); WF.day = null; WF.g90 = null; if (["dwtoday", "g90"].includes(state.view)) render(); return r; };
 }

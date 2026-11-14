@@ -4,6 +4,7 @@
 
 // Newest first. Plain words: this is what a manager sees under "What's new".
 const WHATS_NEW = [
+  ["2.37.2", "90-Day Goals: an Add Goal button at the top, goals renumber automatically, and every edit form now has a Delete button at the bottom right (works on all lists that allow deleting)."],
   ["2.37.1", "Monthly Summary: the highlighted warning tile (such as PM jobs overdue) was a white block with unreadable text; it now matches the dark theme."],
   ["2.37.0", "New Operations section: Vendors & Contracts (contacts, service dates, contract end, order profile), Daily Forecast (expected vs actual covers with variance), Prep Pars by station, Smallware & Service-Ware Pars (count against par, Short flagged), Winter Preparedness (12 starter items) and Shed Inventory. Expired contracts, overdue services, smallware below par and overdue winter-prep items show in Needs Attention."],
   ["2.36.0", "Daily Workflow: your daily duties as timed blocks you tick off (the block you are in is highlighted), with who ticked it and when, plus a Handoff Log with owner, next action and due date. Weekly and monthly checks tick once per week or month. Overdue handoff items show on the dashboard. 90-Day Goals (under Maintenance): the nine signed goals with owner, target date, status and evidence, the leadership scorecard and weekly progress reviews, with day and week of the 90. The Today's Task Progress ring now includes the workflow."],

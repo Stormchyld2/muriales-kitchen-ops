@@ -5,6 +5,7 @@ package main
 // scorecard, and a weekly progress review. Lives under Maintenance.
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -15,7 +16,7 @@ func init() {
 	regDefs["goals90"] = &collDef{Name: "goals90", Title: "90-Day Goals", NewLabel: "Add Goal", Prefix: "G90-", Digits: 3, Deletable: true, Starter: "goals90.json", Report: "g90",
 		Intro:    "The nine signed short-term goals. Set an owner and target date, keep Status and Next action current, and write what proves it is finished in Completion evidence.",
 		ListCols: []string{"id", "title", "owner", "target", "status", "nextAction"},
-		Fields:   []fieldDef{txt("title", "Goal", true), lng("scope", "What it covers", false), txt("owner", "Owner", false), dat("target", "Target date", false), sel("status", "Status", g90Statuses, true), lng("nextAction", "Next action / blocker", false), lng("evidence", "Completion evidence / notes", false), txt("order", "Order", false)}}
+		Fields:   []fieldDef{txt("title", "Goal", true), lng("scope", "What it covers", false), txt("owner", "Owner", false), dat("target", "Target date", false), sel("status", "Status", g90Statuses, true), lng("nextAction", "Next action / blocker", false), lng("evidence", "Completion evidence / notes", false)}}
 	regDefs["obj90"] = &collDef{Name: "obj90", Title: "Leadership Scorecard", NewLabel: "Add Objective", Prefix: "OB90-", Digits: 2, Deletable: true, Starter: "obj90.json", Report: "g90",
 		Intro:    "Ongoing objectives for the introductory period. Rate each one at the weekly review.",
 		ListCols: []string{"id", "objective", "rating", "notes"},
@@ -116,10 +117,10 @@ func (s *store) g90Report() *report {
 	v := s.g90View(time.Now())
 	rep := &report{Title: "90-Day Introductory Goals", Subtitle: "Implementation & Progress Tracker"}
 	rows := [][]string{}
-	for _, g := range v["goals"].([]rec) {
-		rows = append(rows, []string{g["order"] + ". " + g["title"], g["owner"], g["target"], g["status"], g["nextAction"], g["evidence"]})
+	for n, g := range v["goals"].([]rec) {
+		rows = append(rows, []string{fmt.Sprint(n+1) + ". " + g["title"], g["owner"], g["target"], g["status"], g["nextAction"], g["evidence"]})
 	}
-	rep.Sections = append(rep.Sections, reportSection{Heading: "Nine signed short-term goals", Cols: []string{"Goal", "Owner", "Target", "Status", "Next action / blocker", "Completion evidence"}, Rows: rows})
+	rep.Sections = append(rep.Sections, reportSection{Heading: "Short-term goals", Cols: []string{"Goal", "Owner", "Target", "Status", "Next action / blocker", "Completion evidence"}, Rows: rows})
 	rows = [][]string{}
 	for _, o := range v["objectives"].([]rec) {
 		rows = append(rows, []string{o["objective"], o["rating"], o["notes"]})
