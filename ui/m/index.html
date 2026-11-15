@@ -32,6 +32,7 @@ h2{font:700 18px Georgia,serif;margin:16px 0 6px;color:var(--gold)}
 </style></head>
 <body>
 <header><button id="back" style="display:none">‹ Home</button><h1 id="ttl">Muriale's Kitchen</h1><button id="qbtn" style="display:none"></button><button id="who"></button></header>
+<a id="mx" href="https://app.getmaintainx.com" style="display:block;text-align:center;text-decoration:none;background:var(--green);color:#fff;font-weight:700;padding:12px;border-bottom:1px solid #3aa24e">🔧 Open MaintainX · Submit a Work Order</a>
 <main><div id="errbar" onclick="this.style.display='none'"></div><div id="v"></div></main><div id="toast"></div>
 <script>
 "use strict";
@@ -278,6 +279,6 @@ async function sds(){title("SDS Lookup");V.innerHTML=`<input id="sq" placeholder
       ${p.missing?'<div class="bad">The PDF is missing from the folder.</div>':`<a class="btn sm" style="text-decoration:none;margin-top:8px" href="/api/phone/sds/${encodeURIComponent(p.id)}/pdf" target="_blank">Open Full Sheet (PDF)</a>`}</div>`).join(""):'<p class="mute">Nothing matches that.</p>';};
   let tm;$("#sq").oninput=()=>{clearTimeout(tm);tm=setTimeout(draw,250);};draw();}
 
-$("#qbtn").onclick=qpanel;showQ();flushQ();setInterval(flushQ,15000);window.addEventListener("online",flushQ);document.addEventListener("visibilitychange",()=>{if(!document.hidden)flushQ();});
+api("/api/phone/options").then(o=>{if(o.portal)$("#mx").href=o.portal;}).catch(()=>{});$("#qbtn").onclick=qpanel;showQ();flushQ();setInterval(flushQ,15000);window.addEventListener("online",flushQ);document.addEventListener("visibilitychange",()=>{if(!document.hidden)flushQ();});
 route();
 </script></body></html>

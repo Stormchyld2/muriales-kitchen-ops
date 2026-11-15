@@ -139,7 +139,8 @@ function render() {
   $("#nav").innerHTML = NAV_HEAD.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("") + menuMods().map(m => `<button class="nav mod ${state.openMod === m.k ? "open" : ""}" data-act="mod" data-k="${m.k}">${icon(m.icon)}<span class="grow">${m.label}</span><span class="chev">${state.openMod === m.k ? "▾" : "▸"}</span></button>`
       + (state.openMod === m.k ? m.subs.map(([v, l]) => `<button class="nav sub ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${l}</button>`).join("") : "")).join("")
     + `<button class="btn wine wo" data-act="problem-new" title="Equipment, food safety, chemical, temperature, training or a reminder">${icon("warn")}Report a Problem</button><button class="btn green wo" data-act="todo-new" title="Gather everything due into one list">${icon("list")}Create To-Do List</button><div class="navsep"></div>` + NAV_TOP.map(([v, i, l]) => `<button class="nav ${v === active ? "on" : ""}" data-act="nav" data-v="${v}">${icon(i)}${l}</button>`).join("")
-    + (MAINT_VIEWS.includes(state.view) ? `<button class="btn green wo" data-act="submit-wo" title="Opens MaintainX in its own window">${icon("ext")}Submit Work Order</button>` : "");
+;
+  $("#mxico").innerHTML = icon("ext");
   $("#subtitle").textContent = state.view === "add" && state.form && state.form.replaceMode ? "Replace SDS PDF" : SUB[state.view];
   const shown = state.view === "detail" && byId(state.id);
   $("#pictos").innerHTML = !shown ? "" : (shown.signalWord ? `<span class="signal ${esc(shown.signalWord)}">${esc(shown.signalWord.toUpperCase())}</span>` : "")

@@ -2,7 +2,7 @@
   --wine:#8a1626;--wine2:#5b0c17;--gold:#e0bc6e;--green:#1e7d30;--green2:#145a22;--cream:#f6f1e6}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--text);font:14px/1.4 "Segoe UI",Tahoma,Arial,sans-serif;display:flex;overflow:hidden}
+body{background:var(--bg);color:var(--text);font:14px/1.4 "Segoe UI",Tahoma,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden}
 button,input,select,textarea{font:inherit}
 aside{width:176px;flex:none;background:linear-gradient(#25272b,#1f2125);border-right:1px solid #45484f;display:flex;flex-direction:column;padding:12px 8px}
 aside img{width:150px;margin:2px auto 16px;display:block}
@@ -243,3 +243,9 @@ header p{color:#ece6d6}
 .wfblock.wfnow{border-color:#4a8fd9;box-shadow:0 0 0 2px rgba(74,143,217,.35)}.wfbar{height:10px;border-radius:5px;background:rgba(255,255,255,.1);margin-top:10px;overflow:hidden}.wfbar>div{height:100%;background:#4caf6a}
 .wfgoal{align-items:flex-start}
 aside{overflow:hidden}aside img{flex:none}aside #nav{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+
+/* the MaintainX bar across the very top, and the app below it */
+#app{flex:1;min-height:0;display:flex}
+#mxbar{flex:none;width:100%;border:0;border-bottom:1px solid var(--goldline);background:linear-gradient(90deg,#1e7d30,#27933b 50%,#1e7d30);color:#fff;font:700 15px "Segoe UI",Tahoma,Arial,sans-serif;letter-spacing:.3px;padding:9px 12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+#mxbar:hover{filter:brightness(1.12)}#mxbar svg{width:18px;height:18px}
+@media print{#mxbar{display:none!important}#app{display:block!important}}

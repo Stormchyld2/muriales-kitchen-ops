@@ -336,7 +336,7 @@ func (s *store) phoneRoutes(mux *http.ServeMux) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		_, _, st := s.loadMaint()
-		writeJSON(w, 200, map[string]any{"areas": st.areas(), "categories": findingCategories, "priorities": priorities})
+		writeJSON(w, 200, map[string]any{"areas": st.areas(), "categories": findingCategories, "priorities": priorities, "portal": st.PortalURL})
 	})
 	mux.HandleFunc("GET /api/phone/attention", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
